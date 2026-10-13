@@ -1,0 +1,12 @@
+node_modules/
+dist/
+out/
+*.log
+.DS_Store
+fixtures/private/
+*.mov
+*.MOV
+*.mp4
+*.MP4
+*.insv
+!fixtures/**/*.json
