@@ -15,6 +15,8 @@ export interface RenderOverlayOptions {
   octx: OverlayContext;
   durationMs: number;
   fps: Fps;
+  /** Exact frame count of the clip, if known (overrides duration × fps). */
+  frames?: number;
   /** .mov path for ProRes; directory for PNG sequence. */
   outPath: string;
   format?: OutputFormat;
@@ -35,7 +37,7 @@ export async function renderOverlay(o: RenderOverlayOptions): Promise<{ frames: 
   const { width, height } = overlayPixelSize(o.def, o.style);
   const canvas = createCanvas(width, height);
   const ctx = canvas.getContext('2d') as unknown as Ctx2D & { getImageData(x: number, y: number, w: number, h: number): { data: Uint8ClampedArray } };
-  const total = frameCountFor(o.durationMs, o.fps);
+  const total = o.frames && o.frames > 0 ? o.frames : frameCountFor(o.durationMs, o.fps);
   const format = o.format ?? 'prores';
   const frameMs = (1000 * o.fps.den) / o.fps.num;
 
