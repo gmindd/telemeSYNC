@@ -1,4 +1,8 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { APP_INFO } from './config.ts';
+import { AboutDialog } from './components/AboutDialog.tsx';
+import { DonateButton, WebsiteLink } from './components/ExternalLinks.tsx';
+import { StepWelcome } from './steps/StepWelcome.tsx';
 import { useApp, type Step } from './lib/store.ts';
 import { StepTelemetry } from './steps/StepTelemetry.tsx';
 import { StepClips } from './steps/StepClips.tsx';
@@ -7,6 +11,7 @@ import { StepOverlays } from './steps/StepOverlays.tsx';
 import { StepRender } from './steps/StepRender.tsx';
 
 const STEPS: { id: Step; label: string }[] = [
+  { id: 'welcome', label: 'Início' },
   { id: 'telemetry', label: '1. Telemetria' },
   { id: 'clips', label: '2. Clips' },
   { id: 'sync', label: '3. Sincronização' },
@@ -17,13 +22,16 @@ const STEPS: { id: Step; label: string }[] = [
 export function App() {
   const { step, setStep, init, notice, dismissNotice, saveProject, openProject, ride, sync } = useApp();
   const projectInput = useRef<HTMLInputElement>(null);
+  const [about, setAbout] = useState(false);
   useEffect(() => {
     void init();
   }, [init]);
   return (
     <div className="app">
       <header>
-        <h1>telemeSYNC</h1>
+        <h1 className="logo" onClick={() => setStep('welcome')}>
+          tele<em>me</em>SYNC
+        </h1>
         <nav>
           {STEPS.map((s) => (
             <button key={s.id} className={step === s.id ? 'active' : ''} onClick={() => setStep(s.id)}>
@@ -53,12 +61,25 @@ export function App() {
         </div>
       ) : null}
       <main>
+        {step === 'welcome' && <StepWelcome onAbout={() => setAbout(true)} />}
         {step === 'telemetry' && <StepTelemetry />}
         {step === 'clips' && <StepClips />}
         {step === 'sync' && <StepSync />}
         {step === 'overlays' && <StepOverlays />}
         {step === 'render' && <StepRender />}
       </main>
+      <footer>
+        <span>
+          {APP_INFO.name} v{APP_INFO.version} · gratuito · © {APP_INFO.year} {APP_INFO.author} · <WebsiteLink />
+        </span>
+        <span className="footer-actions">
+          <button className="linklike" onClick={() => setAbout(true)}>
+            Sobre e avisos legais
+          </button>
+          <DonateButton />
+        </span>
+      </footer>
+      {about ? <AboutDialog onClose={() => setAbout(false)} /> : null}
     </div>
   );
 }

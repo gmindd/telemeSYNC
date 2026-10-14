@@ -26,5 +26,7 @@
     "tsx": "^4.20.0",
     "typescript": "~5.9.3",
     "vitest": "^3.2.7"
-  }
+  },
+  "license": "SEE LICENSE IN LICENCA.txt",
+  "author": "Gabriel Pereira (https://www.pereiragabriel.com/)"
 }

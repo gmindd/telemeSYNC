@@ -26,7 +26,7 @@ import {
 } from '@telemesync/core';
 import { api, type JobSnapshot } from './api.ts';
 
-export type Step = 'telemetry' | 'clips' | 'sync' | 'overlays' | 'render';
+export type Step = 'welcome' | 'telemetry' | 'clips' | 'sync' | 'overlays' | 'render';
 
 export interface Playhead {
   t: number;
@@ -131,7 +131,7 @@ function rideNameFrom(ride: RideData, fileName: string): string {
 }
 
 export const useApp = create<State & Actions>((set, get) => ({
-  step: 'telemetry',
+  step: 'welcome',
   rideLoading: false,
   sync: { cameras: [], clips: [] },
   files: {},

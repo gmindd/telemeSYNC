@@ -1,0 +1,37 @@
+telemeSYNC — Termos de utilização (licença freeware)
+© 2026 Gabriel Pereira — https://www.pereiragabriel.com/
+
+1. Licença. O telemeSYNC é disponibilizado gratuitamente. É concedida a qualquer pessoa uma licença
+   gratuita, não exclusiva e por tempo indeterminado para instalar e utilizar o software, para fins
+   pessoais ou profissionais. Os vídeos e outros conteúdos criados com o software pertencem a quem os cria.
+
+2. Partilha. É permitido copiar e partilhar o pacote de instalação original, completo e sem alterações,
+   desde que gratuitamente e com estes termos incluídos.
+
+3. Restrições. Sem autorização escrita do autor não é permitido: vender, alugar ou cobrar pela
+   distribuição do software; distribuir versões modificadas; remover ou alterar avisos de autoria,
+   de licença ou de marcas. Os componentes de terceiros regem-se pelas respetivas licenças
+   (ver LICENCAS-TERCEIROS.txt), que prevalecem sobre estes termos no que a eles diz respeito.
+
+4. Isenção de garantia. O software é fornecido "tal como está", sem garantias de qualquer tipo,
+   expressas ou implícitas, incluindo de adequação a um fim específico e de exatidão dos dados
+   apresentados (velocidade, inclinação, altitude, frequência cardíaca, posição, sincronização).
+   Os dados não devem ser usados para fins de segurança, médicos ou de prova.
+
+5. Responsabilidade. Na medida máxima permitida pela lei aplicável, o autor não é responsável por
+   quaisquer danos, diretos ou indiretos, resultantes da utilização ou impossibilidade de utilização
+   do software, incluindo perda de dados. Nada nestes termos exclui responsabilidade que não possa
+   ser excluída por lei.
+
+6. Privacidade. O software funciona localmente. Os ficheiros de vídeo e de telemetria não são enviados
+   para servidores externos e não é feita qualquer recolha de dados pessoais ou estatísticas de utilização.
+
+7. Apoios. As contribuições voluntárias feitas através da página de apoio não têm contrapartida,
+   não dão direito a funcionalidades ou suporte e não constituem donativos para efeitos fiscais.
+
+8. Marcas. As marcas de terceiros referidas no software (DJI, GoPro, Insta360, Garmin, Bryton,
+   iGPSPORT, Strava, DaVinci Resolve, Premiere Pro, Final Cut Pro, entre outras) pertencem aos
+   respetivos titulares; o telemeSYNC não é afiliado nem aprovado por eles.
+
+9. Lei aplicável. Estes termos regem-se pela lei portuguesa, sem prejuízo dos direitos imperativos
+   de que os consumidores beneficiem na lei do seu país de residência.
