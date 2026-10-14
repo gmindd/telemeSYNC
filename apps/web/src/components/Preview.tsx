@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   effectiveStart,
+  resolveLayout,
+  type GadgetLayout,
+  type GadgetPlacement,
   getOverlay,
   overlayPixelSize,
   renderOverlayFrame,
@@ -15,8 +18,6 @@ import { useApp } from '../lib/store.ts';
 
 type PlayState = 'loading' | 'ok' | 'error' | 'nofile' | 'unsupported';
 
-const TEXT_IDS = new Set<OverlayId>(['speed', 'altitude', 'grade', 'heartRate', 'cadence', 'power', 'temperature', 'distance', 'elevationGain', 'elapsedTime', 'localTime']);
-
 function reasonText(state: PlayState, clip: Clip): string {
   if (state === 'nofile') return 'O ficheiro de vídeo não está associado (projeto reaberto). Arraste-o de novo no passo "Clips" para ver o vídeo. Abaixo mostram-se só os dados.';
   if (state === 'unsupported') return `O browser não reproduz ficheiros ${clip.meta.fileName.split('.').pop()?.toUpperCase()} (vídeo 360° em bruto). Mostram-se só os dados — use o slider para percorrer o clip.`;
@@ -26,7 +27,59 @@ function reasonText(state: PlayState, clip: Clip): string {
     : 'O browser não consegue reproduzir este ficheiro. Mostram-se só os dados — use o slider para percorrer o clip.';
 }
 
-export function Preview(props: { clip: Clip; camera: Camera; file?: File; ride: RideData; overlays: OverlayId[]; style: OverlayStyle; previewScale: number }) {
+/** One gadget on the preview: drag to move, drag the corner to resize. Positions are fractions of the frame. */
+function Gadget(props: {
+  id: OverlayId;
+  p: GadgetPlacement;
+  style: OverlayStyle;
+  box: React.RefObject<HTMLDivElement | null>;
+  canvasRef: (el: HTMLCanvasElement | null) => void;
+  onChange: (p: GadgetPlacement) => void;
+}) {
+  const { id, p, style } = props;
+  const { width, height } = overlayPixelSize(getOverlay(id), style);
+  const drag = useRef<{ mode: 'move' | 'resize'; x0: number; y0: number; p0: GadgetPlacement; bw: number; bh: number } | null>(null);
+  const start = (mode: 'move' | 'resize') => (e: React.PointerEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    const r = props.box.current!.getBoundingClientRect();
+    (e.currentTarget as Element).setPointerCapture(e.pointerId);
+    drag.current = { mode, x0: e.clientX, y0: e.clientY, p0: p, bw: r.width, bh: r.height };
+  };
+  const move = (e: React.PointerEvent) => {
+    const d = drag.current;
+    if (!d) return;
+    const dx = (e.clientX - d.x0) / d.bw;
+    const dy = (e.clientY - d.y0) / d.bh;
+    if (d.mode === 'move') props.onChange({ ...d.p0, x: d.p0.x + dx, y: d.p0.y + dy });
+    else props.onChange({ ...d.p0, w: d.p0.w + dx });
+  };
+  const end = () => (drag.current = null);
+  return (
+    <div
+      className="gadget"
+      style={{ left: `${p.x * 100}%`, top: `${p.y * 100}%`, width: `${p.w * 100}%` }}
+      title={`${getOverlay(id).label}: arraste para mover, canto inferior direito para redimensionar`}
+      onPointerDown={start('move')}
+      onPointerMove={move}
+      onPointerUp={end}
+    >
+      <canvas ref={props.canvasRef} width={width} height={height} />
+      <span className="gadget-resize" onPointerDown={start('resize')} onPointerMove={move} onPointerUp={end} />
+    </div>
+  );
+}
+
+export function Preview(props: {
+  clip: Clip;
+  camera: Camera;
+  file?: File;
+  ride: RideData;
+  overlays: OverlayId[];
+  style: OverlayStyle;
+  layout: GadgetLayout;
+  onPlacement: (id: OverlayId, p: GadgetPlacement) => void;
+}) {
   const { clip, camera, file, ride, overlays, style } = props;
   const setPlayhead = useApp((s) => s.setPlayhead);
   const playhead = useApp((s) => s.playhead);
@@ -37,7 +90,6 @@ export function Preview(props: { clip: Clip; camera: Camera; file?: File; ride: 
   const video = useRef<HTMLVideoElement>(null);
   const box = useRef<HTMLDivElement>(null);
   const canvases = useRef(new Map<OverlayId, HTMLCanvasElement>());
-  const [boxW, setBoxW] = useState(640);
   const [localMs, setLocalMs] = useState(0);
   const localRef = useRef(0);
   const lastStoreUpdate = useRef(0);
@@ -51,14 +103,6 @@ export function Preview(props: { clip: Clip; camera: Camera; file?: File; ride: 
     setLocalMs(0);
     localRef.current = 0;
   }, [clip.id]);
-
-  useEffect(() => {
-    const el = box.current;
-    if (!el) return;
-    const ro = new ResizeObserver(() => setBoxW(el.clientWidth));
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, []);
 
   const draw = useCallback(
     (ms: number) => {
@@ -135,25 +179,14 @@ export function Preview(props: { clip: Clip; camera: Camera; file?: File; ride: 
     }
   }, [playhead, start, clip.meta.durationMs, state, draw]);
 
-  const clipW = clip.meta.width ?? 1920;
-  // Overlays are rendered at `style.scale`× for sharpness; show them at their 1× size by default.
-  const k = (boxW / clipW / style.scale) * props.previewScale;
-  const textOverlays = overlays.filter((o) => TEXT_IDS.has(o));
-  const canvasFor = (id: OverlayId) => {
-    const { width, height } = overlayPixelSize(getOverlay(id), style);
-    return (
-      <canvas
-        key={id}
-        ref={(el) => {
-          if (el) canvases.current.set(id, el);
-          else canvases.current.delete(id);
-        }}
-        width={width}
-        height={height}
-        style={{ width: width * k, height: height * k }}
-      />
-    );
+  const aspect = clip.meta.width && clip.meta.height ? clip.meta.width / clip.meta.height : 16 / 9;
+  const placements = resolveLayout(overlays, props.layout, aspect, style);
+  const canvasRef = (id: OverlayId) => (el: HTMLCanvasElement | null) => {
+    if (el) canvases.current.set(id, el);
+    else canvases.current.delete(id);
   };
+  // Redraw right after (re)mounting canvases.
+  useEffect(() => draw(localRef.current), [overlays.join(','), draw]);
 
   return (
     <div className="preview">
@@ -172,9 +205,9 @@ export function Preview(props: { clip: Clip; camera: Camera; file?: File; ride: 
           <div className="preview-nodata" />
         )}
         <div className="overlay-layer">
-          <div className="ov-col">{textOverlays.map(canvasFor)}</div>
-          {overlays.includes('map') ? <div className="ov-map">{canvasFor('map')}</div> : null}
-          {overlays.includes('elevationProfile') ? <div className="ov-profile">{canvasFor('elevationProfile')}</div> : null}
+          {overlays.map((id) => (
+            <Gadget key={id} id={id} p={placements[id]} style={style} box={box} canvasRef={canvasRef(id)} onChange={(p) => props.onPlacement(id, p)} />
+          ))}
         </div>
       </div>
       {state === 'error' || state === 'nofile' || state === 'unsupported' ? (

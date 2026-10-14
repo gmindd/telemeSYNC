@@ -2,6 +2,9 @@ import { EventEmitter } from 'node:events';
 import { availableParallelism } from 'node:os';
 import { join } from 'node:path';
 import {
+  compositeSize,
+  resolveLayout,
+  type GadgetLayout,
   getOverlay,
   OVERLAY_FILE_SLUG,
   type Fps,
@@ -18,6 +21,8 @@ export interface RenderClipInput {
   durationMs: number;
   fps: Fps;
   frameCount?: number;
+  width?: number;
+  height?: number;
 }
 
 export interface RenderRequest {
@@ -27,13 +32,22 @@ export interface RenderRequest {
   style: OverlayStyle;
   format: OutputFormat;
   outputDir: string;
+  /** One file per gadget (to position manually in the editor). */
+  separate: boolean;
+  /** One file per clip with every gadget in its dragged position. */
+  composite: boolean;
+  layout: GadgetLayout;
+  /** Short side of the composite in px (1080 = Full HD). */
+  compositeShortSide: number;
 }
 
 export type TaskStatus = 'queued' | 'running' | 'done' | 'error' | 'cancelled';
 
+export const COMPOSITE_SLUG = 'composicao';
+
 export interface TaskState {
   clipId: string;
-  overlay: OverlayId;
+  overlay: OverlayId | 'composite';
   outPath: string;
   status: TaskStatus;
   progress: number;
@@ -80,8 +94,9 @@ export class Job extends EventEmitter {
     this.tasks = [];
     for (const clip of req.clips) {
       const base = clipBaseName(clip.fileName);
-      for (const overlay of req.overlays) {
-        const name = `${base}_${OVERLAY_FILE_SLUG[overlay]}`;
+      const outputs: (OverlayId | 'composite')[] = [...(req.composite ? ['composite' as const] : []), ...(req.separate ? req.overlays : [])];
+      for (const overlay of outputs) {
+        const name = `${base}_${overlay === 'composite' ? COMPOSITE_SLUG : OVERLAY_FILE_SLUG[overlay]}`;
         this.tasks.push({
           clipId: clip.id,
           overlay,
@@ -125,11 +140,21 @@ export class Job extends EventEmitter {
         task.status = 'running';
         this.emit('update');
         try {
-          getOverlay(task.overlay); // validates the id
+          let composite = {};
+          if (task.overlay === 'composite') {
+            const size = compositeSize(clip.width, clip.height, this.req.compositeShortSide);
+            composite = {
+              overlays: this.req.overlays,
+              placements: resolveLayout(this.req.overlays, this.req.layout, size.width / size.height, this.req.style),
+              compositeWidth: size.width,
+              compositeHeight: size.height,
+            };
+          } else getOverlay(task.overlay); // validates the id
           await renderInWorker(
             {
               ride: this.ride,
               overlay: task.overlay,
+              ...composite,
               style: this.req.style,
               clipStart: clip.startUtcMs,
               clipEnd: clip.startUtcMs + clip.durationMs,

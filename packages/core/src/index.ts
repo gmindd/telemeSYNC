@@ -22,3 +22,4 @@ export * from './sync/chapters.ts';
 export * from './sync/sanity.ts';
 export * from './sync/session.ts';
 export * from './project/project.ts';
+export * from './overlays/layout.ts';

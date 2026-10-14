@@ -3,12 +3,18 @@ import { createRequire } from 'node:module';
 import { pathToFileURL } from 'node:url';
 import type { Fps } from '../media/types.ts';
 import type { OverlayId, OverlayStyle } from '../overlays/types.ts';
+import type { GadgetPlacement } from '../overlays/layout.ts';
 import type { RideData } from '../telemetry/ride.ts';
 import type { OutputFormat } from './render.ts';
 
 export interface WorkerJob {
   ride: RideData;
-  overlay: OverlayId;
+  /** A single gadget, or 'composite' = all `overlays` positioned with `placements` in one frame. */
+  overlay: OverlayId | 'composite';
+  overlays?: OverlayId[];
+  placements?: Record<OverlayId, GadgetPlacement>;
+  compositeWidth?: number;
+  compositeHeight?: number;
   style: OverlayStyle;
   clipStart: number;
   clipEnd: number;

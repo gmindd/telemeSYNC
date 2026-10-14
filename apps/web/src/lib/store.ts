@@ -14,6 +14,8 @@ import {
   resolveAll,
   serializeProject,
   type CameraProfileId,
+  type GadgetLayout,
+  type GadgetPlacement,
   type ClipMetadata,
   type Clip,
   type OverlayId,
@@ -52,7 +54,12 @@ interface State {
   rideName: string;
   job?: JobSnapshot;
   renderError?: string;
-  previewScale: number;
+  /** Gadget positions dragged in the preview (fractions of the frame). */
+  layout: GadgetLayout;
+  exportSeparate: boolean;
+  exportComposite: boolean;
+  /** Short side of the composite (1080 = Full HD). */
+  compositeShortSide: number;
   notice?: string;
 }
 
@@ -80,12 +87,32 @@ interface Actions {
   cancelRender(): Promise<void>;
   saveProject(): void;
   openProject(file: File): Promise<void>;
-  setPreviewScale(v: number): void;
+  setPlacement(id: OverlayId, p: GadgetPlacement): void;
+  resetLayout(): void;
+  setExportOptions(o: Partial<Pick<State, 'exportSeparate' | 'exportComposite' | 'compositeShortSide'>>): void;
   dismissNotice(): void;
   init(): Promise<void>;
 }
 
 const STYLE_KEY = 'telemesync.style';
+const LAYOUT_KEY = 'telemesync.layout';
+
+function loadStored<T>(key: string, fallback: T): T {
+  try {
+    const v = JSON.parse(localStorage.getItem(key) ?? 'null');
+    return v ?? fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function store(key: string, v: unknown) {
+  try {
+    localStorage.setItem(key, JSON.stringify(v));
+  } catch {
+    /* ignore */
+  }
+}
 
 function loadStoredStyle(): OverlayStyle {
   try {
@@ -115,7 +142,10 @@ export const useApp = create<State & Actions>((set, get) => ({
   format: 'prores',
   outputDir: '',
   rideName: 'volta',
-  previewScale: 1,
+  layout: loadStored<GadgetLayout>(LAYOUT_KEY, {}),
+  exportSeparate: true,
+  exportComposite: false,
+  compositeShortSide: 1080,
 
   setStep: (step) => set({ step }),
 
@@ -289,6 +319,8 @@ export const useApp = create<State & Actions>((set, get) => ({
         durationMs: c.meta.durationMs,
         fps: c.meta.fps!,
         frameCount: c.meta.frameCount,
+        width: c.meta.width,
+        height: c.meta.height,
       }))
       .filter((c) => c.startUtcMs !== undefined && c.fps);
     set({ renderError: undefined });
@@ -301,6 +333,10 @@ export const useApp = create<State & Actions>((set, get) => ({
         style: st.style,
         format: st.format,
         outputDir: st.outputDir,
+        separate: st.exportSeparate,
+        composite: st.exportComposite,
+        layout: st.layout,
+        compositeShortSide: st.compositeShortSide,
       });
       set({ job });
       api.watchJob(job.id, (s) => set({ job: s }));
@@ -331,7 +367,8 @@ export const useApp = create<State & Actions>((set, get) => ({
       })),
       overlays: st.overlays,
       style: st.style,
-      output: { format: st.format },
+      output: { format: st.format, separate: st.exportSeparate, composite: st.exportComposite, compositeShortSide: st.compositeShortSide },
+      layout: st.layout,
     };
     const blob = new Blob([serializeProject(p)], { type: 'application/json' });
     const a = document.createElement('a');
@@ -362,6 +399,10 @@ export const useApp = create<State & Actions>((set, get) => ({
         overlays: p.overlays,
         style: p.style,
         format: p.output.format,
+        exportSeparate: p.output.separate ?? true,
+        exportComposite: p.output.composite ?? false,
+        compositeShortSide: p.output.compositeShortSide ?? 1080,
+        layout: p.layout ?? {},
         rideName: p.name,
         activeClipId: clips[0]?.id,
         step: get().ride ? 'sync' : 'telemetry',
@@ -372,6 +413,17 @@ export const useApp = create<State & Actions>((set, get) => ({
     }
   },
 
-  setPreviewScale: (previewScale) => set({ previewScale }),
+  setPlacement(id, p) {
+    const clamp = (v: number, a: number, b: number) => Math.min(b, Math.max(a, v));
+    const w = clamp(p.w, 0.03, 1);
+    const layout = { ...get().layout, [id]: { w, x: clamp(p.x, -w * 0.8, 0.98), y: clamp(p.y, -0.2, 0.98) } };
+    set({ layout });
+    store(LAYOUT_KEY, layout);
+  },
+  resetLayout() {
+    set({ layout: {} });
+    store(LAYOUT_KEY, {});
+  },
+  setExportOptions: (o) => set(o),
   dismissNotice: () => set({ notice: undefined }),
 }));

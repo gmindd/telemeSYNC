@@ -1,8 +1,8 @@
-import type { Fps, OverlayId, OverlayStyle } from '@telemesync/core';
+import type { Fps, GadgetLayout, OverlayId, OverlayStyle } from '@telemesync/core';
 
 export interface TaskState {
   clipId: string;
-  overlay: OverlayId;
+  overlay: OverlayId | 'composite';
   outPath: string;
   status: 'queued' | 'running' | 'done' | 'error' | 'cancelled';
   progress: number;
@@ -44,11 +44,15 @@ export const api = {
   async startRender(body: {
     rideId: string;
     rideName: string;
-    clips: { id: string; fileName: string; startUtcMs: number; durationMs: number; fps: Fps; frameCount?: number }[];
+    clips: { id: string; fileName: string; startUtcMs: number; durationMs: number; fps: Fps; frameCount?: number; width?: number; height?: number }[];
     overlays: OverlayId[];
     style: OverlayStyle;
     format: 'prores' | 'png';
     outputDir: string;
+    separate: boolean;
+    composite: boolean;
+    layout: GadgetLayout;
+    compositeShortSide: number;
   }): Promise<JobSnapshot> {
     return json(await fetch('/api/render', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) }));
   },

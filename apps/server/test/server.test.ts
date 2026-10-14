@@ -92,6 +92,39 @@ describe('server API', () => {
     expect((await app.inject({ method: 'POST', url: '/api/open-folder', payload: { path: tmpdir() } })).statusCode).toBe(403);
   });
 
+  it('renders a composite (all gadgets positioned) at the clip aspect, Full HD', async () => {
+    const rideId = await uploadRide();
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/render',
+      payload: {
+        rideId,
+        rideName: 'composite',
+        clips: [{ id: 'q', fileName: 'DJI_square.MP4', startUtcMs: synth.climb.startT, durationMs: 400, fps: { num: 50, den: 1 }, width: 2880, height: 2880 }],
+        overlays: ['speed', 'map'],
+        layout: { speed: { x: 0.5, y: 0.5, w: 0.3 } },
+        separate: false,
+        composite: true,
+        format: 'prores',
+      },
+    });
+    expect(res.statusCode).toBe(200);
+    const snap = await waitJob(res.json().id);
+    expect(snap.status).toBe('done');
+    expect(snap.tasks.map((t: { overlay: string }) => t.overlay)).toEqual(['composite']);
+    expect(snap.tasks[0].outPath).toMatch(/DJI_square_composicao\.mov$/);
+    const { execFileSync } = await import('node:child_process');
+    const { FFMPEG } = await import('../../../packages/core/test/helpers/ffmpeg.ts');
+    let info = '';
+    try {
+      execFileSync(FFMPEG, ['-hide_banner', '-i', snap.tasks[0].outPath], { stdio: ['ignore', 'pipe', 'pipe'] });
+    } catch (e: any) {
+      info = String(e.stderr);
+    }
+    expect(info).toMatch(/1080x1080/);
+    expect(info).toMatch(/yuva444p/);
+  });
+
   it('cancels a running job', async () => {
     const rideId = await uploadRide();
     const res = await app.inject({

@@ -5,7 +5,7 @@ import { fmtFps } from '../lib/format.ts';
 
 export function StepRender() {
   const st = useApp();
-  const { ride, sync, selected, overlays, job, format, outputDir, rideName, renderError, rideId } = st;
+  const { ride, sync, selected, overlays, job, format, outputDir, rideName, renderError, rideId, exportSeparate, exportComposite, compositeShortSide } = st;
   if (!ride) return <section><p>Carregue primeiro a telemetria.</p></section>;
   const cams = new Map(sync.cameras.map((c) => [c.id, c]));
   const running = job?.status === 'running';
@@ -36,8 +36,32 @@ export function StepRender() {
             </select>
           </label>
         </div>
+        <div className="export-modes">
+          <label className={`mode${exportSeparate ? ' on' : ''}`}>
+            <input type="checkbox" checked={exportSeparate} disabled={running} onChange={(e) => st.setExportOptions({ exportSeparate: e.target.checked })} />
+            <div>
+              <b>Gadgets separados</b>
+              <span>Um ficheiro por gadget, do tamanho do gadget. Ideal para reenquadrar (1:1 → 16:9 / 9:16) e posicionar à mão no editor.</span>
+              <code>{'{clip}'}_velocidade.mov, {'{clip}'}_mapa.mov…</code>
+            </div>
+          </label>
+          <label className={`mode${exportComposite ? ' on' : ''}`}>
+            <input type="checkbox" checked={exportComposite} disabled={running} onChange={(e) => st.setExportOptions({ exportComposite: e.target.checked })} />
+            <div>
+              <b>Composição única</b>
+              <span>Um só ficheiro por clip, com a proporção do vídeo e os gadgets nas posições arrastadas no preview. Basta pôr por cima do clip.</span>
+              <code>{'{clip}'}_composicao.mov</code>
+              <select value={compositeShortSide} disabled={running || !exportComposite} onChange={(e) => st.setExportOptions({ compositeShortSide: Number(e.target.value) })}>
+                <option value={720}>720p</option>
+                <option value={1080}>1080p (Full HD)</option>
+                <option value={1440}>1440p</option>
+                <option value={2160}>2160p (4K)</option>
+              </select>
+            </div>
+          </label>
+        </div>
         <p className="muted">
-          Estrutura: <code>{outputDir || '…'}/{rideName}/{'{clip}'}/{'{clip}'}_{'{métrica}'}.mov</code> · Overlays:{' '}
+          Pasta: <code>{outputDir || '…'}/{rideName}/{'{clip}'}/</code> · Gadgets:{' '}
           {overlays.map((o) => <span key={o} className="chip small">{getOverlay(o).label} → _{OVERLAY_FILE_SLUG[o]}</span>)}
         </p>
       </div>
@@ -103,10 +127,10 @@ export function StepRender() {
 
       <button
         className="primary big"
-        disabled={running || !rideId || chosen.length === 0 || overlays.length === 0 || invalid.length > 0}
+        disabled={running || !rideId || chosen.length === 0 || overlays.length === 0 || invalid.length > 0 || (!exportSeparate && !exportComposite)}
         onClick={st.startRender}
       >
-        Renderizar {chosen.length} clip(s) × {overlays.length} overlay(s)
+        Renderizar {chosen.length} clip(s) · {(exportSeparate ? overlays.length : 0) + (exportComposite ? 1 : 0)} ficheiro(s) por clip
       </button>
     </section>
   );

@@ -128,7 +128,7 @@ function ClipDetail({ clip, cam }: { clip: Clip; cam: Camera }) {
 
 export function StepSync() {
   const st = useApp();
-  const { ride, sync, activeClipId, playhead, style, files, overlays, previewScale } = st;
+  const { ride, sync, activeClipId, playhead, style, files, overlays, layout } = st;
   if (!ride) return <section><p>Carregue primeiro a telemetria.</p></section>;
   const cams = new Map(sync.cameras.map((c) => [c.id, c]));
   const clip = sync.clips.find((c) => c.id === activeClipId) ?? sync.clips[0];
@@ -154,11 +154,11 @@ export function StepSync() {
       {clip && cam ? (
         <div className="sync-bottom">
           <div className="sync-preview">
-            <Preview clip={clip} camera={cam} file={files[clip.id]} ride={ride} overlays={overlays} style={style} previewScale={previewScale} />
-            <label className="muted">
-              Tamanho dos overlays no preview
-              <input type="range" min={0.5} max={3} step={0.1} value={previewScale} onChange={(e) => st.setPreviewScale(Number(e.target.value))} />
-            </label>
+            <Preview clip={clip} camera={cam} file={files[clip.id]} ride={ride} overlays={overlays} style={style} layout={layout} onPlacement={st.setPlacement} />
+            <div className="row muted">
+              Arraste os gadgets para os posicionar; o canto inferior direito muda o tamanho. As posições são usadas na exportação "Composição".
+              <button className="small" onClick={st.resetLayout}>Repor posições</button>
+            </div>
           </div>
           <div className="sync-side">
             <ClipDetail clip={clip} cam={cam} />

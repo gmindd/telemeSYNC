@@ -66,12 +66,13 @@ export async function buildApp(opts: AppOptions = {}): Promise<FastifyInstance> 
     }
   });
 
-  app.post<{ Body: Omit<RenderRequest, 'outputDir'> & { rideId: string; outputDir?: string } }>('/api/render', async (req, reply) => {
+  app.post<{ Body: Omit<RenderRequest, 'outputDir' | 'separate' | 'composite' | 'layout' | 'compositeShortSide'> & Partial<Pick<RenderRequest, 'separate' | 'composite' | 'layout' | 'compositeShortSide'>> & { rideId: string; outputDir?: string } }>('/api/render', async (req, reply) => {
     const b = req.body;
     const entry = rides.get(b?.rideId);
     if (!entry) return reply.code(404).send({ error: 'Telemetria não encontrada no servidor. Volte a carregar o ficheiro.' });
     if (!Array.isArray(b.clips) || b.clips.length === 0) return reply.code(400).send({ error: 'Nenhum clip selecionado.' });
     if (!Array.isArray(b.overlays) || b.overlays.length === 0) return reply.code(400).send({ error: 'Nenhum overlay selecionado.' });
+    if (b.separate === false && b.composite !== true) return reply.code(400).send({ error: 'Escolha gadgets separados e/ou composição.' });
     for (const id of b.overlays) {
       try {
         if (!entry.ride.available.has(getOverlay(id as OverlayId).requires)) {
@@ -96,6 +97,10 @@ export async function buildApp(opts: AppOptions = {}): Promise<FastifyInstance> 
       style: { ...DEFAULT_STYLE, ...b.style, units: { ...DEFAULT_STYLE.units, ...b.style?.units } },
       format: b.format === 'png' ? 'png' : 'prores',
       outputDir,
+      separate: b.separate !== false,
+      composite: b.composite === true,
+      layout: b.layout ?? {},
+      compositeShortSide: [720, 1080, 1440, 2160].includes(Number(b.compositeShortSide)) ? Number(b.compositeShortSide) : 1080,
     });
     return job.snapshot();
   });

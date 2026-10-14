@@ -1,6 +1,7 @@
 import type { ClipMetadata } from '../media/types.ts';
 import { DEFAULT_STYLE, type OverlayId, type OverlayStyle } from '../overlays/types.ts';
 import type { Camera } from '../sync/types.ts';
+import type { GadgetLayout } from '../overlays/layout.ts';
 
 export const PROJECT_VERSION = 1;
 
@@ -20,7 +21,9 @@ export interface ProjectFile {
   }[];
   overlays: OverlayId[];
   style: OverlayStyle;
-  output: { format: 'prores' | 'png' };
+  output: { format: 'prores' | 'png'; separate?: boolean; composite?: boolean; compositeShortSide?: number };
+  /** Gadget positions (fractions of the frame). */
+  layout?: GadgetLayout;
 }
 
 export function serializeProject(p: ProjectFile): string {
@@ -36,6 +39,12 @@ export function parseProject(json: string): ProjectFile {
     ...p,
     style: { ...DEFAULT_STYLE, ...p.style, units: { ...DEFAULT_STYLE.units, ...p.style?.units } },
     overlays: Array.isArray(p.overlays) ? p.overlays : [],
-    output: { format: p.output?.format === 'png' ? 'png' : 'prores' },
+    output: {
+      format: p.output?.format === 'png' ? 'png' : 'prores',
+      separate: p.output?.separate !== false,
+      composite: p.output?.composite === true,
+      compositeShortSide: Number(p.output?.compositeShortSide) || 1080,
+    },
+    layout: p.layout && typeof p.layout === 'object' ? p.layout : {},
   };
 }
