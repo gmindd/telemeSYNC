@@ -7,6 +7,10 @@ Gerador de overlays de telemetria para vídeos de BTT. A partir de um ficheiro *
 
 ## Instalação no Windows
 
+**Forma rápida:** instale o Node.js (passo 1) e depois faça **duplo clique em `iniciar.bat`** na pasta do projeto. Da primeira vez instala tudo; nas seguintes só arranca. Mantenha a janela aberta enquanto usa a aplicação.
+
+**Ou passo a passo:**
+
 1. **Instale o Node.js** (versão 20 ou superior, recomendada a LTS): <https://nodejs.org/pt> → botão "LTS" → instalar com as opções por defeito.
 2. **Descarregue o projeto**:
    - com Git: `git clone https://github.com/gmindd/telemeSYNC.git`, ou
@@ -22,7 +26,7 @@ Gerador de overlays de telemetria para vídeos de BTT. A partir de um ficheiro *
    ```
    O browser abre em <http://localhost:5174>. Para terminar, feche a janela do PowerShell (ou `Ctrl+C`).
 
-> Se o PowerShell disser que a execução de scripts está desativada, use a **Linha de Comandos** (`cmd`) em vez do PowerShell, ou execute uma vez `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned`.
+> Se o PowerShell disser *"running scripts is disabled on this system"*, escreva `npm.cmd` em vez de `npm` (`npm.cmd install`, `npm.cmd start`), ou execute uma vez `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned`.
 
 ### macOS
 
