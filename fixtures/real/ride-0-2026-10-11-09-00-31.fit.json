@@ -1,0 +1,109 @@
+{
+  "kind": "telemetry",
+  "file": "ride-0-2026-10-11-09-00-31.fit",
+  "source": "fit",
+  "device": "igpsport 800",
+  "recordFields": [
+    "altitude",
+    "coreTemperature",
+    "developerFields",
+    "distance",
+    "enhancedAltitude",
+    "enhancedSpeed",
+    "heartRate",
+    "positionLat",
+    "positionLong",
+    "speed",
+    "temperature",
+    "timestamp"
+  ],
+  "channels": [
+    "position",
+    "altitude",
+    "speed",
+    "distance",
+    "heartRate",
+    "temperature"
+  ],
+  "available": [
+    "elapsedTime",
+    "localTime",
+    "speed",
+    "altitude",
+    "elevationGain",
+    "elevationProfile",
+    "grade",
+    "distance",
+    "map",
+    "heartRate",
+    "temperature"
+  ],
+  "samples": 1760,
+  "medianIntervalMs": 5000,
+  "start": "2026-10-11T08:00:31.000Z",
+  "end": "2026-10-11T10:27:24.000Z",
+  "localOffsetHours": 1,
+  "totals": {
+    "durationMs": 8813000,
+    "distanceM": 48511.94,
+    "elevationGainM": 824.1583333333334,
+    "maxSpeed": 15.383999999999995,
+    "avgMovingSpeed": 5.737662921348315,
+    "distanceKm": 48.51194
+  },
+  "gaps": [
+    {
+      "at": "2026-10-11T08:12:29.000Z",
+      "seconds": 23
+    },
+    {
+      "at": "2026-10-11T08:21:11.000Z",
+      "seconds": 12
+    },
+    {
+      "at": "2026-10-11T08:21:43.000Z",
+      "seconds": 30
+    },
+    {
+      "at": "2026-10-11T08:22:15.000Z",
+      "seconds": 14
+    },
+    {
+      "at": "2026-10-11T08:22:33.000Z",
+      "seconds": 12
+    },
+    {
+      "at": "2026-10-11T08:22:56.000Z",
+      "seconds": 13
+    },
+    {
+      "at": "2026-10-11T08:23:31.000Z",
+      "seconds": 12
+    },
+    {
+      "at": "2026-10-11T08:24:16.000Z",
+      "seconds": 19
+    },
+    {
+      "at": "2026-10-11T09:18:49.000Z",
+      "seconds": 18
+    },
+    {
+      "at": "2026-10-11T09:19:17.000Z",
+      "seconds": 12
+    },
+    {
+      "at": "2026-10-11T10:24:38.000Z",
+      "seconds": 45
+    },
+    {
+      "at": "2026-10-11T10:25:31.000Z",
+      "seconds": 67
+    },
+    {
+      "at": "2026-10-11T10:26:38.000Z",
+      "seconds": 23
+    }
+  ],
+  "gapCount": 13
+}
