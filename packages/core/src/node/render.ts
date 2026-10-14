@@ -1,14 +1,15 @@
 import { createCanvas } from '@napi-rs/canvas';
 import { mkdir, rm, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
+import type { OutputFormat } from '../export/formats.ts';
 import type { Fps } from '../media/types.ts';
-import { frameState, overlayPixelSize, textInstant } from '../overlays/registry.ts';
+import { changesAtTextRate, frameState, overlayPixelSize, textInstant } from '../overlays/registry.ts';
 import { compositeFrameKey, drawComposite, type GadgetPlacement } from '../overlays/layout.ts';
 import type { Ctx2D, OverlayContext, OverlayDefinition, OverlayId, OverlayStyle } from '../overlays/types.ts';
 import { FfmpegSink } from './ffmpeg.ts';
 import { registerEmbeddedFonts } from './fonts.ts';
 
-export type OutputFormat = 'prores' | 'png';
+export type { OutputFormat } from '../export/formats.ts';
 
 export interface RenderOverlayOptions {
   def: OverlayDefinition;
@@ -18,7 +19,7 @@ export interface RenderOverlayOptions {
   fps: Fps;
   /** Exact frame count of the clip, if known (overrides duration × fps). */
   frames?: number;
-  /** .mov path for ProRes; directory for PNG sequence. */
+  /** Video file path; directory for a PNG sequence. */
   outPath: string;
   format?: OutputFormat;
   signal?: AbortSignal;
@@ -53,7 +54,7 @@ async function renderFrames(src: FrameSource, o: SinkOptions): Promise<{ frames:
   const frameMs = (1000 * o.fps.den) / o.fps.num;
 
   await mkdir(format === 'png' ? o.outPath : dirname(o.outPath), { recursive: true });
-  const sink = format === 'prores' ? new FfmpegSink({ width, height, fps: o.fps, outPath: o.outPath }) : undefined;
+  const sink = format !== 'png' ? new FfmpegSink({ width, height, fps: o.fps, outPath: o.outPath, format }) : undefined;
 
   let lastKey: number | undefined;
   let lastFrame: Uint8Array | undefined;
@@ -85,7 +86,7 @@ async function renderFrames(src: FrameSource, o: SinkOptions): Promise<{ frames:
     await sink?.finish();
   } catch (e) {
     sink?.abort();
-    if (format === 'prores') await rm(o.outPath, { force: true });
+    if (format !== 'png') await rm(o.outPath, { force: true });
     throw e;
   }
   return { frames: total, width, height };
@@ -98,8 +99,8 @@ export function renderOverlay(o: RenderOverlayOptions): Promise<{ frames: number
     {
       width,
       height,
-      // Text-only overlays change only at the text rate: reuse the previous frame.
-      key: (t) => (o.def.textOnly ? textInstant(t, o.octx.clipStart, o.style.textRateHz) : t),
+      // Overlays that change only at the text rate reuse the previous frame.
+      key: (t) => (changesAtTextRate(o.def, o.style) ? textInstant(t, o.octx.clipStart, o.style.textRateHz) : t),
       draw: (ctx, t) => {
         ctx.setTransform(1, 0, 0, 1, 0, 0);
         ctx.clearRect(0, 0, width, height);

@@ -26,6 +26,11 @@ export function overlayPixelSize(def: OverlayDefinition, style: OverlayStyle): {
   return { width: even(s.width), height: even(s.height) };
 }
 
+/** True when the overlay only changes at the text rate with this style (frames in between can be reused). */
+export function changesAtTextRate(def: OverlayDefinition, style: OverlayStyle): boolean {
+  return def.textOnly || !!def.textRateOnly?.(style);
+}
+
 /** Text-update instant: quantised to `textRateHz`, relative to the clip start so all clips behave the same. */
 export function textInstant(t: number, clipStart: number, rateHz: number): number {
   if (!(rateHz > 0)) return t;

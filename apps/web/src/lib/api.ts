@@ -1,4 +1,4 @@
-import type { Fps, GadgetLayout, OverlayId, OverlayStyle } from '@telemesync/core';
+import type { Fps, GadgetLayout, OutputFormat, OverlayId, OverlayStyle } from '@telemesync/core';
 
 export interface TaskState {
   clipId: string;
@@ -47,7 +47,8 @@ export const api = {
     clips: { id: string; fileName: string; startUtcMs: number; durationMs: number; fps: Fps; frameCount?: number; width?: number; height?: number }[];
     overlays: OverlayId[];
     style: OverlayStyle;
-    format: 'prores' | 'png';
+    format: OutputFormat;
+    maxFps: number;
     outputDir: string;
     separate: boolean;
     composite: boolean;

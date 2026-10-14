@@ -1,16 +1,18 @@
-import { effectiveStart, getOverlay, OVERLAY_FILE_SLUG } from '@telemesync/core';
+import { effectiveStart, getOverlay, OUTPUT_FORMATS, outputExtension, OVERLAY_FILE_SLUG, type OutputFormat } from '@telemesync/core';
 import { useApp } from '../lib/store.ts';
 import { api } from '../lib/api.ts';
 import { fmtFps } from '../lib/format.ts';
 
 export function StepRender() {
   const st = useApp();
-  const { ride, sync, selected, overlays, job, format, outputDir, rideName, renderError, rideId, exportSeparate, exportComposite, compositeShortSide } = st;
+  const { ride, sync, selected, overlays, job, format, maxFps, outputDir, rideName, renderError, rideId, exportSeparate, exportComposite, compositeShortSide } = st;
   if (!ride) return <section><p>Carregue primeiro a telemetria.</p></section>;
   const cams = new Map(sync.cameras.map((c) => [c.id, c]));
   const running = job?.status === 'running';
   const chosen = sync.clips.filter((c) => selected[c.id]);
   const invalid = chosen.filter((c) => effectiveStart(c, cams.get(c.cameraId)!) === undefined || !c.meta.fps);
+  const formatInfo = OUTPUT_FORMATS.find((f) => f.id === format) ?? OUTPUT_FORMATS[0];
+  const ext = outputExtension(format);
 
   return (
     <section>
@@ -29,20 +31,33 @@ export function StepRender() {
             <input value={rideName} onChange={(e) => st.setRideName(e.target.value)} disabled={running} />
           </label>
           <label className="field">
-            Formato
-            <select value={format} onChange={(e) => st.setFormat(e.target.value as 'prores' | 'png')} disabled={running}>
-              <option value="prores">ProRes 4444 com alfa (.mov)</option>
-              <option value="png">Sequência PNG</option>
+            Frame rate dos overlays
+            <select value={maxFps} onChange={(e) => st.setMaxFps(Number(e.target.value))} disabled={running}>
+              <option value={0}>Igual ao clip</option>
+              <option value={30}>Máximo 30 fps (mais leve com clips a 50/60 fps)</option>
             </select>
           </label>
         </div>
+        <div className="row">
+          <label className="field grow">
+            Formato
+            <select value={format} onChange={(e) => st.setFormat(e.target.value as OutputFormat)} disabled={running}>
+              {OUTPUT_FORMATS.map((f) => <option key={f.id} value={f.id}>{f.label}</option>)}
+            </select>
+            <span className="format-hint">{formatInfo.hint}</span>
+          </label>
+        </div>
+        <p className="format-note">
+          <b>Se o fundo aparecer preto ou opaco no editor de vídeo</b>, exporte noutro formato: no DaVinci Resolve use ProRes 4444 ou FFV1; no CapCut, ProRes 4444.
+          O Canva não aceita vídeos com transparência (converte o fundo em preto).
+        </p>
         <div className="export-modes">
           <label className={`mode${exportSeparate ? ' on' : ''}`}>
             <input type="checkbox" checked={exportSeparate} disabled={running} onChange={(e) => st.setExportOptions({ exportSeparate: e.target.checked })} />
             <div>
               <b>Gadgets separados</b>
               <span>Um ficheiro por gadget, do tamanho do gadget. Ideal para reenquadrar (1:1 → 16:9 / 9:16) e posicionar à mão no editor.</span>
-              <code>{'{clip}'}_velocidade.mov, {'{clip}'}_mapa.mov…</code>
+              <code>{'{clip}'}_velocidade{ext}, {'{clip}'}_mapa{ext}…</code>
             </div>
           </label>
           <label className={`mode${exportComposite ? ' on' : ''}`}>
@@ -50,7 +65,7 @@ export function StepRender() {
             <div>
               <b>Composição única</b>
               <span>Um só ficheiro por clip, com a proporção do vídeo e os gadgets nas posições arrastadas no preview. Basta pôr por cima do clip.</span>
-              <code>{'{clip}'}_composicao.mov</code>
+              <code>{'{clip}'}_composicao{ext}</code>
               <select value={compositeShortSide} disabled={running || !exportComposite} onChange={(e) => st.setExportOptions({ compositeShortSide: Number(e.target.value) })}>
                 <option value={720}>720p</option>
                 <option value={1080}>1080p (Full HD)</option>

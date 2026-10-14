@@ -170,6 +170,13 @@ export function StepOverlays() {
         <Color label="Gradiente (baixo)" k="gradientFrom" />
         <Color label="Gradiente (alto)" k="gradientTo" />
         <label className="field">
+          Movimento dos painéis
+          <select value={style.panelRate} onChange={(e) => setStyle({ panelRate: e.target.value as OverlayStyle['panelRate'] })}>
+            <option value="smooth">Suave (a cada frame)</option>
+            <option value="text">Ao ritmo dos números (ficheiros mais leves)</option>
+          </select>
+        </label>
+        <label className="field">
           Fundo dos painéis
           <input type="range" min={0} max={1} step={0.05} value={style.panelOpacity} onChange={(e) => setStyle({ panelOpacity: Number(e.target.value) })} />
         </label>

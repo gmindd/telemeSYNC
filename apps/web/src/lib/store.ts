@@ -4,6 +4,7 @@ import {
   blobSource,
   buildRide,
   CAMERA_PROFILES,
+  DEFAULT_OUTPUT_FORMAT,
   DEFAULT_STYLE,
   defaultCamera,
   effectiveStart,
@@ -20,6 +21,7 @@ import {
   type ClipMetadata,
   type Clip,
   type OverlayId,
+  type OutputFormat,
   type OverlayStyle,
   type ProjectFile,
   type RideData,
@@ -50,7 +52,9 @@ interface State {
   playhead?: Playhead;
   overlays: OverlayId[];
   style: OverlayStyle;
-  format: 'prores' | 'png';
+  format: OutputFormat;
+  /** Cap on the overlay frame rate (0 = same as the clip). */
+  maxFps: number;
   outputDir: string;
   rideName: string;
   job?: JobSnapshot;
@@ -79,7 +83,8 @@ interface Actions {
   setCameraLabel(cameraId: string, label: string): void;
   toggleOverlay(id: OverlayId, on: boolean): void;
   setStyle(p: Partial<OverlayStyle>): void;
-  setFormat(f: 'prores' | 'png'): void;
+  setFormat(f: OutputFormat): void;
+  setMaxFps(fps: number): void;
   setOutputDir(d: string): void;
   saveOutputDir(): Promise<void>;
   setRideName(n: string): void;
@@ -97,6 +102,8 @@ interface Actions {
 
 const STYLE_KEY = 'telemesync.style';
 const LAYOUT_KEY = 'telemesync.layout';
+const FORMAT_KEY = 'telemesync.format';
+const MAX_FPS_KEY = 'telemesync.maxFps';
 
 function loadStored<T>(key: string, fallback: T): T {
   try {
@@ -140,7 +147,8 @@ export const useApp = create<State & Actions>((set, get) => ({
   clipErrors: [],
   overlays: ['speed', 'grade', 'map', 'elevationProfile'],
   style: loadStoredStyle(),
-  format: 'prores',
+  format: loadStored<OutputFormat>(FORMAT_KEY, DEFAULT_OUTPUT_FORMAT),
+  maxFps: loadStored<number>(MAX_FPS_KEY, 0),
   outputDir: '',
   rideName: 'volta',
   layout: loadStored<GadgetLayout>(LAYOUT_KEY, {}),
@@ -294,7 +302,14 @@ export const useApp = create<State & Actions>((set, get) => ({
     }
   },
 
-  setFormat: (format) => set({ format }),
+  setFormat(format) {
+    set({ format });
+    store(FORMAT_KEY, format);
+  },
+  setMaxFps(maxFps) {
+    set({ maxFps });
+    store(MAX_FPS_KEY, maxFps);
+  },
   setOutputDir: (outputDir) => set({ outputDir }),
   async saveOutputDir() {
     try {
@@ -333,6 +348,7 @@ export const useApp = create<State & Actions>((set, get) => ({
         overlays: st.overlays,
         style: st.style,
         format: st.format,
+        maxFps: st.maxFps,
         outputDir: st.outputDir,
         separate: st.exportSeparate,
         composite: st.exportComposite,
@@ -368,7 +384,7 @@ export const useApp = create<State & Actions>((set, get) => ({
       })),
       overlays: st.overlays,
       style: st.style,
-      output: { format: st.format, separate: st.exportSeparate, composite: st.exportComposite, compositeShortSide: st.compositeShortSide },
+      output: { format: st.format, separate: st.exportSeparate, composite: st.exportComposite, compositeShortSide: st.compositeShortSide, maxFps: st.maxFps },
       layout: st.layout,
     };
     const blob = new Blob([serializeProject(p)], { type: 'application/json' });
@@ -400,6 +416,7 @@ export const useApp = create<State & Actions>((set, get) => ({
         overlays: p.overlays,
         style: p.style,
         format: p.output.format,
+        maxFps: p.output.maxFps === 30 ? 30 : 0,
         exportSeparate: p.output.separate ?? true,
         exportComposite: p.output.composite ?? false,
         compositeShortSide: p.output.compositeShortSide ?? 1080,

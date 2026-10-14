@@ -117,6 +117,8 @@ export interface OverlayStyle {
   panels: Partial<Record<PanelMetric, PanelOptions>>;
   /** Functional threshold power (W), for the power zones. */
   ftp: number;
+  /** Panels redraw every frame (smooth) or only at the text rate (much smaller files). */
+  panelRate: 'smooth' | 'text';
 }
 
 export const DEFAULT_STYLE: OverlayStyle = {
@@ -145,6 +147,7 @@ export const DEFAULT_STYLE: OverlayStyle = {
   chartDistance: 10,
   panels: {},
   ftp: 250,
+  panelRate: 'smooth',
 };
 
 /** Context shared by all frames of one overlay render. */
@@ -174,5 +177,7 @@ export interface OverlayDefinition {
   size(style: OverlayStyle): { width: number; height: number };
   /** Text-only overlays are constant between text updates (render can reuse frames). */
   textOnly: boolean;
+  /** Overlay that, with this style, also changes only at the text rate (e.g. panels in "text" mode). */
+  textRateOnly?: (style: OverlayStyle) => boolean;
   draw(ctx: Ctx2D, frame: FrameState, style: OverlayStyle, octx: OverlayContext): void;
 }

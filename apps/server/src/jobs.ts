@@ -2,7 +2,9 @@ import { EventEmitter } from 'node:events';
 import { availableParallelism } from 'node:os';
 import { join } from 'node:path';
 import {
+  cappedFps,
   compositeSize,
+  outputExtension,
   resolveLayout,
   type GadgetLayout,
   getOverlay,
@@ -39,6 +41,8 @@ export interface RenderRequest {
   layout: GadgetLayout;
   /** Short side of the composite in px (1080 = Full HD). */
   compositeShortSide: number;
+  /** Cap on the overlay frame rate (0 = same as the clip). */
+  maxFps: number;
 }
 
 export type TaskStatus = 'queued' | 'running' | 'done' | 'error' | 'cancelled';
@@ -100,7 +104,7 @@ export class Job extends EventEmitter {
         this.tasks.push({
           clipId: clip.id,
           overlay,
-          outPath: join(this.rideDir, base, req.format === 'png' ? name : `${name}.mov`),
+          outPath: join(this.rideDir, base, `${name}${outputExtension(req.format)}`),
           status: 'queued',
           progress: 0,
         });
@@ -150,6 +154,7 @@ export class Job extends EventEmitter {
               compositeHeight: size.height,
             };
           } else getOverlay(task.overlay); // validates the id
+          const rate = cappedFps(clip.fps, clip.frameCount, this.req.maxFps);
           await renderInWorker(
             {
               ride: this.ride,
@@ -159,8 +164,8 @@ export class Job extends EventEmitter {
               clipStart: clip.startUtcMs,
               clipEnd: clip.startUtcMs + clip.durationMs,
               durationMs: clip.durationMs,
-              fps: clip.fps,
-              frames: clip.frameCount,
+              fps: rate.fps,
+              frames: rate.frames,
               outPath: task.outPath,
               format: this.req.format,
             },

@@ -131,6 +131,8 @@ progress { accent-color: var(--accent); height: 10px; }
 
 .style-form { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end; background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 14px; }
 @media (max-width: 1000px) { .sync-bottom { grid-template-columns: 1fr; } }
+.format-hint { color: var(--muted); font-size: 12px; }
+.format-note { background: var(--panel2); border-left: 3px solid var(--warn); border-radius: 6px; padding: 8px 12px; font-size: 13px; margin: 6px 0; }
 .export-modes { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 10px 0; }
 .export-modes .mode { display: flex; gap: 10px; background: var(--panel2); border: 1px solid var(--border); border-radius: 8px; padding: 10px; cursor: pointer; }
 .export-modes .mode.on { border-color: var(--accent); }

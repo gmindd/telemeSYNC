@@ -1,4 +1,4 @@
-import { frameState, getOverlay, textInstant } from './registry.ts';
+import { changesAtTextRate, frameState, getOverlay, textInstant } from './registry.ts';
 import type { Ctx2D, OverlayContext, OverlayId, OverlayStyle } from './types.ts';
 
 /**
@@ -79,7 +79,7 @@ export function drawComposite(
   }
 }
 
-/** Key that changes only when the composite image can change (text-only sets update at the text rate). */
+/** Key that changes only when the composite image can change (sets that only change at the text rate). */
 export function compositeFrameKey(ids: OverlayId[], t: number, clipStart: number, style: OverlayStyle): number {
-  return ids.every((id) => getOverlay(id).textOnly) ? textInstant(t, clipStart, style.textRateHz) : t;
+  return ids.every((id) => changesAtTextRate(getOverlay(id), style)) ? textInstant(t, clipStart, style.textRateHz) : t;
 }

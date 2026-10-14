@@ -17,6 +17,7 @@ import { formatDateTime, formatDuration } from '../util/timezone.ts';
 import { readClipMetadataFromPath } from '../node/fileSource.ts';
 import { renderOverlay } from '../node/render.ts';
 import type { Fps } from '../media/types.ts';
+import { isOutputFormat, outputExtension } from '../export/formats.ts';
 
 function parseFps(s: string): Fps {
   const [n, d] = s.split('/').map(Number);
@@ -70,8 +71,8 @@ async function main() {
 
   const def = getOverlay(values.metric as OverlayId);
   if (!ride.available.has(def.requires)) throw new Error(`A métrica ${def.id} não existe neste ficheiro.`);
-  const format = values.format === 'png' ? 'png' : 'prores';
-  const outPath = join(resolve(values.out), format === 'png' ? `${clipName}_${OVERLAY_FILE_SLUG[def.id]}` : `${OVERLAY_FILE_SLUG[def.id]}.mov`);
+  const format = isOutputFormat(values.format) ? values.format : 'prores';
+  const outPath = join(resolve(values.out), format === 'png' ? `${clipName}_${OVERLAY_FILE_SLUG[def.id]}` : `${OVERLAY_FILE_SLUG[def.id]}${outputExtension(format)}`);
   const style = { ...DEFAULT_STYLE, scale: Number(values.scale) };
   const t0 = Date.now();
   let lastPct = -1;

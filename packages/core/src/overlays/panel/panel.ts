@@ -556,8 +556,11 @@ function makePanel(metric: PanelMetric): OverlayDefinition {
     label: `Painel · ${info.label}`,
     requires: metric,
     textOnly: false,
+    textRateOnly: (style) => style.panelRate === 'text',
     size: () => ({ width: W, height: H }),
-    draw: (ctx: Ctx2D, frame: FrameState, style: OverlayStyle, octx: OverlayContext) => {
+    draw: (ctx: Ctx2D, fullFrame: FrameState, style: OverlayStyle, octx: OverlayContext) => {
+      // "text" mode: gauge and chart move with the numbers, so every frame between updates is identical.
+      const frame = style.panelRate === 'text' ? { t: fullFrame.textSample.t, sample: fullFrame.textSample, textSample: fullFrame.textSample } : fullFrame;
       const ride = octx.ride;
       const p = paintOf(style);
       const opts = panelOptions(metric, style, ride);
