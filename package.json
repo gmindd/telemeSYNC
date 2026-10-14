@@ -19,7 +19,8 @@
     "typecheck": "tsc -p packages/core && tsc -p apps/server && tsc -p apps/web",
     "poc": "tsx packages/core/src/cli/poc.ts",
     "inspect": "tsx packages/core/src/cli/inspect.ts",
-    "contact-sheet": "tsx packages/core/src/cli/contactSheet.ts"
+    "contact-sheet": "tsx packages/core/src/cli/contactSheet.ts",
+    "site:shots": "tsx packages/core/src/cli/siteShots.ts"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",

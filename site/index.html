@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>telemeSYNC · Telemetria de BTT por cima dos seus vídeos</title>
+  <meta name="description" content="telemeSYNC é um programa gratuito que sincroniza a telemetria do seu ciclocomputador (FIT/GPX) com os vídeos da action cam e gera overlays transparentes: velocidade, inclinação, mapa, altimetria, frequência cardíaca e painéis.">
+  <meta property="og:title" content="telemeSYNC · Telemetria de BTT por cima dos seus vídeos">
+  <meta property="og:description" content="Gratuito. Sincroniza o FIT/GPX com os clips da GoPro, DJI ou Insta360 e gera overlays transparentes prontos para o editor de vídeo.">
+  <meta property="og:image" content="assets/images/hero-composicao.webp">
+  <meta name="theme-color" content="#0b0f14">
+  <link rel="icon" href="assets/images/favicon.svg" type="image/svg+xml">
+  <link rel="preload" href="assets/fonts/Inter-800.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="style.css">
+  <script src="script.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#conteudo">Saltar para o conteúdo</a>
+
+  <header class="site-header">
+    <div class="container site-header__inner">
+      <a class="brand" href="#topo" aria-label="telemeSYNC, início">tele<em>me</em>SYNC</a>
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="menu" aria-label="Abrir menu">
+        <span></span><span></span><span></span>
+      </button>
+      <nav class="site-nav" id="menu" aria-label="Navegação principal">
+        <a href="#layers">Layers</a>
+        <a href="#demo">Demonstração</a>
+        <a href="#roadmap">Roadmap</a>
+        <a href="#novidades">Novidades</a>
+        <a class="btn btn--small btn--coffee" href="#apoiar">☕ Apoiar</a>
+        <a class="btn btn--small btn--primary" href="#download">Download</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="conteudo">
+    <!-- Hero -->
+    <section class="hero" id="topo">
+      <div class="container hero__grid">
+        <div class="hero__text">
+          <p class="eyebrow">Gratuito · Windows 10/11</p>
+          <h1>A telemetria das suas voltas de BTT, <span class="accent">por cima dos seus vídeos</span>.</h1>
+          <p class="lead">
+            O telemeSYNC sincroniza o ficheiro do ciclocomputador (FIT ou GPX) com os clips da action cam e gera gráficos transparentes:
+            velocidade, inclinação, mapa, altimetria, frequência cardíaca e painéis completos. Arraste-os para o editor e já está.
+          </p>
+          <div class="hero__actions">
+            <a class="btn btn--primary btn--big js-download" href="https://github.com/gmindd/telemeSYNC/raw/downloads/telemeSYNC-windows.zip">
+              <span>Descarregar v<span class="js-version">0.3.1</span></span>
+            </a>
+            <a class="btn btn--ghost btn--big" href="#demo">Ver demonstração</a>
+          </div>
+          <ul class="checks">
+            <li>Os vídeos nunca saem do seu computador</li>
+            <li>Não é preciso instalar nada: extrair e abrir</li>
+            <li>GoPro, DJI Osmo Action, Insta360 · Bryton, Garmin, iGPSPORT</li>
+          </ul>
+        </div>
+        <figure class="hero__frame">
+          <!-- Composição exportada pelo telemeSYNC (fundo transparente) por cima de uma paisagem ilustrativa -->
+          <img src="assets/images/hero-composicao.webp" width="1920" height="1080" alt="Exemplo de composição do telemeSYNC: velocidade, inclinação, mapa da volta e painel de velocidade com o gráfico de altimetria dos últimos 10 km.">
+          <figcaption>Composição real exportada de uma volta, por cima de uma paisagem ilustrativa.</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <!-- Como funciona -->
+    <section class="section" id="como-funciona" aria-labelledby="como-titulo">
+      <div class="container">
+        <h2 id="como-titulo">Como funciona</h2>
+        <ol class="steps">
+          <li class="step">
+            <span class="step__n">1</span>
+            <h3>Telemetria</h3>
+            <p>Carregue o FIT ou GPX do ciclocomputador. Aparece o resumo da volta e as métricas disponíveis.</p>
+          </li>
+          <li class="step">
+            <span class="step__n">2</span>
+            <h3>Clips</h3>
+            <p>Arraste todos os vídeos da volta. A câmara e a hora de cada clip são detetadas a partir dos metadados.</p>
+          </li>
+          <li class="step">
+            <span class="step__n">3</span>
+            <h3>Sincronizar</h3>
+            <p>Confirme o alinhamento numa timeline com o vídeo e os gráficos ao vivo. Um ajuste por câmara alinha todos os clips.</p>
+          </li>
+          <li class="step">
+            <span class="step__n">4</span>
+            <h3>Exportar</h3>
+            <p>Vídeos transparentes com a mesma duração do clip: um por gadget ou tudo numa só composição.</p>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- Apoiar e patrocinar -->
+    <section class="section backers" id="apoiar" aria-labelledby="apoiar-titulo">
+      <div class="container">
+        <div class="backers__intro">
+          <p class="eyebrow">Gratuito graças a quem apoia</p>
+          <h2 id="apoiar-titulo">Ajude o telemeSYNC a continuar</h2>
+          <p class="section__lead">
+            O telemeSYNC é gratuito e vai continuar a ser. Cada café e cada patrocínio pagam as horas de desenvolvimento:
+            mais câmaras e ciclocomputadores, novos gadgets e exportações cada vez melhores.
+          </p>
+        </div>
+
+        <div class="backers__grid">
+          <article class="backer-card backer-card--coffee" aria-labelledby="cafe-titulo">
+            <span class="backer-card__icon" aria-hidden="true">☕</span>
+            <h3 id="cafe-titulo">Pague-me um café</h3>
+            <p>Um apoio pontual, do valor que quiser, através do Buy Me a Coffee. Demora um minuto e faz mesmo diferença.</p>
+            <a class="btn btn--coffee btn--big" href="https://buymeacoffee.com/pereiragabriel" target="_blank" rel="noopener">☕ Pague-me um café</a>
+            <p class="fine">Contribuição voluntária, sem contrapartida. Não é um donativo fiscalmente dedutível.</p>
+            <div class="supporters" aria-labelledby="apoiantes-titulo">
+              <h4 id="apoiantes-titulo">Últimos apoiantes</h4>
+              <ul class="supporters__list js-supporters" aria-live="polite">
+                <li class="supporters__empty">A carregar…</li>
+              </ul>
+            </div>
+          </article>
+
+          <article class="backer-card backer-card--sponsor" id="patrocinadores" aria-labelledby="patrocinadores-titulo">
+            <span class="backer-card__icon" aria-hidden="true">★</span>
+            <h3 id="patrocinadores-titulo">Patrocine o projeto</h3>
+            <p>
+              Anunciar a sua empresa neste espaço é uma forma de apoiar o projeto e a continuação do desenvolvimento.
+              Lojas de bicicletas, marcas de equipamento, eventos de BTT e empresas de turismo ativo chegam aqui
+              a quem filma e partilha as suas voltas.
+            </p>
+            <a class="btn btn--primary btn--big" href="mailto:hello@pereiragabriel.com?subject=Patroc%C3%ADnio%20telemeSYNC">Quero patrocinar</a>
+            <p class="fine">Condições por email. Os patrocínios são sempre identificados como tal.</p>
+          </article>
+        </div>
+
+        <h3 class="sponsors__title">Patrocinadores</h3>
+        <div class="sponsors">
+          <a class="sponsor-slot" href="mailto:hello@pereiragabriel.com?subject=Patroc%C3%ADnio%20telemeSYNC">
+            <span class="sponsor-slot__plus" aria-hidden="true">+</span>
+            <span>O logótipo da sua empresa aqui</span>
+          </a>
+          <a class="sponsor-slot" href="mailto:hello@pereiragabriel.com?subject=Patroc%C3%ADnio%20telemeSYNC">
+            <span class="sponsor-slot__plus" aria-hidden="true">+</span>
+            <span>Espaço disponível</span>
+          </a>
+          <a class="sponsor-slot" href="mailto:hello@pereiragabriel.com?subject=Patroc%C3%ADnio%20telemeSYNC">
+            <span class="sponsor-slot__plus" aria-hidden="true">+</span>
+            <span>Espaço disponível</span>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Layers -->
+    <section class="section" id="layers" aria-labelledby="layers-titulo">
+      <div class="container">
+        <h2 id="layers-titulo">Os layers</h2>
+        <p class="section__lead">
+          Cada gadget é exportado como um vídeo com fundo transparente. Escolha as métricas, as cores e o gradiente,
+          e posicione-os no editor ou deixe o telemeSYNC fazer a composição.
+        </p>
+
+        <h3 class="gallery__title">Painéis</h3>
+        <p class="muted">Mostrador, máximo, média, zona ou aceleração, e um gráfico dos últimos 10 min ou 10 km. O gráfico pode mostrar outra métrica.</p>
+        <div class="gallery gallery--wide">
+          <figure class="shot">
+            <img src="assets/images/painel-velocidade.webp" width="1500" height="420" loading="lazy" alt="Painel de velocidade com mostrador, velocidade máxima e média, aceleração e gráfico de altimetria dos últimos 10 km.">
+            <figcaption>Velocidade, com o gráfico de altimetria dos últimos 10 km</figcaption>
+          </figure>
+          <figure class="shot">
+            <img src="assets/images/painel-fc.webp" width="1500" height="420" loading="lazy" alt="Painel de frequência cardíaca com zona atual e gráfico dos últimos 10 minutos.">
+            <figcaption>Frequência cardíaca com zonas</figcaption>
+          </figure>
+          <figure class="shot">
+            <img src="assets/images/painel-altitude.webp" width="1500" height="420" loading="lazy" alt="Painel de altitude com gradiente verde e azul, máximo, mínimo e desnível acumulado.">
+            <figcaption>Altitude, com outro gradiente de cores</figcaption>
+          </figure>
+          <figure class="shot">
+            <img src="assets/images/painel-temperatura.webp" width="1500" height="420" loading="lazy" alt="Painel de temperatura com mínimo, máximo e variação.">
+            <figcaption>Temperatura</figcaption>
+          </figure>
+        </div>
+
+        <h3 class="gallery__title">Gadgets</h3>
+        <div class="gallery">
+          <figure class="shot">
+            <img src="assets/images/mapa.webp" width="630" height="630" loading="lazy" alt="Mapa do traçado da volta com a parte já percorrida destacada.">
+            <figcaption>Mapa do traçado</figcaption>
+          </figure>
+          <figure class="shot">
+            <img src="assets/images/perfil.webp" width="960" height="300" loading="lazy" alt="Perfil de altimetria da volta com a posição atual.">
+            <figcaption>Perfil de altimetria</figcaption>
+          </figure>
+          <figure class="shot">
+            <img src="assets/images/texto-speed.webp" loading="lazy" alt="Gadget de velocidade em km/h.">
+            <figcaption>Velocidade</figcaption>
+          </figure>
+          <figure class="shot">
+            <img src="assets/images/texto-grade.webp" loading="lazy" alt="Gadget de inclinação em percentagem, com indicador por cor.">
+            <figcaption>Inclinação</figcaption>
+          </figure>
+          <figure class="shot">
+            <img src="assets/images/texto-heartRate.webp" loading="lazy" alt="Gadget de frequência cardíaca colorido pela zona.">
+            <figcaption>Frequência cardíaca</figcaption>
+          </figure>
+          <figure class="shot">
+            <img src="assets/images/texto-distance.webp" loading="lazy" alt="Gadget de distância percorrida em km.">
+            <figcaption>Distância</figcaption>
+          </figure>
+        </div>
+      </div>
+    </section>
+
+    <!-- Demonstração -->
+    <section class="section section--alt" id="demo" aria-labelledby="demo-titulo">
+      <div class="container container--narrow">
+        <h2 id="demo-titulo">Demonstração</h2>
+        <p class="section__lead">Do ficheiro do ciclocomputador ao vídeo final em poucos minutos.</p>
+        <!-- O ID do vídeo do YouTube é definido em script.js (SITE_CONFIG.youtubeId) -->
+        <div class="video js-video">
+          <button class="video__play" type="button" aria-label="Reproduzir a demonstração no YouTube">
+            <span class="video__icon" aria-hidden="true"></span>
+            <span class="video__label js-video-label">Vídeo de demonstração em breve</span>
+          </button>
+        </div>
+        <p class="fine">O vídeo é carregado a partir do YouTube (modo de privacidade reforçada) só quando carrega em reproduzir.</p>
+      </div>
+    </section>
+
+    <!-- Download -->
+    <section class="section" id="download" aria-labelledby="download-titulo">
+      <div class="container download">
+        <div>
+          <h2 id="download-titulo">Download</h2>
+          <p class="section__lead">Versão <span class="js-version">0.3.1</span> para Windows 10/11 (64 bits) · cerca de 86 MB · gratuita.</p>
+          <ol class="download__steps">
+            <li>Descarregue e extraia o ZIP (botão direito → <em>Extrair tudo</em>).</li>
+            <li>Faça duplo clique em <b>Iniciar telemeSYNC.bat</b>. A aplicação abre no browser.</li>
+            <li>Mantenha a janela preta aberta enquanto usa o programa.</li>
+          </ol>
+        </div>
+        <div class="download__actions">
+          <a class="btn btn--primary btn--big js-download" href="https://github.com/gmindd/telemeSYNC/raw/downloads/telemeSYNC-windows.zip">Descarregar telemeSYNC</a>
+          <a class="btn btn--ghost" href="https://github.com/gmindd/telemeSYNC/raw/downloads/Instrucoes-telemeSYNC.pdf">Instruções em PDF</a>
+          <p class="fine">Ao descarregar aceita os termos de utilização incluídos no ficheiro LICENCA.txt.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Roadmap -->
+    <section class="section section--alt" id="roadmap" aria-labelledby="roadmap-titulo">
+      <div class="container container--narrow">
+        <h2 id="roadmap-titulo">Roadmap</h2>
+        <p class="section__lead">Em que estou a trabalhar neste momento.</p>
+        <ul class="roadmap">
+          <li class="roadmap__item">
+            <span class="tag tag--progress">Em curso</span>
+            <h3>Melhoria do algoritmo de sincronização automática</h3>
+            <p>Menos ajustes manuais: alinhar os clips com a telemetria de forma mais fiável, em mais câmaras.</p>
+          </li>
+          <li class="roadmap__item">
+            <span class="tag tag--progress">Em curso</span>
+            <h3>Melhoria dos formatos de exportação e do tamanho dos ficheiros</h3>
+            <p>Ficheiros mais leves e compatíveis com mais editores de vídeo.</p>
+          </li>
+          <li class="roadmap__item">
+            <span class="tag tag--progress">Em curso</span>
+            <h3>Novos designs e gadgets</h3>
+            <p>Mais estilos de painéis e novos gadgets para mostrar a telemetria.</p>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- Novidades -->
+    <section class="section" id="novidades" aria-labelledby="novidades-titulo">
+      <div class="container container--narrow">
+        <h2 id="novidades-titulo">Novidades</h2>
+        <div class="changelog">
+          <article class="release">
+            <header class="release__head">
+              <h3>Versão 0.3.1</h3>
+              <time datetime="2026-10-14">14 de outubro de 2026</time>
+            </header>
+            <ul>
+              <li><b>Ficheiros até 10× mais leves:</b> o formato predefinido passa a ser QuickTime Animation (.mov, sem perdas). Uma composição Full HD de 21 minutos passa de cerca de 19 GB para cerca de 1,8 GB.</li>
+              <li><b>Escolha do formato de exportação:</b> QuickTime Animation, ProRes 4444, FFV1 (.mkv, para o DaVinci Resolve), WebM VP9 (experimental) e sequência PNG, com indicação dos editores que mantêm a transparência.</li>
+              <li><b>Máximo 30 fps:</b> com clips a 50/60 fps, os overlays podem ser exportados a metade do frame rate (metade do tamanho), sem perder o alinhamento com o vídeo.</li>
+              <li><b>Painéis ao ritmo dos números:</b> o mostrador e o gráfico atualizam com os números, o que deixa os ficheiros dos painéis cerca de 3× mais leves e mais rápidos a renderizar.</li>
+            </ul>
+          </article>
+          <article class="release">
+            <header class="release__head">
+              <h3>Versão 0.3.0</h3>
+              <time datetime="2026-10-14">14 de outubro de 2026</time>
+            </header>
+            <ul>
+              <li><b>Painéis:</b> mostrador, estatísticas da volta e gráfico recente para velocidade, potência, frequência cardíaca, cadência, temperatura, altitude e inclinação.</li>
+              <li>Gradiente de duas cores à escolha, fundo ajustável e zonas de potência a partir do FTP.</li>
+              <li>O gráfico de cada painel pode mostrar outra métrica, nos últimos minutos ou quilómetros.</li>
+              <li>Corrigido: a exportação falhava na versão para Windows.</li>
+            </ul>
+          </article>
+          <article class="release">
+            <header class="release__head">
+              <h3>Versão 0.2.0</h3>
+              <time datetime="2026-10-14">14 de outubro de 2026</time>
+            </header>
+            <ul>
+              <li>Página de boas-vindas, avisos legais e ligação de apoio.</li>
+              <li>Leitura de ficheiros FIT com descodificador próprio.</li>
+            </ul>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- Sobre o autor -->
+    <section class="section section--alt" id="autor" aria-labelledby="autor-titulo">
+      <div class="container container--narrow author">
+        <div class="author__avatar" aria-hidden="true">GP</div>
+        <div>
+          <h2 id="autor-titulo">Feito por Gabriel Pereira</h2>
+          <p class="author__role">Web designer e consultor digital</p>
+          <p>
+            O telemeSYNC nasceu da vontade de juntar duas paixões: o BTT e o digital bem feito. É o mesmo cuidado que ponho nos projetos
+            para empresas e profissionais: websites e landing pages, product design e desenvolvimento, automações e estratégia digital.
+            Mais de 20 projetos entregues, em Portugal e no estrangeiro, entre eles o site, a loja online e o aluguer de bicicletas da ViaBike, no Caminho de Santiago.
+          </p>
+          <p>O telemeSYNC é freeware. Se precisa de um site ou de um projeto digital, conheça os meus serviços.</p>
+          <div class="author__actions">
+            <a class="btn btn--primary" href="https://www.pereiragabriel.com/" target="_blank" rel="noopener">Conhecer os serviços ↗</a>
+            <a class="btn btn--ghost" href="mailto:hello@pereiragabriel.com">hello@pereiragabriel.com</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container site-footer__inner">
+      <p>© 2026 <a href="https://www.pereiragabriel.com/" target="_blank" rel="noopener">Gabriel Pereira</a> · telemeSYNC é gratuito (freeware).</p>
+      <p class="visits js-visits" hidden>
+        <span class="visits__dot" aria-hidden="true"></span>
+        <span><b class="js-visits-count">—</b> visitas a esta página</span>
+      </p>
+      <p><a href="legal.html">Aviso legal, termos e privacidade</a></p>
+      <p class="fine">
+        GoPro, DJI, Insta360, Garmin, Bryton, iGPSPORT, DaVinci Resolve, Premiere Pro e Final Cut Pro são marcas dos respetivos titulares,
+        referidas apenas para indicar compatibilidade. Estatísticas de visitas anónimas, sem cookies.
+      </p>
+    </div>
+  </footer>
+</body>
+</html>

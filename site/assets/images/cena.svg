@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice">
+  <!-- Ilustração de fundo (céu ao fim da tarde e serra), usada atrás das imagens transparentes -->
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1b2a44"/>
+      <stop offset="0.55" stop-color="#6a4a5e"/>
+      <stop offset="0.85" stop-color="#d9824a"/>
+    </linearGradient>
+    <linearGradient id="far" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#4b4560"/>
+      <stop offset="1" stop-color="#2c2b3c"/>
+    </linearGradient>
+    <linearGradient id="mid" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#26303a"/>
+      <stop offset="1" stop-color="#1a2128"/>
+    </linearGradient>
+    <linearGradient id="trail" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#7a5a40"/>
+      <stop offset="1" stop-color="#3a2a1e"/>
+    </linearGradient>
+  </defs>
+  <rect width="1600" height="900" fill="url(#sky)"/>
+  <circle cx="1180" cy="520" r="90" fill="#ffb35c" opacity="0.55"/>
+  <path d="M0 560 L180 470 L330 520 L520 410 L700 500 L880 430 L1060 520 L1250 440 L1430 500 L1600 450 L1600 900 L0 900Z" fill="url(#far)"/>
+  <path d="M0 650 L150 600 L300 640 L470 560 L640 630 L820 590 L1000 660 L1190 600 L1380 650 L1600 610 L1600 900 L0 900Z" fill="url(#mid)"/>
+  <path d="M0 900 L0 760 L220 720 L480 760 L760 700 L1040 760 L1320 730 L1600 770 L1600 900Z" fill="#141a20"/>
+  <path d="M600 900 C700 820 760 760 790 720 L815 720 C860 770 980 840 1120 900Z" fill="url(#trail)" opacity="0.85"/>
+</svg>
