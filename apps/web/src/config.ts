@@ -5,7 +5,9 @@ export const APP_INFO = {
   author: 'Gabriel Pereira',
   website: 'https://www.pereiragabriel.com/',
   websiteLabel: 'pereiragabriel.com',
+  role: 'Web designer e consultor digital',
+  email: 'hello@pereiragabriel.com',
   /** Buy Me a Coffee page, e.g. https://buymeacoffee.com/<utilizador>. Empty = button hidden. */
-  donateUrl: '',
+  donateUrl: 'https://buymeacoffee.com/pereiragabriel',
   year: 2026,
 };

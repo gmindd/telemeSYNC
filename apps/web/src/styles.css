@@ -178,3 +178,7 @@ footer { display: flex; justify-content: space-between; align-items: center; gap
 table.licenses { width: 100%; border-collapse: collapse; font-size: 13px; margin: 6px 0; }
 table.licenses td { padding: 3px 6px; border-bottom: 1px solid var(--border); }
 @media (max-width: 900px) { .hero, .promo-grid { grid-template-columns: 1fr; } .how { grid-template-columns: 1fr 1fr; } }
+.promo-role { margin-top: -6px; color: var(--accent) !important; font-weight: 600; font-size: 13px; }
+.services { list-style: none; padding: 0; margin: 8px 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.services li { background: var(--panel2); border: 1px solid var(--border); border-radius: 14px; padding: 3px 10px; font-size: 12px; }
+.promo-actions { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; margin-top: 10px; }

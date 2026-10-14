@@ -66,13 +66,27 @@ export function StepWelcome({ onAbout }: { onAbout: () => void }) {
       <div className="promo-grid">
         <div className="card promo">
           <h3>Feito por {APP_INFO.author}</h3>
+          <p className="promo-role">{APP_INFO.role}</p>
           <p>
-            O {APP_INFO.name} foi criado por um freelancer que também anda de BTT. Precisa de um projeto à medida para o seu negócio, clube ou evento? Conheça os
-            meus serviços.
+            O {APP_INFO.name} nasceu da vontade de juntar duas paixões: o BTT e o digital bem feito. É o mesmo cuidado que ponho nos projetos para empresas e
+            profissionais — pensado, discutido e bem construído.
           </p>
-          <WebsiteLink>
-            <span className="link-btn">Visitar {APP_INFO.websiteLabel} ↗</span>
-          </WebsiteLink>
+          <ul className="services">
+            <li>Websites &amp; landing pages</li>
+            <li>Product design &amp; desenvolvimento</li>
+            <li>Automações &amp; workflows</li>
+            <li>Estratégia digital &amp; SEO</li>
+          </ul>
+          <p className="muted">
+            Mais de 20 projetos entregues, em Portugal e no estrangeiro — entre eles o site, a loja online e o aluguer de bicicletas da ViaBike, no Caminho de
+            Santiago.
+          </p>
+          <div className="promo-actions">
+            <WebsiteLink>
+              <span className="link-btn">Conhecer os serviços ↗</span>
+            </WebsiteLink>
+            <a href={`mailto:${APP_INFO.email}`}>{APP_INFO.email}</a>
+          </div>
         </div>
         <div className="card promo support">
           <h3>Apoie o projeto</h3>

@@ -30,7 +30,8 @@ export function AboutDialog({ onClose }: { onClose: () => void }) {
           {APP_INFO.name} <span className="muted">v{APP_INFO.version}</span>
         </h2>
         <p>
-          Gerador de overlays de telemetria para vídeos de BTT. © {APP_INFO.year} {APP_INFO.author} — <WebsiteLink />
+          Gerador de overlays de telemetria para vídeos de BTT. © {APP_INFO.year} {APP_INFO.author} — <WebsiteLink /> ·{' '}
+          <a href={`mailto:${APP_INFO.email}`}>{APP_INFO.email}</a>
         </p>
         <DonateButton />
 
@@ -87,7 +88,7 @@ export function AboutDialog({ onClose }: { onClose: () => void }) {
         </table>
         <p className="fine">
           A lista completa e os textos das licenças estão no ficheiro <code>LICENCAS-TERCEIROS.txt</code> incluído no pacote. O FFmpeg é distribuído sob a GPL-3.0;
-          o respetivo código-fonte está disponível em ffmpeg.org e, mediante pedido ao autor através de {APP_INFO.websiteLabel}, durante pelo menos três anos.
+          o respetivo código-fonte está disponível em ffmpeg.org e, mediante pedido ao autor ({APP_INFO.email}), durante pelo menos três anos.
         </p>
       </div>
     </div>

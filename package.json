@@ -1,7 +1,7 @@
 {
   "name": "telemesync",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Gerador de overlays de telemetria para vídeos de BTT",
   "type": "module",
   "workspaces": [

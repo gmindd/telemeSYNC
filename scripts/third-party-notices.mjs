@@ -45,7 +45,7 @@ FFmpeg (executável ffmpeg.exe, não modificado) — GPL-3.0
 Compilação estática distribuída pelo pacote ffmpeg-static (https://github.com/eugeneware/ffmpeg-static).
 Código-fonte do FFmpeg: https://ffmpeg.org/download.html (e https://git.ffmpeg.org/ffmpeg.git).
 Oferta escrita: durante pelo menos três anos a contar da distribuição, o autor do telemeSYNC fornece,
-mediante pedido através de https://www.pereiragabriel.com/, uma cópia do código-fonte correspondente do
+mediante pedido para hello@pereiragabriel.com, uma cópia do código-fonte correspondente do
 FFmpeg incluído, sem outro custo além do da sua disponibilização.
 ${sep}
 Node.js (runtime\\node.exe) — MIT e outras (ver runtime\\LICENSE)
