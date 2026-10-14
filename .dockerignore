@@ -2,3 +2,4 @@
 !site/
 !scripts/fetch-supporters.mjs
 !scripts/supporters-loop.sh
+!scripts/nginx-site.conf
