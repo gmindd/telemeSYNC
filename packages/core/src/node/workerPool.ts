@@ -1,6 +1,4 @@
 import { Worker } from 'node:worker_threads';
-import { createRequire } from 'node:module';
-import { pathToFileURL } from 'node:url';
 import type { Fps } from '../media/types.ts';
 import type { OverlayId, OverlayStyle } from '../overlays/types.ts';
 import type { GadgetPlacement } from '../overlays/layout.ts';
@@ -25,17 +23,15 @@ export interface WorkerJob {
   format: OutputFormat;
 }
 
-function tsLoaderArgs(): string[] {
-  // Source files are TypeScript; make sure the worker can load them (tsx), unless already compiled.
-  if (import.meta.url.endsWith('.js')) return [];
-  const req = createRequire(import.meta.url);
-  return ['--import', pathToFileURL(req.resolve('tsx/esm')).href];
+/** Worker entry: the compiled worker, or a JS boot file that loads the TypeScript worker through tsx. */
+function workerEntry(): URL {
+  return new URL(import.meta.url.endsWith('.js') ? './renderWorker.js' : './renderWorkerBoot.mjs', import.meta.url);
 }
 
 /** Runs one overlay render in a worker thread. */
 export function renderInWorker(job: WorkerJob, opts: { signal?: AbortSignal; onProgress?: (f: number) => void } = {}): Promise<void> {
   return new Promise((resolve, reject) => {
-    const worker = new Worker(new URL('./renderWorker.ts', import.meta.url), { workerData: job, execArgv: tsLoaderArgs() });
+    const worker = new Worker(workerEntry(), { workerData: job });
     let settled = false;
     const finish = (err?: Error) => {
       if (settled) return;

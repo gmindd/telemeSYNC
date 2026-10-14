@@ -3,7 +3,8 @@
 # Testers only extract the ZIP and double-click "Iniciar telemeSYNC.bat".
 #   usage: scripts/package-windows.sh [out-dir]
 set -euo pipefail
-ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+# `pwd -W` (Git Bash on Windows) gives F:/… so the path also works inside node -p/-e strings.
+ROOT="$(cd "$(dirname "$0")/.." && (pwd -W 2>/dev/null || pwd))"
 OUT="${1:-$ROOT/dist-release}"
 VERSION="$(node -p "require('$ROOT/package.json').version")"
 NODE_VERSION="${NODE_VERSION:-22.22.0}"
