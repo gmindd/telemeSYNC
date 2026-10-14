@@ -10,7 +10,9 @@ export const CAMERA_PROFILES: Record<CameraProfileId, CameraProfile> = {
     id: 'dji',
     label: 'DJI Osmo Action',
     resolvers: ['manual', 'filename', 'creationTime'],
-    creationTime: { clock: 'local', marks: 'start' },
+    // Osmo Action (2026-10, DJI_20261011094817_0011_D.MP4): Windows shows "media created" 09:48 local
+    // = creation_time 08:48 UTC → real UTC, start of recording, consistent with the file name.
+    creationTime: { clock: 'utc', marks: 'start' },
     verified: false,
     color: '#e53935',
   },

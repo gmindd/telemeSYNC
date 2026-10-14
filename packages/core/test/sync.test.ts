@@ -81,12 +81,20 @@ describe('timestamp resolvers', () => {
     expect(resolveStart(m, { profile, timeZone: tz }).startUtcMs).toBe(Date.UTC(2024, 5, 15, 9, 30, 0));
   });
   it('DJI: file name first, creation_time kept as an alternative', () => {
-    const m = meta({ fileName: 'DJI_20240615103005_0001_D.MP4', creationTimeRawMs: Date.UTC(2024, 5, 15, 10, 30, 5) });
+    const m = meta({ fileName: 'DJI_20240615103005_0001_D.MP4', creationTimeRawMs: Date.UTC(2024, 5, 15, 9, 30, 5) });
     const r = resolveStart(m, { profile: CAMERA_PROFILES.dji, timeZone: tz });
     expect(r.source).toBe('filename');
     expect(r.startUtcMs).toBe(Date.UTC(2024, 5, 15, 9, 30, 5));
     expect(r.candidates.map((c) => c.resolver)).toEqual(['filename', 'creationTime']);
   });
+  it('DJI Osmo Action real file: name (local) and creation_time (UTC) agree', () => {
+    // DJI_20261011094817_0011_D.MP4, 1:25; Windows "Suporte criado" 11/10/2026 09:48 (Lisbon, UTC+1)
+    const m = meta({ fileName: 'DJI_20261011094817_0011_D.MP4', durationMs: 85_000, creationTimeRawMs: Date.UTC(2026, 9, 11, 8, 48, 17) });
+    const r = resolveStart(m, { profile: CAMERA_PROFILES.dji, timeZone: tz });
+    expect(r.startUtcMs).toBe(Date.UTC(2026, 9, 11, 8, 48, 17));
+    expect(r.candidates.map((c) => c.startUtcMs)).toEqual([Date.UTC(2026, 9, 11, 8, 48, 17), Date.UTC(2026, 9, 11, 8, 48, 17)]);
+  });
+
   it('manual overrides everything', () => {
     const m = meta({ fileName: 'DJI_20240615103005_0001_D.MP4' });
     const r = resolveStart(m, { profile: CAMERA_PROFILES.dji, timeZone: tz, manualStartUtcMs: 123_000 });
