@@ -37,4 +37,6 @@ export interface RawTelemetry {
   /** Offset between device local time and UTC at the start of the activity, if known (ms). */
   localOffsetMs?: number;
   samples: RawSample[];
+  /** Names of the fields found in FIT record messages (diagnostics). */
+  recordFields?: string[];
 }

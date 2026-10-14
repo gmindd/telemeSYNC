@@ -1,0 +1,92 @@
+# telemeSYNC
+
+Gerador de overlays de telemetria para vídeos de BTT. A partir de um ficheiro **FIT/GPX** (Bryton, Garmin, iGPSPORT…) e dos clips das action cams (**DJI Osmo Action, GoPro, Insta360**), gera **por clip e por métrica** um vídeo transparente (ProRes 4444 com alfa) com a mesma duração e fps do clip. No editor (DaVinci Resolve, Premiere Pro, Final Cut Pro) basta arrastá-lo para cima do clip.
+
+- Os vídeos **nunca são enviados** para lado nenhum: o browser lê só os metadados (duração, fps, datas).
+- Tudo corre localmente no seu computador.
+
+## Instalação no Windows
+
+1. **Instale o Node.js** (versão 20 ou superior, recomendada a LTS): <https://nodejs.org/pt> → botão "LTS" → instalar com as opções por defeito.
+2. **Descarregue o projeto**:
+   - com Git: `git clone https://github.com/gmindd/telemeSYNC.git`, ou
+   - no GitHub: botão verde **Code → Download ZIP**, e extraia o ZIP (por exemplo para `Documentos\telemeSYNC`).
+3. Abra a pasta do projeto no **Explorador de Ficheiros**, clique na barra de endereço, escreva `powershell` e carregue em Enter.
+4. Na janela do PowerShell, instale as dependências (só da primeira vez; descarrega o FFmpeg automaticamente):
+   ```powershell
+   npm install
+   ```
+5. Arranque a aplicação:
+   ```powershell
+   npm start
+   ```
+   O browser abre em <http://localhost:5174>. Para terminar, feche a janela do PowerShell (ou `Ctrl+C`).
+
+> Se o PowerShell disser que a execução de scripts está desativada, use a **Linha de Comandos** (`cmd`) em vez do PowerShell, ou execute uma vez `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned`.
+
+### macOS
+
+Instale o Node.js (<https://nodejs.org/pt> ou `brew install node`), depois no Terminal, dentro da pasta do projeto: `npm install` e `npm start`.
+
+## Como usar
+
+1. **Telemetria** — arraste o `.fit` (preferido) ou `.gpx`. Aparece o resumo da volta e as métricas disponíveis.
+2. **Clips** — arraste todos os clips de uma vez (várias câmaras). A câmara é detetada automaticamente; pode mudá-la na lista (inclusive criar uma segunda câmara do mesmo tipo).
+3. **Sincronização** — a timeline mostra a volta (velocidade + altimetria) e os clips como blocos coloridos por câmara.
+   - Arrastar um bloco muda o **offset global da câmara** (alinha todos os clips dessa câmara de uma vez). Com **Alt** ajusta só esse clip.
+   - Botões ±1 min / ±1 s / ±0,1 s para afinar.
+   - Selecione um clip para ver o vídeo com os overlays por cima, ao vivo. Valide numa **paragem**: a velocidade tem de ir a 0 quando a bicicleta para.
+   - Avisos: clip fora da volta, desvio de exatamente 1 h/2 h (corrige-se com um clique), MP4 exportado do Insta360 Studio, etc.
+4. **Overlays** — escolha as métricas e o estilo (cores, contorno, sombra, unidades métricas/imperiais, °C/°F, resolução…).
+5. **Renderizar** — escolha a pasta de saída (predefinida: `Documentos\telemeSYNC`) e carregue em Renderizar. No fim, **Abrir pasta**.
+
+Estrutura gerada:
+```
+{pasta de saída}/{nome da volta}/{clip}/{clip}_{métrica}.mov
+ex.: Documentos/telemeSYNC/2024-06-15 Sintra/GX010123/GX010123_velocidade.mov
+```
+
+Pode **guardar o projeto** (JSON) e reabri-lo mais tarde; volte a carregar a telemetria e arraste os vídeos para os pré-visualizar.
+
+### Preview de vídeos HEVC (H.265) e .insv
+
+Muitas câmaras gravam em HEVC. O Chrome/Edge no Windows só o reproduzem com as **Extensões de Vídeo HEVC** da Microsoft Store instaladas (o Edge costuma funcionar melhor). Ficheiros `.insv` (360° em bruto) não são reproduzíveis no browser. Nestes casos o preview mostra só os dados, com um slider para percorrer o clip — a sincronização e a exportação funcionam na mesma.
+
+## No editor de vídeo
+
+Os ficheiros são **ProRes 4444 com canal alfa** (`.mov`), com a mesma duração e fps do clip. São renderizados a 2× (configurável) para ficarem nítidos quando os aumenta.
+
+- **DaVinci Resolve**: arraste o `.mov` para a pista acima do clip, alinhado com o início. Se a transparência não aparecer: botão direito no clip na Media Pool → *Clip Attributes* → *Alpha Mode* → *Straight*.
+- **Premiere Pro**: arraste para a pista V2, por cima do clip. O alfa é reconhecido automaticamente.
+- **Final Cut Pro**: arraste como *connected clip* por cima do clip.
+
+## Linha de comandos
+
+```powershell
+# Prova de conceito (Fase 0): um clip + FIT + offset manual → velocidade.mov
+npm run poc -- --fit volta.fit --clip GX010123.MP4 --offset 0 --out saida
+
+# Ver os metadados de ficheiros reais (para validar câmaras / gerar fixtures)
+npm run inspect -- GX010123.MP4 DJI_20240615093005_0001_D.MP4 volta.fit --out fixtures/real
+```
+
+## Desenvolvimento
+
+```powershell
+npm run dev        # servidor (watch) + Vite com hot reload em http://localhost:5173
+npm test           # testes unitários e de integração (Vitest)
+npm run typecheck
+```
+
+- `packages/core` — parsing FIT/GPX, métricas, sincronização, leitor de metadados MP4/MOV e **renderers** dos overlays (partilhados entre preview e exportação).
+- `apps/server` — Fastify: jobs de renderização (worker threads + FFmpeg), progresso por SSE, definições, abrir pasta.
+- `apps/web` — Vite + React: painel, timeline e preview.
+
+Ver também [`docs/architecture.md`](docs/architecture.md) e [`docs/camera-timestamps.md`](docs/camera-timestamps.md).
+
+## Estado
+
+- ✅ Fase 0 — prova de risco (`npm run poc`).
+- ✅ Fase 1 — painel completo (em validação com ficheiros reais).
+- ⏳ Validar o comportamento das datas de cada câmara com ficheiros reais (`docs/camera-timestamps.md`).
+- Parcialmente feito da Fase 2: guardar/abrir projeto, sequência PNG, zonas de FC, estilo guardado no browser.

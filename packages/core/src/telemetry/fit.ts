@@ -68,5 +68,8 @@ export function parseFit(data: ArrayBuffer | Uint8Array, name?: string): RawTele
   const fileId = ((messages as any).fileIdMesgs ?? [])[0];
   const device = fileId ? [fileId.manufacturer, fileId.garminProduct ?? fileId.product].filter(Boolean).join(' ') : undefined;
 
-  return { source: 'fit', name, device: device || undefined, localOffsetMs, samples };
+  const recordFields = new Set<string>();
+  for (const r of records) for (const [k, v] of Object.entries(r)) if (v !== undefined && v !== null) recordFields.add(k);
+
+  return { source: 'fit', name, device: device || undefined, localOffsetMs, samples, recordFields: [...recordFields].sort() };
 }
