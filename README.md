@@ -43,6 +43,7 @@ Instale o Node.js (<https://nodejs.org/pt> ou `brew install node`), depois no Te
    - **Arraste os gadgets** no preview para os posicionar; o canto inferior direito muda o tamanho. *Repor posições* volta ao arranjo inicial.
    - Avisos: clip fora da volta, desvio de exatamente 1 h/2 h (corrige-se com um clique), MP4 exportado do Insta360 Studio, etc.
 4. **Overlays** — escolha as métricas e o estilo (cores, contorno, sombra, unidades métricas/imperiais, °C/°F, resolução…).
+   - **Painéis**: um gadget por métrica com mostrador, máximo/média (ou zona, aceleração, variação) e gráfico dos últimos 10 min ou 10 km, num gradiente de duas cores à escolha. O gráfico pode mostrar outra métrica (ex.: velocidade com a altimetria dos últimos 10 km).
 5. **Renderizar** — escolha a pasta de saída (predefinida: `Documentos\telemeSYNC`), o modo de exportação e carregue em Renderizar. No fim, **Abrir pasta**.
    - **Gadgets separados**: um `.mov` por gadget, do tamanho do gadget — os mesmos ficheiros servem para várias montagens (ex.: filmado em 1:1, recortado para 16:9 no YouTube e 9:16 no Instagram, posicionando cada gadget à mão).
    - **Composição única**: um `.mov` por clip com a proporção do vídeo (720p a 4K, predefinido Full HD) e os gadgets nas posições arrastadas no preview — é só pôr por cima do clip.
