@@ -48,6 +48,8 @@ Instale o Node.js (<https://nodejs.org/pt> ou `brew install node`), depois no Te
    - **Gadgets separados**: um `.mov` por gadget, do tamanho do gadget — os mesmos ficheiros servem para várias montagens (ex.: filmado em 1:1, recortado para 16:9 no YouTube e 9:16 no Instagram, posicionando cada gadget à mão).
    - **Composição única**: um `.mov` por clip com a proporção do vídeo (720p a 4K, predefinido Full HD) e os gadgets nas posições arrastadas no preview — é só pôr por cima do clip.
    - Pode escolher os dois.
+   - **Formato**: por defeito *QuickTime Animation* (.mov, sem perdas, cerca de 10× mais leve do que ProRes; transparência no Premiere Pro e no Final Cut Pro). Se o fundo aparecer preto no editor, exporte em *ProRes 4444* (DaVinci Resolve, CapCut) ou *FFV1* (DaVinci Resolve). O Canva não aceita vídeos com transparência.
+   - Para ficheiros ainda mais leves: *Máximo 30 fps* (clips a 50/60 fps) e, no passo 4, painéis *ao ritmo dos números*.
 
 Estrutura gerada:
 ```
