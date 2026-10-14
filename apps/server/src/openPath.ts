@@ -19,7 +19,9 @@ export function openPath(target: string): void {
     cmd = 'xdg-open';
     args = [target];
   }
-  const child = spawn(cmd, args, { detached: true, stdio: 'ignore', windowsHide: false });
+  // `start "" <url>` needs the empty title verbatim (no Node quoting); URLs here never contain spaces or &.
+  const verbatim = process.platform === 'win32' && cmd === 'cmd';
+  const child = spawn(cmd, args, { detached: true, stdio: 'ignore', windowsHide: true, windowsVerbatimArguments: verbatim });
   child.on('error', () => undefined);
   child.unref();
 }
