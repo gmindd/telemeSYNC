@@ -1,8 +1,19 @@
-import { availableOverlays, DEFAULT_STYLE, effectiveStart, type OverlayStyle } from '@telemesync/core';
+import {
+  availableOverlays,
+  DEFAULT_STYLE,
+  effectiveStart,
+  PANEL_METRIC_INFO,
+  PANEL_METRICS,
+  panelMetricOf,
+  panelOptions,
+  type OverlayStyle,
+  type PanelMetric,
+  type PanelOptions,
+} from '@telemesync/core';
 import { OverlayCanvas } from '../components/OverlayCanvas.tsx';
 import { useApp } from '../lib/store.ts';
 
-function Color({ label, k }: { label: string; k: 'textColor' | 'accentColor' | 'outlineColor' }) {
+function Color({ label, k }: { label: string; k: 'textColor' | 'accentColor' | 'outlineColor' | 'gradientFrom' | 'gradientTo' }) {
   const { style, setStyle } = useApp();
   const hex = /^#[0-9a-f]{6}$/i.test(style[k]) ? style[k] : '#000000';
   return (
@@ -16,7 +27,13 @@ function Color({ label, k }: { label: string; k: 'textColor' | 'accentColor' | '
 export function StepOverlays() {
   const { ride, overlays, toggleOverlay, style, setStyle, sync, activeClipId, playhead, setStep } = useApp();
   if (!ride) return <section><p>Carregue primeiro a telemetria.</p></section>;
-  const defs = availableOverlays(ride);
+  const all = availableOverlays(ride);
+  const defs = all.filter((d) => !panelMetricOf(d.id));
+  const panels = all.filter((d) => panelMetricOf(d.id));
+  const chartMetrics = PANEL_METRICS.filter((m) => ride.available.has(m));
+  const distUnit = style.units.system === 'metric' ? 'km' : 'mi';
+  const setPanel = (m: PanelMetric, patch: Partial<PanelOptions>) =>
+    setStyle({ panels: { ...style.panels, [m]: { ...panelOptions(m, style, ride), ...patch } } });
   const clip = sync.clips.find((c) => c.id === activeClipId);
   const cam = clip ? sync.cameras.find((c) => c.id === clip.cameraId) : undefined;
   const cs = clip && cam ? effectiveStart(clip, cam) : undefined;
@@ -38,6 +55,42 @@ export function StepOverlays() {
             </div>
           </label>
         ))}
+      </div>
+
+      <h3>Painéis</h3>
+      <p className="lead">Mostrador, máximos/médias e gráfico recente num só gadget. O gráfico pode mostrar outra métrica (ex.: velocidade com a altimetria dos últimos 10 km).</p>
+      <div className="overlay-grid panels">
+        {panels.map((d) => {
+          const m = panelMetricOf(d.id)!;
+          const o = panelOptions(m, style, ride);
+          const on = overlays.includes(d.id);
+          return (
+            <div key={d.id} className={`overlay-card${on ? ' on' : ''}`}>
+              <label className="overlay-card-head">
+                <input type="checkbox" checked={on} onChange={(e) => toggleOverlay(d.id, e.target.checked)} />
+                <span>{d.label}</span>
+              </label>
+              <div className="panel-opts">
+                <label className="field">
+                  Gráfico
+                  <select value={o.chart} onChange={(e) => setPanel(m, { chart: e.target.value as PanelMetric })}>
+                    {chartMetrics.map((c) => <option key={c} value={c}>{PANEL_METRIC_INFO[c].label}</option>)}
+                  </select>
+                </label>
+                <label className="field">
+                  Janela
+                  <select value={o.window} onChange={(e) => setPanel(m, { window: e.target.value as PanelOptions['window'] })}>
+                    <option value="time">Últimos {style.chartMinutes} min</option>
+                    <option value="distance">Últimos {style.chartDistance} {distUnit}</option>
+                  </select>
+                </label>
+              </div>
+              <div className="checker" onClick={() => toggleOverlay(d.id, !on)}>
+                <OverlayCanvas id={d.id} ride={ride} style={style} t={t} clipStart={clipStart} clipEnd={clipEnd} cssScale={0.45} fitHeight={220} />
+              </div>
+            </div>
+          );
+        })}
       </div>
 
       <h3>Estilo</h3>
@@ -113,6 +166,26 @@ export function StepOverlays() {
               />
             </label>
           </>
+        ) : null}
+        <Color label="Gradiente (baixo)" k="gradientFrom" />
+        <Color label="Gradiente (alto)" k="gradientTo" />
+        <label className="field">
+          Fundo dos painéis
+          <input type="range" min={0} max={1} step={0.05} value={style.panelOpacity} onChange={(e) => setStyle({ panelOpacity: Number(e.target.value) })} />
+        </label>
+        <label className="field">
+          Janela de tempo (min)
+          <input type="number" min={1} max={120} step={1} value={style.chartMinutes} onChange={(e) => Number(e.target.value) > 0 && setStyle({ chartMinutes: Number(e.target.value) })} />
+        </label>
+        <label className="field">
+          Janela de distância ({distUnit})
+          <input type="number" min={0.5} max={200} step={0.5} value={style.chartDistance} onChange={(e) => Number(e.target.value) > 0 && setStyle({ chartDistance: Number(e.target.value) })} />
+        </label>
+        {ride.available.has('power') ? (
+          <label className="field">
+            FTP (W)
+            <input type="number" min={50} max={600} step={5} value={style.ftp} onChange={(e) => Number(e.target.value) > 0 && setStyle({ ftp: Number(e.target.value) })} />
+          </label>
         ) : null}
         <button className="small" onClick={() => setStyle(DEFAULT_STYLE)}>Repor estilo</button>
       </div>

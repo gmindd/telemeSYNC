@@ -7,6 +7,7 @@ import {
   DEFAULT_STYLE,
   defaultCamera,
   effectiveStart,
+  getOverlay,
   parseProject,
   parseTelemetryFile,
   PROJECT_VERSION,
@@ -166,14 +167,14 @@ export const useApp = create<State & Actions>((set, get) => ({
       const { id } = await api.uploadTelemetry(file);
       const sync = resolveAll(get().sync, ride.startTime);
       // Keep only overlays that this ride supports.
-      const overlays = get().overlays.filter((o) => ride.available.has(o));
+      const overlays = get().overlays.filter((o) => ride.available.has(getOverlay(o).requires));
       set({
         ride,
         rideId: id,
         rideFile: { name: file.name, size: file.size },
         rideName: rideNameFrom(ride, file.name),
         sync,
-        overlays: overlays.length ? overlays : (['speed'] as OverlayId[]).filter((o) => ride.available.has(o)),
+        overlays: overlays.length ? overlays : (['speed'] as OverlayId[]).filter((o) => ride.available.has(getOverlay(o).requires)),
         rideLoading: false,
       });
     } catch (e) {

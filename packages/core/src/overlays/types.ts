@@ -1,4 +1,4 @@
-import type { RideData, RideSample } from '../telemetry/ride.ts';
+import type { MetricKey, RideData, RideSample } from '../telemetry/ride.ts';
 import type { Units } from './units.ts';
 
 /**
@@ -19,6 +19,9 @@ export interface Ctx2D {
   arc(x: number, y: number, r: number, a0: number, a1: number, ccw?: boolean): void;
   rect(x: number, y: number, w: number, h: number): void;
   clip(): void;
+  quadraticCurveTo(cpx: number, cpy: number, x: number, y: number): void;
+  bezierCurveTo(cp1x: number, cp1y: number, cp2x: number, cp2y: number, x: number, y: number): void;
+  createLinearGradient(x0: number, y0: number, x1: number, y1: number): CanvasGradientLike;
   fill(): void;
   stroke(): void;
   fillText(text: string, x: number, y: number): void;
@@ -39,6 +42,10 @@ export interface Ctx2D {
   shadowOffsetY: number;
 }
 
+export interface CanvasGradientLike {
+  addColorStop(offset: number, color: string): void;
+}
+
 export type OverlayId =
   | 'speed'
   | 'altitude'
@@ -52,7 +59,24 @@ export type OverlayId =
   | 'elapsedTime'
   | 'localTime'
   | 'map'
-  | 'elevationProfile';
+  | 'elevationProfile'
+  | 'panelSpeed'
+  | 'panelAltitude'
+  | 'panelGrade'
+  | 'panelHeartRate'
+  | 'panelCadence'
+  | 'panelPower'
+  | 'panelTemperature';
+
+/** Metrics that have a dashboard panel (gauge + stats + chart), and that a panel chart can show. */
+export type PanelMetric = 'speed' | 'altitude' | 'grade' | 'heartRate' | 'cadence' | 'power' | 'temperature';
+
+export interface PanelOptions {
+  /** Metric drawn in the panel's chart (may differ from the gauge metric). */
+  chart: PanelMetric;
+  /** Chart window: last `chartMinutes` or last `chartDistance`. */
+  window: 'time' | 'distance';
+}
 
 export interface OverlayStyle {
   fontFamily: string;
@@ -80,6 +104,19 @@ export interface OverlayStyle {
   /** Map framing: whole ride or zoom on the clip's section. */
   mapMode: 'full' | 'clip';
   timeZone: string;
+  /** Two-colour gradient used by the dashboard panels (low → high). */
+  gradientFrom: string;
+  gradientTo: string;
+  /** Opacity of the dark panel background (0 = no background). */
+  panelOpacity: number;
+  /** Panel chart time window, minutes. */
+  chartMinutes: number;
+  /** Panel chart distance window, km (mi in imperial). */
+  chartDistance: number;
+  /** Per-panel options; missing = chart of the panel's own metric over time. */
+  panels: Partial<Record<PanelMetric, PanelOptions>>;
+  /** Functional threshold power (W), for the power zones. */
+  ftp: number;
 }
 
 export const DEFAULT_STYLE: OverlayStyle = {
@@ -101,6 +138,13 @@ export const DEFAULT_STYLE: OverlayStyle = {
   gapSpeed: 'zero',
   mapMode: 'full',
   timeZone: 'Europe/Lisbon',
+  gradientFrom: '#ffc400',
+  gradientTo: '#ff3d00',
+  panelOpacity: 0.8,
+  chartMinutes: 10,
+  chartDistance: 10,
+  panels: {},
+  ftp: 250,
 };
 
 /** Context shared by all frames of one overlay render. */
@@ -125,7 +169,7 @@ export interface OverlayDefinition {
   /** Portuguese label for the UI. */
   label: string;
   /** Metric that must be available in the ride. */
-  requires: OverlayId;
+  requires: MetricKey;
   /** Base size in px at scale 1. */
   size(style: OverlayStyle): { width: number; height: number };
   /** Text-only overlays are constant between text updates (render can reuse frames). */

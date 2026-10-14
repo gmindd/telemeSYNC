@@ -1,11 +1,11 @@
-import type { RideSample } from '../../telemetry/ride.ts';
+import type { MetricKey, RideSample } from '../../telemetry/ride.ts';
 import { formatDuration, formatTime } from '../../util/timezone.ts';
 import { drawText } from '../draw.ts';
 import type { Ctx2D, OverlayDefinition, OverlayId, OverlayStyle } from '../types.ts';
 import { convert, fmt } from '../units.ts';
 
 interface TextMetric {
-  id: OverlayId;
+  id: Extract<OverlayId, MetricKey>;
   label: string;
   /** Widest expected value, used for a fixed layout (unit never moves). */
   template: (s: OverlayStyle) => string;

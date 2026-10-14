@@ -2,10 +2,11 @@ import type { RideData } from '../telemetry/ride.ts';
 import { sampleAt } from '../telemetry/ride.ts';
 import { elevationProfileOverlay } from './elevationProfile.ts';
 import { mapOverlay } from './map.ts';
+import { panelOverlays } from './panel/panel.ts';
 import { textOverlays } from './text/metrics.ts';
 import type { Ctx2D, FrameState, OverlayContext, OverlayDefinition, OverlayId, OverlayStyle } from './types.ts';
 
-export const OVERLAYS: OverlayDefinition[] = [...textOverlays, mapOverlay, elevationProfileOverlay];
+export const OVERLAYS: OverlayDefinition[] = [...textOverlays, mapOverlay, elevationProfileOverlay, ...panelOverlays];
 
 export function getOverlay(id: OverlayId): OverlayDefinition {
   const o = OVERLAYS.find((x) => x.id === id);
@@ -68,4 +69,11 @@ export const OVERLAY_FILE_SLUG: Record<OverlayId, string> = {
   localTime: 'hora',
   map: 'mapa',
   elevationProfile: 'perfil',
+  panelSpeed: 'painel-velocidade',
+  panelAltitude: 'painel-altitude',
+  panelGrade: 'painel-inclinacao',
+  panelHeartRate: 'painel-fc',
+  panelCadence: 'painel-cadencia',
+  panelPower: 'painel-potencia',
+  panelTemperature: 'painel-temperatura',
 };
