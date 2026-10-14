@@ -9,7 +9,7 @@ import {
   type OverlayStyle,
   type RideData,
 } from '@telemesync/core';
-import { renderOverlay, type OutputFormat } from '@telemesync/core/node';
+import { renderInWorker, type OutputFormat } from '@telemesync/core/node';
 
 export interface RenderClipInput {
   id: string;
@@ -125,21 +125,28 @@ export class Job extends EventEmitter {
         task.status = 'running';
         this.emit('update');
         try {
-          await renderOverlay({
-            def: getOverlay(task.overlay),
-            style: this.req.style,
-            octx: { ride: this.ride, clipStart: clip.startUtcMs, clipEnd: clip.startUtcMs + clip.durationMs },
-            durationMs: clip.durationMs,
-            fps: clip.fps,
-            frames: clip.frameCount,
-            outPath: task.outPath,
-            format: this.req.format,
-            signal: this.abort.signal,
-            onProgress: (f) => {
-              task.progress = f;
-              this.emit('update');
+          getOverlay(task.overlay); // validates the id
+          await renderInWorker(
+            {
+              ride: this.ride,
+              overlay: task.overlay,
+              style: this.req.style,
+              clipStart: clip.startUtcMs,
+              clipEnd: clip.startUtcMs + clip.durationMs,
+              durationMs: clip.durationMs,
+              fps: clip.fps,
+              frames: clip.frameCount,
+              outPath: task.outPath,
+              format: this.req.format,
             },
-          });
+            {
+              signal: this.abort.signal,
+              onProgress: (f) => {
+                task.progress = f;
+                this.emit('update');
+              },
+            },
+          );
           task.status = 'done';
           task.progress = 1;
         } catch (e) {

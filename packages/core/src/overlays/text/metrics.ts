@@ -43,7 +43,7 @@ const metrics: TextMetric[] = [
     id: 'speed',
     label: 'Velocidade',
     template: () => '88,8',
-    value: (s) => ({ text: fmt(s.speed, 1) }),
+    value: (s, st) => ({ text: fmt(convert.speed(s.speed, st.units), 1) }),
     unit: (st) => convert.speedUnit(st.units),
   },
   {

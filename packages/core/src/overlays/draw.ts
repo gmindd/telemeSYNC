@@ -6,6 +6,11 @@ export function font(style: OverlayStyle, sizePx: number, weight = 700): string 
 
 const digitWidthCache = new Map<string, number>();
 
+/** Call after web fonts finish loading (measurements made with a fallback font are cached). */
+export function clearTextMetricsCache(): void {
+  digitWidthCache.clear();
+}
+
 /** Widest digit for the current font: each digit is drawn centred in a cell this wide (tabular figures). */
 function digitCell(ctx: Ctx2D): number {
   const key = ctx.font;
