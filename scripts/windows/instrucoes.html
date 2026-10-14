@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+<meta charset="utf-8">
+<title>telemeSYNC — Instalação e utilização</title>
+<style>
+  @page { size: A4; margin: 16mm 15mm; }
+  :root { --accent: #e8630a; --ink: #1d2329; --muted: #5d6873; --line: #dde2e7; --soft: #f5f7f9; }
+  * { box-sizing: border-box; }
+  body { font-family: "Segoe UI", "Inter", Arial, sans-serif; color: var(--ink); font-size: 10.5pt; line-height: 1.45; margin: 0; }
+  h1 { font-size: 24pt; margin: 0 0 2mm; letter-spacing: -0.5px; }
+  h1 span { color: var(--accent); }
+  .sub { color: var(--muted); font-size: 11pt; margin-bottom: 6mm; }
+  h2 { font-size: 14pt; margin: 8mm 0 3mm; padding-bottom: 1.5mm; border-bottom: 2px solid var(--accent); break-after: avoid; }
+  h3 { font-size: 11pt; margin: 4mm 0 1.5mm; break-after: avoid; }
+  .step { display: grid; grid-template-columns: 9mm 1fr; gap: 3mm; margin: 3mm 0; break-inside: avoid; }
+  .num { width: 8mm; height: 8mm; border-radius: 50%; background: var(--accent); color: #fff; font-weight: 700; display: flex; align-items: center; justify-content: center; font-size: 11pt; }
+  .step p { margin: 0 0 1.5mm; }
+  .box { background: var(--soft); border: 1px solid var(--line); border-radius: 3mm; padding: 3mm 4mm; margin: 2mm 0; break-inside: avoid; }
+  .warn { background: #fff6e8; border-color: #f3c98b; }
+  .ok { background: #eef8ef; border-color: #a9d8ae; }
+  .win { border: 1px solid #9aa5b1; border-radius: 2mm; overflow: hidden; margin: 2mm 0; max-width: 120mm; break-inside: avoid; font-size: 9.5pt; }
+  .win .bar { background: #0f6cbd; color: #fff; padding: 1.5mm 3mm; font-weight: 600; }
+  .win .body { padding: 3mm; background: #fff; }
+  .win .btns { display: flex; gap: 2mm; justify-content: flex-end; margin-top: 2mm; }
+  .btn { border: 1px solid #8a96a1; border-radius: 1mm; padding: 0.8mm 3mm; background: #f3f3f3; font-size: 9pt; }
+  .btn.hl { outline: 2px solid var(--accent); outline-offset: 1px; font-weight: 700; }
+  .link { color: #0f6cbd; text-decoration: underline; }
+  .hl-text { background: #ffe0c2; padding: 0 1mm; border-radius: 1mm; font-weight: 600; }
+  code, .key { font-family: Consolas, "Courier New", monospace; background: #eef1f4; border: 1px solid var(--line); border-radius: 1mm; padding: 0 1.2mm; font-size: 9.5pt; }
+  .term { background: #0c0c0c; color: #d7d7d7; font-family: Consolas, monospace; font-size: 8.8pt; border-radius: 2mm; padding: 3mm; max-width: 140mm; white-space: pre; break-inside: avoid; }
+  .term b { color: #fff; }
+  table { border-collapse: collapse; width: 100%; font-size: 9.5pt; break-inside: avoid; }
+  th, td { text-align: left; padding: 1.5mm 2mm; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 4mm; }
+  .tree { font-family: Consolas, monospace; font-size: 9pt; background: var(--soft); border: 1px solid var(--line); border-radius: 2mm; padding: 3mm; white-space: pre; }
+  .page-break { break-before: page; }
+  .muted { color: var(--muted); }
+  ul { margin: 1mm 0; padding-left: 5mm; }
+</style>
+</head>
+<body>
+
+<h1>tele<span>me</span>SYNC</h1>
+<div class="sub">Gerador de overlays de telemetria para vídeos de BTT — guia de instalação e utilização (Windows)</div>
+
+<div class="box">
+  A partir do ficheiro <b>FIT/GPX</b> do ciclocomputador (Bryton, Garmin, iGPSPORT…) e dos clips da action cam
+  (DJI Osmo Action, GoPro, Insta360), o telemeSYNC gera vídeos <b>transparentes</b> (velocidade, inclinação, mapa,
+  altimetria, frequência cardíaca…) para pôr por cima dos clips no DaVinci Resolve, Premiere Pro ou Final Cut Pro.
+  <br><b>Os vídeos nunca saem do seu computador.</b>
+</div>
+
+<h2>O que precisa</h2>
+<table>
+  <tr><th>Sistema</th><td>Windows 10 ou 11, 64 bits</td></tr>
+  <tr><th>Espaço em disco</th><td>cerca de 600 MB para a aplicação + espaço para os vídeos gerados</td></tr>
+  <tr><th>Browser</th><td>Microsoft Edge ou Google Chrome (o Edge reproduz melhor vídeos HEVC/H.265)</td></tr>
+  <tr><th>Instalar programas</th><td><b>Não é preciso.</b> O pacote já traz tudo (incluindo o Node.js e o FFmpeg).</td></tr>
+</table>
+
+<h2>1. Instalar</h2>
+
+<div class="step"><div class="num">1</div><div>
+  <p><b>Descarregue o ficheiro</b> <code>telemeSYNC-…-windows.zip</code> que lhe enviaram, para a pasta <b>Transferências</b>.</p>
+</div></div>
+
+<div class="step"><div class="num">2</div><div>
+  <p><b>Desbloqueie o ZIP</b> (evita avisos do Windows mais tarde): botão direito no ZIP → <b>Propriedades</b> → no fundo do separador
+  <i>Geral</i>, marque <span class="hl-text">Desbloquear</span> → <b>OK</b>.</p>
+  <div class="win"><div class="bar">Propriedades de telemeSYNC-windows.zip</div><div class="body">
+    Segurança: Este ficheiro veio de outro computador e poderá ser bloqueado para ajudar a proteger este computador.
+    &nbsp;&nbsp;<span class="btn hl">☑ Desbloquear</span>
+    <div class="btns"><span class="btn hl">OK</span><span class="btn">Cancelar</span></div>
+  </div></div>
+  <p class="muted">Se não aparecer a opção "Desbloquear", não faz mal — passe ao passo seguinte.</p>
+</div></div>
+
+<div class="step"><div class="num">3</div><div>
+  <p><b>Extraia o ZIP</b>: botão direito no ZIP → <b>Extrair tudo…</b> → escolha por exemplo <code>Documentos</code> → <b>Extrair</b>.</p>
+  <div class="box warn">⚠ Não abra a aplicação <b>dentro</b> do ZIP (com duplo clique no ZIP). Tem de extrair primeiro.</div>
+  <p>Fica com esta pasta:</p>
+  <div class="tree">Documentos\telemeSYNC\
+   ├─ Iniciar telemeSYNC.bat   ← é este que se abre
+   ├─ Instrucoes-telemeSYNC.pdf
+   ├─ LEIA-ME.txt
+   ├─ apps\  packages\  runtime\  node_modules\   (não mexer)</div>
+</div></div>
+
+<div class="step"><div class="num">4</div><div>
+  <p><b>Faça duplo clique em</b> <code>Iniciar telemeSYNC.bat</code>. <span class="muted">(Se os ficheiros aparecerem sem extensão, é o que tem a roda dentada.)</span></p>
+  <p>Na primeira vez o Windows pode mostrar este aviso azul. Clique em <b>Mais informações</b> e depois em <b>Executar mesmo assim</b>:</p>
+  <div class="win"><div class="bar">O Windows protegeu o computador</div><div class="body">
+    O Microsoft Defender SmartScreen impediu o arranque de uma aplicação não reconhecida…<br>
+    <span class="link">Mais informações</span>
+    <div class="btns"><span class="btn hl">Executar mesmo assim</span><span class="btn">Não executar</span></div>
+  </div></div>
+  <p>Se aparecer um aviso da <b>Firewall do Windows</b> sobre o "Node.js", clique em <b>Cancelar</b> ou <b>Permitir</b> — tanto faz: a aplicação só funciona dentro do seu computador.</p>
+</div></div>
+
+<div class="step"><div class="num">5</div><div>
+  <p>Abre-se uma <b>janela preta</b> e, ao fim de alguns segundos, o browser abre em <code>http://localhost:5174</code> com o telemeSYNC.</p>
+  <div class="term"><b>  telemeSYNC - gerador de overlays de telemetria</b>
+  ---------------------------------------------
+  A aplicacao vai abrir no browser em http://localhost:5174
+
+  MANTENHA ESTA JANELA ABERTA enquanto usa a aplicacao.
+  Para terminar, feche esta janela.
+telemeSYNC a correr em http://localhost:5174  (Ctrl+C para terminar)</div>
+  <div class="box ok">✔ <b>Mantenha a janela preta aberta</b> enquanto usa a aplicação. Para terminar, basta fechá-la.<br>
+  Se o browser não abrir sozinho, abra o Edge/Chrome e escreva <code>localhost:5174</code> na barra de endereço.</div>
+</div></div>
+
+<h3>E o PowerShell?</h3>
+<div class="box">
+  <b>Com este pacote não precisa do PowerShell</b> — basta o duplo clique no passo 4. O PowerShell já vem instalado no Windows 10 e 11
+  (menu Iniciar → escreva <code>PowerShell</code> → <b>Windows PowerShell</b>). Só é útil para quem quiser arrancar a aplicação à mão:
+  <div class="term">cd "$env:USERPROFILE\Documents\telemeSYNC"
+.\runtime\node.exe --import tsx apps\server\src\main.ts</div>
+  Se, num Windows muito antigo, não existir: instale-o gratuitamente a partir da <b>Microsoft Store</b> (pesquise "PowerShell") ou em
+  <span class="link">aka.ms/powershell</span>. Se o PowerShell disser <i>"running scripts is disabled on this system"</i>, use a Linha de Comandos
+  (<code>cmd</code>) ou o duplo clique — é uma proteção do Windows, não um erro da aplicação.
+</div>
+
+<h2>2. Usar — os 5 passos</h2>
+
+<div class="step"><div class="num">1</div><div>
+  <p><b>Telemetria</b> — arraste o ficheiro <code>.fit</code> (preferível) ou <code>.gpx</code> da volta. Aparece o resumo: data, duração,
+  distância, desnível e as métricas que o seu aparelho grava (só essas aparecem nas opções).</p>
+  <p class="muted">Onde encontrar o FIT: na app do ciclocomputador (Bryton Active, iGPSPORT, Garmin Connect → Exportar original) ou no Strava (atividade → ⋯ → Exportar original).</p>
+</div></div>
+
+<div class="step"><div class="num">2</div><div>
+  <p><b>Clips</b> — arraste todos os vídeos da volta de uma vez (podem ser de várias câmaras). A câmara e a hora de cada clip são detetadas
+  automaticamente. Os vídeos <b>não são copiados nem enviados</b>: só se leem a data, a duração e os fps.</p>
+</div></div>
+
+<div class="step"><div class="num">3</div><div>
+  <p><b>Sincronização</b> — a linha do tempo mostra a volta (velocidade e altimetria) e os clips como blocos coloridos por câmara.</p>
+  <ul>
+    <li>Clique num clip para o ver com os gráficos por cima, ao vivo. Confirme num momento conhecido: por exemplo, numa <b>paragem</b> a velocidade tem de ir a 0.</li>
+    <li>Se estiver desfasado: arraste o bloco ou use os botões <code>±1 min</code> <code>±1 s</code> <code>±0,1 s</code>. O ajuste vale para <b>todos os clips dessa câmara</b> (com a tecla <span class="key">Alt</span> ajusta só esse clip).</li>
+    <li>Se a câmara estiver com a hora errada em exatamente 1 h ou 2 h, aparece um aviso com o botão de correção.</li>
+    <li><b>Arraste os gráficos</b> por cima do vídeo para os posicionar; o quadrado laranja no canto muda o tamanho.</li>
+  </ul>
+</div></div>
+
+<div class="step"><div class="num">4</div><div>
+  <p><b>Overlays</b> — escolha os gráficos (velocidade, inclinação, mapa, altimetria, FC, …) e o estilo (cores, contorno, sombra,
+  km/h ou mph, °C ou °F).</p>
+</div></div>
+
+<div class="step"><div class="num">5</div><div>
+  <p><b>Renderizar</b> — escolha a pasta de saída (por defeito <code>Documentos\telemeSYNC</code>) e o modo:</p>
+  <div class="two">
+    <div class="box"><b>Gadgets separados</b><br>Um vídeo por gráfico. Ideal se vai reenquadrar (filmado em 1:1 → YouTube 16:9 e Instagram 9:16) e posicionar cada gráfico no editor.</div>
+    <div class="box"><b>Composição única</b><br>Um só vídeo por clip, do tamanho do vídeo (Full HD por defeito), com os gráficos nas posições escolhidas. É só pôr por cima.</div>
+  </div>
+  <p>No fim, clique em <b>Abrir pasta</b>.</p>
+</div></div>
+
+<h2>3. No editor de vídeo</h2>
+<p>Os ficheiros são <b>ProRes 4444 com transparência</b> (<code>.mov</code>), com a mesma duração e fps do clip. Ponha-os numa pista
+<b>acima</b> do clip, a começar no mesmo instante.</p>
+<table>
+  <tr><th>DaVinci Resolve</th><td>Arraste para a pista V2. Se o fundo aparecer preto: botão direito no ficheiro na Media Pool → <i>Clip Attributes</i> → <i>Alpha Mode</i> → <i>Straight</i>.</td></tr>
+  <tr><th>Premiere Pro</th><td>Arraste para a pista V2. A transparência é reconhecida automaticamente.</td></tr>
+  <tr><th>Final Cut Pro</th><td>Arraste como clip ligado (connected clip) por cima do clip.</td></tr>
+</table>
+
+<h2>4. Problemas comuns</h2>
+<table>
+  <tr><th style="width:38%">Problema</th><th>Solução</th></tr>
+  <tr><td>"O Windows protegeu o computador"</td><td><b>Mais informações</b> → <b>Executar mesmo assim</b> (passo 4). Desbloquear o ZIP antes de extrair evita o aviso.</td></tr>
+  <tr><td>A janela preta abre e fecha logo / mostra um erro</td><td>Confirme que extraiu o ZIP (não está a abrir dentro dele). Tire uma fotografia ao erro e envie-a.</td></tr>
+  <tr><td>"Não foi possível arrancar o servidor na porta 5174"</td><td>A aplicação já está aberta noutra janela preta. Feche as janelas pretas e volte a abrir.</td></tr>
+  <tr><td>O vídeo não aparece no preview (só os dados)</td><td>Vídeos HEVC/H.265: use o <b>Edge</b>, ou instale as "Extensões de Vídeo HEVC" da Microsoft Store. Ficheiros <code>.insv</code> nunca aparecem. A sincronização e a exportação funcionam na mesma.</td></tr>
+  <tr><td>Os gráficos estão desfasados do vídeo</td><td>No passo 3, ajuste o offset da câmara numa paragem ou num momento fácil de identificar.</td></tr>
+  <tr><td>O antivírus bloqueia <code>node.exe</code> ou <code>ffmpeg.exe</code></td><td>São os motores da aplicação (Node.js e FFmpeg, ambos open source). Autorize-os ou adicione a pasta <code>telemeSYNC</code> às exclusões.</td></tr>
+</table>
+
+<h2>5. Desinstalar</h2>
+<p>Apague a pasta <code>telemeSYNC</code>. As definições ficam em <code>%APPDATA%\telemeSYNC</code> (pode apagar também).</p>
+
+<div class="box" style="margin-top:6mm">
+  <b>Feedback para a versão de testes</b> — anote: modelo da câmara e do ciclocomputador, se a hora dos clips foi detetada certa
+  (e quanto teve de ajustar), se o vídeo apareceu no preview, e se os ficheiros abriram com transparência no seu editor.
+</div>
+
+</body>
+</html>

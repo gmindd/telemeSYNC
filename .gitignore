@@ -10,3 +10,4 @@ fixtures/private/
 *.MP4
 *.insv
 !fixtures/**/*.json
+dist-release/

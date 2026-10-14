@@ -1,0 +1,18 @@
+telemeSYNC - gerador de overlays de telemetria para videos de BTT
+================================================================
+
+COMO ARRANCAR
+1. Extraia este ZIP (botao direito > "Extrair tudo...") para uma pasta, por exemplo Documentos.
+2. Abra a pasta "telemeSYNC" e faca duplo clique em "Iniciar telemeSYNC.bat".
+3. O browser abre em http://localhost:5174. Mantenha a janela preta aberta enquanto usa a aplicacao.
+
+Nao e preciso instalar nada: tudo o que a aplicacao precisa ja vem dentro desta pasta.
+Instrucoes completas, com imagens dos avisos do Windows: Instrucoes-telemeSYNC.pdf
+
+SE O WINDOWS MOSTRAR "O Windows protegeu o computador"
+Clique em "Mais informacoes" e depois em "Executar mesmo assim".
+
+PARA TERMINAR
+Feche a janela preta.
+
+Os seus videos nunca saem do computador: a aplicacao le apenas os metadados (data, duracao, fps).

@@ -85,6 +85,7 @@ npm run inspect -- GX010123.MP4 DJI_20240615093005_0001_D.MP4 volta.fit --out fi
 npm run dev        # servidor (watch) + Vite com hot reload em http://localhost:5173
 npm test           # testes unitários e de integração (Vitest)
 npm run typecheck
+scripts/package-windows.sh   # pacote Windows autónomo (Node portátil + dependências) em dist-release/
 ```
 
 - `packages/core` — parsing FIT/GPX, métricas, sincronização, leitor de metadados MP4/MOV e **renderers** dos overlays (partilhados entre preview e exportação).
