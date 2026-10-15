@@ -71,6 +71,13 @@ mv "$APP/runtime/darwin-arm64/ffmpeg.README" "$APP/runtime/FFMPEG-README.txt" 2>
 rm -f "$APP"/runtime/darwin-*/ffmpeg.LICENSE "$APP"/runtime/darwin-*/ffmpeg.README
 # The workspace links npm made (junctions on Windows) are written into the ZIP as relative symlinks.
 rm -rf "$APP/node_modules/@telemesync"
+# Apple Silicon only runs signed code: unsigned binaries get an ad-hoc signature (on macOS; packages built elsewhere
+# are signed by the launcher on the tester's Mac). Valid signatures, like Node's, are left alone.
+if command -v codesign >/dev/null; then
+  for f in "$APP"/runtime/darwin-arm64/* "$APP"/node_modules/@esbuild/darwin-arm64/bin/esbuild "$APP"/node_modules/@napi-rs/canvas-darwin-arm64/*.node; do
+    codesign -v "$f" 2>/dev/null || { echo "› Assinatura ad-hoc: ${f#"$APP"/}"; codesign --force --sign - "$f"; }
+  done
+fi
 
 echo "› Lançador e instruções"
 cp "$ROOT/scripts/mac/Iniciar telemeSYNC.command" "$ROOT/scripts/mac/LEIA-ME.txt" "$ROOT/LICENCA.txt" "$APP/"

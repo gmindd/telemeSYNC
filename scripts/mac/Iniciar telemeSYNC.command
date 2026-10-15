@@ -24,6 +24,12 @@ case "$arch" in
   *) echo "  Este Mac ($arch) não é suportado."; read -r -n 1 -s -p "  Carregue numa tecla para fechar."; exit 1 ;;
 esac
 chmod +x "$runtime/node" "$runtime/ffmpeg" node_modules/@esbuild/*/bin/esbuild 2>/dev/null
+# Apple Silicon kills unsigned code ("Killed: 9"): anything left unsigned gets an ad-hoc signature, once.
+if [ "$arch" = arm64 ]; then
+  for f in "$runtime/node" "$runtime/ffmpeg" node_modules/@esbuild/darwin-arm64/bin/esbuild node_modules/@napi-rs/canvas-darwin-arm64/*.node; do
+    codesign -v "$f" 2>/dev/null || codesign --force --sign - "$f" 2>/dev/null
+  done
+fi
 export FFMPEG_PATH="$PWD/$runtime/ffmpeg"
 
 "$runtime/node" --import tsx apps/server/src/main.ts
