@@ -157,7 +157,7 @@ function timeAgo(iso) {
   return 'agora mesmo';
 }
 
-// Counts the visit with GoatCounter (no cookies) and shows the page's total visits
+// Counts the visit with GoatCounter (no cookies) and shows the total visits to the site
 function initVisitCounter() {
   const code = SITE_CONFIG.goatcounterCode.trim();
   const box = document.querySelector('.js-visits');
@@ -171,12 +171,14 @@ function initVisitCounter() {
   document.head.append(script);
   // Pages without the counter box (e.g. legal.html) are still counted
   if (!box || !out) return;
-  // Total for this page; needs "Allow adding visitor counts on your website" in GoatCounter's settings.
-  const path = encodeURIComponent(location.pathname || '/');
-  fetch(`${endpoint}/counter/${path}.json`)
+  // Whole-site total; needs "Allow adding visitor counts on your website" in GoatCounter's settings.
+  // GoatCounter answers 404 until its first visits are processed: the counter stays hidden until then.
+  fetch(`${endpoint}/counter/TOTAL.json`)
     .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
     .then((d) => {
-      out.textContent = d.count;
+      // The count comes formatted in English ("1,234"): show it the Portuguese way ("1234" / "12 345")
+      const n = Number(String(d.count).replace(/\D/g, ''));
+      out.textContent = n.toLocaleString('pt-PT');
       box.hidden = false;
     })
     .catch(() => {
