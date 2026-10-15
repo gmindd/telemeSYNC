@@ -63,6 +63,8 @@ function initVideo() {
     return;
   }
   if (label) label.textContent = 'Ver a demonstração';
+  const poster = box.querySelector('.js-video-poster');
+  if (poster) loadPoster(poster, id);
   button.addEventListener('click', () => {
     const iframe = document.createElement('iframe');
     iframe.src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(id)}?autoplay=1&rel=0`;
@@ -71,6 +73,20 @@ function initVideo() {
     iframe.allowFullscreen = true;
     box.replaceChildren(iframe);
   });
+}
+
+// Shows the video's YouTube thumbnail behind the play button (the illustration stays if it fails)
+function loadPoster(img, id) {
+  const base = `https://i.ytimg.com/vi/${encodeURIComponent(id)}`;
+  img.addEventListener('load', () => {
+    // Without an HD thumbnail YouTube answers with a 120px grey placeholder: use the smaller one
+    if (img.naturalWidth <= 120 && img.src.includes('maxresdefault')) {
+      img.src = `${base}/hqdefault.jpg`;
+      return;
+    }
+    img.hidden = false;
+  });
+  img.src = `${base}/maxresdefault.jpg`;
 }
 
 // Fetches the latest Buy Me a Coffee supporters (JSON built by the GitHub Action) and lists them

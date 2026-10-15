@@ -19,7 +19,7 @@ export function StepWelcome({ onAbout }: { onAbout: () => void }) {
             Bem-vindo ao <span className="brand">tele<em>me</em>SYNC</span>
           </h1>
           <p className="hero-lead">
-            A telemetria das suas voltas de BTT — velocidade, inclinação, mapa, altimetria, frequência cardíaca — sincronizada e desenhada por cima dos seus
+            A telemetria das suas voltas de bicicleta — velocidade, inclinação, mapa, altimetria, frequência cardíaca — sincronizada e desenhada por cima dos seus
             vídeos.
           </p>
           <div className="hero-actions">

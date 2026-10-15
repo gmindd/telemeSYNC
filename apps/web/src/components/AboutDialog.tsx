@@ -30,7 +30,7 @@ export function AboutDialog({ onClose }: { onClose: () => void }) {
           {APP_INFO.name} <span className="muted">v{APP_INFO.version}</span>
         </h2>
         <p>
-          Gerador de overlays de telemetria para vídeos de BTT. © {APP_INFO.year} {APP_INFO.author} — <WebsiteLink /> ·{' '}
+          Gerador de overlays de telemetria para vídeos de bicicleta. © {APP_INFO.year} {APP_INFO.author} — <WebsiteLink /> ·{' '}
           <a href={`mailto:${APP_INFO.email}`}>{APP_INFO.email}</a>
         </p>
         <DonateButton />

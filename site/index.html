@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>telemeSYNC · Telemetria de BTT por cima dos seus vídeos</title>
+  <title>telemeSYNC · Telemetria das suas voltas de bicicleta por cima dos seus vídeos</title>
   <meta name="description" content="telemeSYNC é um programa gratuito que sincroniza a telemetria do seu ciclocomputador (FIT/GPX) com os vídeos da action cam e gera overlays transparentes: velocidade, inclinação, mapa, altimetria, frequência cardíaca e painéis.">
-  <meta property="og:title" content="telemeSYNC · Telemetria de BTT por cima dos seus vídeos">
+  <meta property="og:title" content="telemeSYNC · Telemetria das suas voltas de bicicleta por cima dos seus vídeos">
   <meta property="og:description" content="Gratuito. Sincroniza o FIT/GPX com os clips da GoPro, DJI ou Insta360 e gera overlays transparentes prontos para o editor de vídeo.">
   <meta property="og:image" content="assets/images/hero-composicao.webp">
   <meta name="theme-color" content="#0b0f14">
@@ -40,7 +40,7 @@
       <div class="container hero__grid">
         <div class="hero__text">
           <p class="eyebrow">Gratuito · Windows 10/11</p>
-          <h1>A telemetria das suas voltas de BTT, <span class="accent">por cima dos seus vídeos</span>.</h1>
+          <h1>A telemetria das suas voltas de bicicleta, <span class="accent">por cima dos seus vídeos</span>.</h1>
           <p class="lead">
             O telemeSYNC sincroniza o ficheiro do ciclocomputador (FIT ou GPX) com os clips da action cam e gera gráficos transparentes:
             velocidade, inclinação, mapa, altimetria, frequência cardíaca e painéis completos. Arraste-os para o editor e já está.
@@ -126,7 +126,7 @@
             <h3 id="patrocinadores-titulo">Patrocine o projeto</h3>
             <p>
               Anunciar a sua empresa neste espaço é uma forma de apoiar o projeto e a continuação do desenvolvimento.
-              Lojas de bicicletas, marcas de equipamento, eventos de BTT e empresas de turismo ativo chegam aqui
+              Lojas de bicicletas, marcas de equipamento, eventos de ciclismo e empresas de turismo ativo chegam aqui
               a quem filma e partilha as suas voltas.
             </p>
             <a class="btn btn--primary btn--big" href="mailto:hello@pereiragabriel.com?subject=Patroc%C3%ADnio%20telemeSYNC">Quero patrocinar</a>
@@ -219,12 +219,18 @@
         <p class="section__lead">Do ficheiro do ciclocomputador ao vídeo final em poucos minutos.</p>
         <!-- O ID do vídeo do YouTube é definido em script.js (SITE_CONFIG.youtubeId) -->
         <div class="video js-video">
+          <img class="video__poster js-video-poster" alt="" hidden>
           <button class="video__play" type="button" aria-label="Reproduzir a demonstração no YouTube">
             <span class="video__icon" aria-hidden="true"></span>
             <span class="video__label js-video-label">Vídeo de demonstração em breve</span>
           </button>
         </div>
-        <p class="fine">O vídeo é carregado a partir do YouTube (modo de privacidade reforçada) só quando carrega em reproduzir.</p>
+        <p class="video-credit">
+          Vídeo cedido por cortesia de <strong>Alves na Roda</strong> ·
+          <a href="https://www.youtube.com/channel/UCBBXkj3p9e81YS1_LJHircw" target="_blank" rel="noopener">YouTube</a> ·
+          <a href="https://www.instagram.com/alvesnaroda.oficial/" target="_blank" rel="noopener">Instagram</a>
+        </p>
+        <p class="fine">A imagem de pré-visualização vem do YouTube; o vídeo em si (modo de privacidade reforçada) só é carregado quando carrega em reproduzir.</p>
       </div>
     </section>
 
