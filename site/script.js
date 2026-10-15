@@ -4,8 +4,8 @@
 
 // Site settings: edit here only.
 const SITE_CONFIG = {
-  // Current version shown on the download buttons.
-  version: '0.3.1',
+  // Latest release (version and download link), also read by the program to announce updates.
+  latestUrl: 'data/latest.json',
   // YouTube video ID of the demo (the part after "watch?v="). Empty = "em breve" placeholder.
   youtubeId: 'zG_BmoFqpx0',
   // GoatCounter site code (https://<code>.goatcounter.com). Empty = no counting and no counter shown.
@@ -44,11 +44,17 @@ function initNav() {
   });
 }
 
-// Writes the current version into every element marked with .js-version
+// Writes the latest version and download link (data/latest.json) into the download buttons
 function initVersion() {
-  document.querySelectorAll('.js-version').forEach((el) => {
-    el.textContent = SITE_CONFIG.version;
-  });
+  fetch(SITE_CONFIG.latestUrl, { cache: 'no-cache' })
+    .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
+    .then((latest) => {
+      if (latest.version) document.querySelectorAll('.js-version').forEach((el) => (el.textContent = latest.version));
+      if (latest.downloadUrl) document.querySelectorAll('.js-download').forEach((el) => (el.href = latest.downloadUrl));
+    })
+    .catch(() => {
+      /* keep the version and link written in the HTML */
+    });
 }
 
 // Shows the demo video only after a click (no YouTube request before that, privacy-enhanced domain)

@@ -54,7 +54,8 @@ export function AboutDialog({ onClose }: { onClose: () => void }) {
         <p>
           Tudo corre no seu computador. Os ficheiros de vídeo e de telemetria <b>não são enviados</b> para nenhum servidor externo: a aplicação lê apenas os metadados
           dos vídeos (data, duração, fps) e processa a telemetria localmente. Não há registo de utilizadores, cookies de terceiros, publicidade nem recolha de
-          estatísticas. As definições ficam guardadas apenas no seu computador. Os links externos ({APP_INFO.websiteLabel} e a página de apoio) só são abertos se
+          estatísticas. As definições ficam guardadas apenas no seu computador. Ao abrir, a aplicação consulta o site do telemeSYNC para saber se há uma versão
+          nova; esse pedido não leva nenhum dado seu (o site vê apenas o endereço IP, como em qualquer visita). Os links externos ({APP_INFO.websiteLabel} e a página de apoio) só são abertos se
           clicar neles, e regem-se pelas políticas de privacidade desses sites.
         </p>
 

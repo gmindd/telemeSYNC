@@ -97,6 +97,15 @@ scripts/package-windows.sh   # pacote Windows autónomo (Node portátil + depend
 
 Ver também [`docs/architecture.md`](docs/architecture.md) e [`docs/camera-timestamps.md`](docs/camera-timestamps.md).
 
+### Publicar uma atualização
+
+1. Subir a versão no `package.json` da raiz e de `apps/*` e gerar o pacote (`scripts/package-windows.sh`).
+2. Carregar o `.zip` para o branch `downloads`.
+3. No site: acrescentar a versão em **Novidades** (`site/index.html`) e atualizar `site/data/latest.json` (versão, data e resumo de uma linha).
+4. Enviar para o `main` e fazer *Redeploy* no Coolify.
+
+Ao abrir, o programa lê `https://telemesync.pereiragabriel.com/data/latest.json` e, se a versão for mais recente do que a sua, mostra um aviso com os links para as novidades e o download. O site usa o mesmo ficheiro para a versão e o link dos botões de download.
+
 ## Estado
 
 - ✅ Fase 0 — prova de risco (`npm run poc`).
