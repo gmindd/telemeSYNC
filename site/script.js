@@ -1,5 +1,5 @@
 /* ==========================================================================
-   telemeSYNC landing page: navigation, demo video, supporters, visit counter
+   telemeSYNC landing page: languages, navigation, demo video, supporters, visit counter
    ========================================================================== */
 
 // Site settings: edit here only.
@@ -14,9 +14,39 @@ const SITE_CONFIG = {
   supportersUrl: 'data/supporters.json',
   // How many supporters to list.
   supportersMax: 8,
+  // Languages offered by the flags: Portuguese is the page itself, the others come from i18n/<code>.json.
+  languages: ['pt', 'en', 'fr', 'es', 'de'],
 };
 
+// Portuguese texts written by this script (the other languages have them under the same keys in i18n/*.json)
+const PT_UI = {
+  locale: 'pt-PT',
+  'ui.menuOpen': 'Abrir menu',
+  'ui.menuClose': 'Fechar menu',
+  'ui.videoSoon': 'Vídeo de demonstração em breve',
+  'ui.videoWatch': 'Ver a demonstração',
+  'ui.videoTitle': 'Demonstração do telemeSYNC',
+  'ui.loading': 'A carregar…',
+  'ui.someone': 'Alguém',
+  'ui.coffeeOne': 'café',
+  'ui.coffeeMany': 'cafés',
+  'ui.noSupporters': 'Ainda sem apoiantes. Seja o primeiro!',
+  'ui.justNow': 'agora mesmo',
+};
+const LANG_STORAGE_KEY = 'telemesync-lang';
+let dict = PT_UI;
+let currentLang = 'pt';
+let supportersData = null;
+const ptOriginals = new WeakMap();
+let langRequest = 0;
+
+// Text for a key in the current language (Portuguese when missing)
+function t(key) {
+  return dict[key] ?? PT_UI[key] ?? key;
+}
+
 document.addEventListener('DOMContentLoaded', () => {
+  initLanguage();
   initNav();
   initVersion();
   initVideo();
@@ -24,6 +54,91 @@ document.addEventListener('DOMContentLoaded', () => {
   initVisitCounter();
   initReveal();
 });
+
+// Flags in the header: Portuguese by default, choice kept in the browser and in ?lang= links
+function initLanguage() {
+  document.querySelectorAll('.js-lang [data-lang]').forEach((btn) => {
+    btn.addEventListener('click', () => setLanguage(btn.dataset.lang));
+  });
+  let lang = new URLSearchParams(location.search).get('lang');
+  if (!lang) {
+    try {
+      lang = localStorage.getItem(LANG_STORAGE_KEY);
+    } catch {
+      lang = null;
+    }
+  }
+  if (lang && lang !== 'pt' && SITE_CONFIG.languages.includes(lang)) setLanguage(lang, false);
+  else document.documentElement.classList.remove('i18n-loading');
+}
+
+// Loads a language and rewrites every marked text; `remember` saves the choice for the next visits
+async function setLanguage(lang, remember = true) {
+  if (!SITE_CONFIG.languages.includes(lang)) lang = 'pt';
+  const request = ++langRequest;
+  let next = PT_UI;
+  if (lang !== 'pt') {
+    try {
+      const res = await fetch(`i18n/${lang}.json`);
+      if (!res.ok) throw new Error(res.status);
+      next = { ...PT_UI, ...(await res.json()) };
+    } catch {
+      lang = 'pt'; // translation unavailable: stay in Portuguese
+    }
+  }
+  if (request !== langRequest) return; // another flag was clicked meanwhile
+  dict = next;
+  currentLang = lang;
+  applyTranslations(lang === 'pt' ? null : next);
+  if (remember) {
+    try {
+      localStorage.setItem(LANG_STORAGE_KEY, lang);
+    } catch {
+      /* private mode: the choice lasts for this page only */
+    }
+  }
+  const url = new URL(location.href);
+  if (url.searchParams.has('lang')) {
+    url.searchParams.set('lang', lang);
+    history.replaceState(null, '', url);
+  }
+  document.documentElement.classList.remove('i18n-loading');
+}
+
+// Swaps texts and attributes marked with data-i18n*; the Portuguese originals are kept to switch back
+function applyTranslations(texts) {
+  const swap = (el, slot, key, read, write) => {
+    const saved = ptOriginals.get(el) ?? {};
+    if (!(slot in saved)) ptOriginals.set(el, { ...saved, [slot]: read() });
+    write(texts?.[key] ?? ptOriginals.get(el)[slot]);
+  };
+  document.querySelectorAll('[data-i18n]').forEach((el) =>
+    swap(el, 'html', el.dataset.i18n, () => el.innerHTML, (v) => (el.innerHTML = v)),
+  );
+  ['alt', 'aria-label'].forEach((attr) => {
+    document.querySelectorAll(`[data-i18n-${attr}]`).forEach((el) =>
+      swap(el, attr, el.getAttribute(`data-i18n-${attr}`), () => el.getAttribute(attr) ?? '', (v) => el.setAttribute(attr, v)),
+    );
+  });
+  const meta = document.querySelector('meta[name="description"]');
+  const root = document.documentElement;
+  if (!('ptTitle' in root.dataset)) {
+    root.dataset.ptTitle = document.title;
+    root.dataset.ptDescription = meta?.content ?? '';
+  }
+  document.title = texts?.['meta.title'] ?? root.dataset.ptTitle;
+  if (meta) meta.content = texts?.['meta.description'] ?? root.dataset.ptDescription;
+  root.lang = currentLang;
+  document.querySelectorAll('.js-date').forEach((el) => {
+    const d = new Date(`${el.getAttribute('datetime')}T12:00:00`);
+    if (!Number.isNaN(d.getTime())) el.textContent = d.toLocaleDateString(t('locale'), { day: 'numeric', month: 'long', year: 'numeric' });
+  });
+  document.querySelectorAll('.js-lang [data-lang]').forEach((btn) => btn.setAttribute('aria-pressed', String(btn.dataset.lang === currentLang)));
+  const toggle = document.querySelector('.nav-toggle');
+  if (toggle) toggle.setAttribute('aria-label', t(toggle.getAttribute('aria-expanded') === 'true' ? 'ui.menuClose' : 'ui.menuOpen'));
+  renderVideoLabel();
+  if (supportersData) renderSupporters();
+}
 
 // Opens/closes the mobile menu and closes it after a link is chosen
 function initNav() {
@@ -33,7 +148,7 @@ function initNav() {
   const setOpen = (open) => {
     nav.classList.toggle('is-open', open);
     toggle.setAttribute('aria-expanded', String(open));
-    toggle.setAttribute('aria-label', open ? 'Fechar menu' : 'Abrir menu');
+    toggle.setAttribute('aria-label', t(open ? 'ui.menuClose' : 'ui.menuOpen'));
   };
   toggle.addEventListener('click', () => setOpen(!nav.classList.contains('is-open')));
   nav.addEventListener('click', (e) => {
@@ -61,24 +176,29 @@ function initVersion() {
 function initVideo() {
   const box = document.querySelector('.js-video');
   const button = box?.querySelector('.video__play');
-  const label = box?.querySelector('.js-video-label');
   if (!box || !button) return;
   const id = SITE_CONFIG.youtubeId.trim();
+  renderVideoLabel();
   if (!id) {
     button.disabled = true;
     return;
   }
-  if (label) label.textContent = 'Ver a demonstração';
   const poster = box.querySelector('.js-video-poster');
   if (poster) loadPoster(poster, id);
   button.addEventListener('click', () => {
     const iframe = document.createElement('iframe');
     iframe.src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(id)}?autoplay=1&rel=0`;
-    iframe.title = 'Demonstração do telemeSYNC';
+    iframe.title = t('ui.videoTitle');
     iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
     iframe.allowFullscreen = true;
     box.replaceChildren(iframe);
   });
+}
+
+// Play button text: "watch" when there is a video, "coming soon" otherwise
+function renderVideoLabel() {
+  const label = document.querySelector('.js-video-label');
+  if (label) label.textContent = t(SITE_CONFIG.youtubeId.trim() ? 'ui.videoWatch' : 'ui.videoSoon');
 }
 
 // Shows the video's YouTube thumbnail behind the play button (the illustration stays if it fails)
@@ -97,8 +217,7 @@ function loadPoster(img, id) {
 
 // Fetches the latest Buy Me a Coffee supporters (JSON built by the GitHub Action) and lists them
 async function loadSupporters() {
-  const list = document.querySelector('.js-supporters');
-  if (!list) return;
+  if (!document.querySelector('.js-supporters')) return;
   let supporters = [];
   try {
     const res = await fetch(SITE_CONFIG.supportersUrl, { cache: 'no-cache' });
@@ -106,12 +225,20 @@ async function loadSupporters() {
   } catch {
     supporters = [];
   }
+  supportersData = supporters;
+  renderSupporters();
+}
+
+// Lists the supporters already fetched, in the current language
+function renderSupporters() {
+  const list = document.querySelector('.js-supporters');
+  if (!list) return;
   list.replaceChildren();
-  if (!supporters.length) {
+  if (!supportersData.length) {
     list.append(createEmptySupporter());
     return;
   }
-  supporters.slice(0, SITE_CONFIG.supportersMax).forEach((s) => list.append(createSupporterItem(s)));
+  supportersData.slice(0, SITE_CONFIG.supportersMax).forEach((s) => list.append(createSupporterItem(s)));
 }
 
 // Builds one supporter row: cup, name, coffees and how long ago
@@ -125,11 +252,11 @@ function createSupporterItem(s) {
   const text = document.createElement('div');
   const name = document.createElement('div');
   name.className = 'supporter__name';
-  name.textContent = s.name || 'Alguém';
+  name.textContent = s.name || t('ui.someone');
   const meta = document.createElement('div');
   meta.className = 'supporter__meta';
   const coffees = Number(s.coffees) || 1;
-  meta.textContent = `${coffees} ${coffees === 1 ? 'café' : 'cafés'}${s.date ? ` · ${timeAgo(s.date)}` : ''}`;
+  meta.textContent = `${coffees} ${t(coffees === 1 ? 'ui.coffeeOne' : 'ui.coffeeMany')}${s.date ? ` · ${timeAgo(s.date)}` : ''}`;
   text.append(name, meta);
   li.append(cup, text);
   return li;
@@ -139,15 +266,15 @@ function createSupporterItem(s) {
 function createEmptySupporter() {
   const li = document.createElement('li');
   li.className = 'supporters__empty';
-  li.textContent = 'Ainda sem apoiantes. Seja o primeiro!';
+  li.textContent = t('ui.noSupporters');
   return li;
 }
 
-// Turns an ISO date into "há 3 dias" style text in Portuguese
+// Turns an ISO date into "há 3 dias" style text in the current language
 function timeAgo(iso) {
   const then = new Date(iso);
   if (Number.isNaN(then.getTime())) return '';
-  const rtf = new Intl.RelativeTimeFormat('pt-PT', { numeric: 'auto' });
+  const rtf = new Intl.RelativeTimeFormat(t('locale'), { numeric: 'auto' });
   const seconds = (then.getTime() - Date.now()) / 1000;
   const units = [
     ['year', 31536000],
@@ -160,7 +287,7 @@ function timeAgo(iso) {
   for (const [unit, size] of units) {
     if (Math.abs(seconds) >= size) return rtf.format(Math.round(seconds / size), unit);
   }
-  return 'agora mesmo';
+  return t('ui.justNow');
 }
 
 // Counts the visit with GoatCounter (no cookies) and shows the total visits to the site (footer and sponsors card)

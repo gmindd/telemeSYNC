@@ -12,24 +12,51 @@
   <link rel="icon" href="assets/images/favicon.svg" type="image/svg+xml">
   <link rel="preload" href="assets/fonts/Inter-800.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="style.css">
+  <script>
+    // Chosen language other than Portuguese: hide the page until script.js has translated it (at most 1.5 s)
+    try {
+      var l = new URLSearchParams(location.search).get('lang') || localStorage.getItem('telemesync-lang');
+      if (l && l !== 'pt') {
+        document.documentElement.classList.add('i18n-loading');
+        setTimeout(function () { document.documentElement.classList.remove('i18n-loading'); }, 1500);
+      }
+    } catch (e) {}
+  </script>
   <script src="script.js" defer></script>
 </head>
 <body>
-  <a class="skip-link" href="#conteudo">Saltar para o conteúdo</a>
+  <a class="skip-link" href="#conteudo" data-i18n="nav.skip">Saltar para o conteúdo</a>
 
   <header class="site-header">
     <div class="container site-header__inner">
-      <a class="brand" href="#topo" aria-label="telemeSYNC, início">tele<em>me</em>SYNC</a>
+      <a class="brand" href="#topo" aria-label="telemeSYNC, início" data-i18n-aria-label="nav.home">tele<em>me</em>SYNC</a>
+      <div class="lang-switch js-lang" role="group" aria-label="Língua · Language">
+        <button type="button" class="lang-switch__flag" data-lang="pt" lang="pt" title="Português" aria-label="Português" aria-pressed="true">
+          <svg viewBox="0 0 30 20" aria-hidden="true"><rect width="12" height="20" fill="#006600"/><rect x="12" width="18" height="20" fill="#ff0000"/><circle cx="12" cy="10" r="4.2" fill="#ffcc00"/><circle cx="12" cy="10" r="2.6" fill="#ff0000" stroke="#fff" stroke-width=".8"/></svg>
+        </button>
+        <button type="button" class="lang-switch__flag" data-lang="en" lang="en" title="English" aria-label="English" aria-pressed="false">
+          <svg viewBox="0 0 60 40" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><rect width="60" height="40" fill="#012169"/><path d="M0 0 60 40M60 0 0 40" stroke="#fff" stroke-width="8"/><path d="M0 0 60 40M60 0 0 40" stroke="#c8102e" stroke-width="3"/><path d="M30 0v40M0 20h60" stroke="#fff" stroke-width="12"/><path d="M30 0v40M0 20h60" stroke="#c8102e" stroke-width="7"/></svg>
+        </button>
+        <button type="button" class="lang-switch__flag" data-lang="fr" lang="fr" title="Français" aria-label="Français" aria-pressed="false">
+          <svg viewBox="0 0 30 20" aria-hidden="true"><rect width="10" height="20" fill="#002654"/><rect x="10" width="10" height="20" fill="#fff"/><rect x="20" width="10" height="20" fill="#ce1126"/></svg>
+        </button>
+        <button type="button" class="lang-switch__flag" data-lang="es" lang="es" title="Español" aria-label="Español" aria-pressed="false">
+          <svg viewBox="0 0 30 20" aria-hidden="true"><rect width="30" height="20" fill="#aa151b"/><rect y="5" width="30" height="10" fill="#f1bf00"/></svg>
+        </button>
+        <button type="button" class="lang-switch__flag" data-lang="de" lang="de" title="Deutsch" aria-label="Deutsch" aria-pressed="false">
+          <svg viewBox="0 0 30 20" aria-hidden="true"><rect width="30" height="7" fill="#000"/><rect y="6.6" width="30" height="6.8" fill="#dd0000"/><rect y="13.3" width="30" height="6.7" fill="#ffce00"/></svg>
+        </button>
+      </div>
       <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="menu" aria-label="Abrir menu">
         <span></span><span></span><span></span>
       </button>
-      <nav class="site-nav" id="menu" aria-label="Navegação principal">
-        <a href="#layers">Layers</a>
-        <a href="#demo">Demonstração</a>
-        <a href="#roadmap">Roadmap</a>
-        <a href="#novidades">Novidades</a>
-        <a class="btn btn--small btn--coffee" href="#apoiar">☕ Apoiar</a>
-        <a class="btn btn--small btn--primary" href="#download">Download</a>
+      <nav class="site-nav" id="menu" aria-label="Navegação principal" data-i18n-aria-label="nav.aria">
+        <a href="#layers" data-i18n="nav.layers">Layers</a>
+        <a href="#demo" data-i18n="nav.demo">Demonstração</a>
+        <a href="#roadmap" data-i18n="nav.roadmap">Roadmap</a>
+        <a href="#novidades" data-i18n="nav.news">Novidades</a>
+        <a class="btn btn--small btn--coffee" href="#apoiar" data-i18n="nav.support">☕ Apoiar</a>
+        <a class="btn btn--small btn--primary" href="#download" data-i18n="nav.download">Download</a>
       </nav>
     </div>
   </header>
@@ -39,28 +66,28 @@
     <section class="hero" id="topo">
       <div class="container hero__grid">
         <div class="hero__text">
-          <p class="eyebrow">Gratuito · Windows 10/11</p>
-          <h1>A telemetria das suas voltas de bicicleta, <span class="accent">por cima dos seus vídeos</span>.</h1>
-          <p class="lead">
+          <p class="eyebrow" data-i18n="hero.eyebrow">Gratuito · Windows 10/11</p>
+          <h1 data-i18n="hero.title">A telemetria das suas voltas de bicicleta, <span class="accent">por cima dos seus vídeos</span>.</h1>
+          <p class="lead" data-i18n="hero.lead">
             O telemeSYNC sincroniza o ficheiro do ciclocomputador (FIT ou GPX) com os clips da action cam e gera gráficos transparentes:
             velocidade, inclinação, mapa, altimetria, frequência cardíaca e painéis completos. Arraste-os para o editor e já está.
           </p>
           <div class="hero__actions">
             <a class="btn btn--primary btn--big js-download" href="https://github.com/gmindd/telemeSYNC/raw/downloads/telemeSYNC-0.3.2-windows.zip">
-              <span>Descarregar v<span class="js-version">0.3.2</span></span>
+              <span><span data-i18n="hero.download">Descarregar</span> v<span class="js-version">0.3.2</span></span>
             </a>
-            <a class="btn btn--ghost btn--big" href="#demo">Ver demonstração</a>
+            <a class="btn btn--ghost btn--big" href="#demo" data-i18n="hero.demo">Ver demonstração</a>
           </div>
           <ul class="checks">
-            <li>Os vídeos nunca saem do seu computador</li>
-            <li>Não é preciso instalar nada: extrair e abrir</li>
+            <li data-i18n="hero.check1">Os vídeos nunca saem do seu computador</li>
+            <li data-i18n="hero.check2">Não é preciso instalar nada: extrair e abrir</li>
             <li>GoPro, DJI Osmo Action, Insta360 · Bryton, Garmin, iGPSPORT</li>
           </ul>
         </div>
         <figure class="hero__frame">
           <!-- Composição exportada pelo telemeSYNC (fundo transparente) por cima de uma paisagem ilustrativa -->
-          <img src="assets/images/hero-composicao.webp" width="1920" height="1080" alt="Exemplo de composição do telemeSYNC: velocidade, inclinação, mapa da volta e painel de velocidade com o gráfico de altimetria dos últimos 10 km.">
-          <figcaption>Composição real exportada de uma volta, por cima de uma paisagem ilustrativa.</figcaption>
+          <img src="assets/images/hero-composicao.webp" width="1920" height="1080" data-i18n-alt="hero.alt" alt="Exemplo de composição do telemeSYNC: velocidade, inclinação, mapa da volta e painel de velocidade com o gráfico de altimetria dos últimos 10 km.">
+          <figcaption data-i18n="hero.caption">Composição real exportada de uma volta, por cima de uma paisagem ilustrativa.</figcaption>
         </figure>
       </div>
     </section>
@@ -68,27 +95,27 @@
     <!-- Como funciona -->
     <section class="section" id="como-funciona" aria-labelledby="como-titulo">
       <div class="container">
-        <h2 id="como-titulo">Como funciona</h2>
+        <h2 id="como-titulo" data-i18n="how.title">Como funciona</h2>
         <ol class="steps">
           <li class="step">
             <span class="step__n">1</span>
-            <h3>Telemetria</h3>
-            <p>Carregue o FIT ou GPX do ciclocomputador. Aparece o resumo da volta e as métricas disponíveis.</p>
+            <h3 data-i18n="how.s1">Telemetria</h3>
+            <p data-i18n="how.s1text">Carregue o FIT ou GPX do ciclocomputador. Aparece o resumo da volta e as métricas disponíveis.</p>
           </li>
           <li class="step">
             <span class="step__n">2</span>
-            <h3>Clips</h3>
-            <p>Arraste todos os vídeos da volta. A câmara e a hora de cada clip são detetadas a partir dos metadados.</p>
+            <h3 data-i18n="how.s2">Clips</h3>
+            <p data-i18n="how.s2text">Arraste todos os vídeos da volta. A câmara e a hora de cada clip são detetadas a partir dos metadados.</p>
           </li>
           <li class="step">
             <span class="step__n">3</span>
-            <h3>Sincronizar</h3>
-            <p>Confirme o alinhamento numa timeline com o vídeo e os gráficos ao vivo. Um ajuste por câmara alinha todos os clips.</p>
+            <h3 data-i18n="how.s3">Sincronizar</h3>
+            <p data-i18n="how.s3text">Confirme o alinhamento numa timeline com o vídeo e os gráficos ao vivo. Um ajuste por câmara alinha todos os clips.</p>
           </li>
           <li class="step">
             <span class="step__n">4</span>
-            <h3>Exportar</h3>
-            <p>Vídeos transparentes com a mesma duração do clip: um por gadget ou tudo numa só composição.</p>
+            <h3 data-i18n="how.s4">Exportar</h3>
+            <p data-i18n="how.s4text">Vídeos transparentes com a mesma duração do clip: um por gadget ou tudo numa só composição.</p>
           </li>
         </ol>
       </div>
@@ -98,9 +125,9 @@
     <section class="section backers" id="apoiar" aria-labelledby="apoiar-titulo">
       <div class="container">
         <div class="backers__intro">
-          <p class="eyebrow">Gratuito graças a quem apoia</p>
-          <h2 id="apoiar-titulo">Ajude o telemeSYNC a continuar</h2>
-          <p class="section__lead">
+          <p class="eyebrow" data-i18n="backers.eyebrow">Gratuito graças a quem apoia</p>
+          <h2 id="apoiar-titulo" data-i18n="backers.title">Ajude o telemeSYNC a continuar</h2>
+          <p class="section__lead" data-i18n="backers.lead">
             O telemeSYNC é gratuito e vai continuar a ser. Cada café e cada patrocínio pagam as horas de desenvolvimento:
             mais câmaras e ciclocomputadores, novos gadgets e exportações cada vez melhores.
           </p>
@@ -109,12 +136,12 @@
         <div class="backers__grid">
           <article class="backer-card backer-card--coffee" aria-labelledby="cafe-titulo">
             <span class="backer-card__icon" aria-hidden="true">☕</span>
-            <h3 id="cafe-titulo">Pague-me um café</h3>
-            <p>Um apoio pontual, do valor que quiser, através do Buy Me a Coffee. Demora um minuto e faz mesmo diferença.</p>
-            <a class="btn btn--coffee btn--big" href="https://buymeacoffee.com/pereiragabriel" target="_blank" rel="noopener">☕ Pague-me um café</a>
-            <p class="fine">Contribuição voluntária, sem contrapartida. Não é um donativo fiscalmente dedutível.</p>
+            <h3 id="cafe-titulo" data-i18n="coffee.title">Pague-me um café</h3>
+            <p data-i18n="coffee.text">Um apoio pontual, do valor que quiser, através do Buy Me a Coffee. Demora um minuto e faz mesmo diferença.</p>
+            <a class="btn btn--coffee btn--big" href="https://buymeacoffee.com/pereiragabriel" target="_blank" rel="noopener" data-i18n="coffee.button">☕ Pague-me um café</a>
+            <p class="fine" data-i18n="coffee.fine">Contribuição voluntária, sem contrapartida. Não é um donativo fiscalmente dedutível.</p>
             <div class="supporters" aria-labelledby="apoiantes-titulo">
-              <h4 id="apoiantes-titulo">Últimos apoiantes</h4>
+              <h4 id="apoiantes-titulo" data-i18n="coffee.supporters">Últimos apoiantes</h4>
               <ul class="supporters__list js-supporters" aria-live="polite">
                 <li class="supporters__empty">A carregar…</li>
               </ul>
@@ -123,8 +150,8 @@
 
           <article class="backer-card backer-card--sponsor" id="patrocinadores" aria-labelledby="patrocinadores-titulo">
             <span class="backer-card__icon" aria-hidden="true">★</span>
-            <h3 id="patrocinadores-titulo">Patrocine o projeto</h3>
-            <p>
+            <h3 id="patrocinadores-titulo" data-i18n="sponsor.title">Patrocine o projeto</h3>
+            <p data-i18n="sponsor.text">
               Anunciar a sua empresa neste espaço é uma forma de apoiar o projeto e a continuação do desenvolvimento.
               Lojas de bicicletas, marcas de equipamento, eventos de ciclismo e empresas de turismo ativo chegam aqui
               a quem filma e partilha as suas voltas.
@@ -132,26 +159,26 @@
             <!-- Filled by script.js with the GoatCounter total; hidden while unavailable -->
             <p class="sponsor-stat js-visits" hidden>
               <b class="js-visits-count">—</b>
-              <span>visitas ao site até hoje</span>
+              <span data-i18n="sponsor.visits">visitas ao site até hoje</span>
             </p>
-            <a class="btn btn--primary btn--big" href="mailto:hello@pereiragabriel.com?subject=Patroc%C3%ADnio%20telemeSYNC">Quero patrocinar</a>
-            <p class="fine">Condições por email. Os patrocínios são sempre identificados como tal.</p>
+            <a class="btn btn--primary btn--big" href="mailto:hello@pereiragabriel.com?subject=Patroc%C3%ADnio%20telemeSYNC" data-i18n="sponsor.button">Quero patrocinar</a>
+            <p class="fine" data-i18n="sponsor.fine">Condições por email. Os patrocínios são sempre identificados como tal.</p>
           </article>
         </div>
 
-        <h3 class="sponsors__title">Patrocinadores</h3>
+        <h3 class="sponsors__title" data-i18n="sponsors.title">Patrocinadores</h3>
         <div class="sponsors">
           <a class="sponsor-slot" href="mailto:hello@pereiragabriel.com?subject=Patroc%C3%ADnio%20telemeSYNC">
             <span class="sponsor-slot__plus" aria-hidden="true">+</span>
-            <span>O logótipo da sua empresa aqui</span>
+            <span data-i18n="sponsors.yourLogo">O logótipo da sua empresa aqui</span>
           </a>
           <a class="sponsor-slot" href="mailto:hello@pereiragabriel.com?subject=Patroc%C3%ADnio%20telemeSYNC">
             <span class="sponsor-slot__plus" aria-hidden="true">+</span>
-            <span>Espaço disponível</span>
+            <span data-i18n="sponsors.free">Espaço disponível</span>
           </a>
           <a class="sponsor-slot" href="mailto:hello@pereiragabriel.com?subject=Patroc%C3%ADnio%20telemeSYNC">
             <span class="sponsor-slot__plus" aria-hidden="true">+</span>
-            <span>Espaço disponível</span>
+            <span data-i18n="sponsors.free">Espaço disponível</span>
           </a>
         </div>
       </div>
@@ -160,58 +187,58 @@
     <!-- Layers -->
     <section class="section" id="layers" aria-labelledby="layers-titulo">
       <div class="container">
-        <h2 id="layers-titulo">Os layers</h2>
-        <p class="section__lead">
+        <h2 id="layers-titulo" data-i18n="layers.title">Os layers</h2>
+        <p class="section__lead" data-i18n="layers.lead">
           Cada gadget é exportado como um vídeo com fundo transparente. Escolha as métricas, as cores e o gradiente,
           e posicione-os no editor ou deixe o telemeSYNC fazer a composição.
         </p>
 
-        <h3 class="gallery__title">Painéis</h3>
-        <p class="muted">Mostrador, máximo, média, zona ou aceleração, e um gráfico dos últimos 10 min ou 10 km. O gráfico pode mostrar outra métrica.</p>
+        <h3 class="gallery__title" data-i18n="layers.panels">Painéis</h3>
+        <p class="muted" data-i18n="layers.panelsText">Mostrador, máximo, média, zona ou aceleração, e um gráfico dos últimos 10 min ou 10 km. O gráfico pode mostrar outra métrica.</p>
         <div class="gallery gallery--wide">
           <figure class="shot">
-            <img src="assets/images/painel-velocidade.webp" width="1500" height="420" loading="lazy" alt="Painel de velocidade com mostrador, velocidade máxima e média, aceleração e gráfico de altimetria dos últimos 10 km.">
-            <figcaption>Velocidade, com o gráfico de altimetria dos últimos 10 km</figcaption>
+            <img src="assets/images/painel-velocidade.webp" width="1500" height="420" loading="lazy" data-i18n-alt="shot.painel-velocidade.alt" alt="Painel de velocidade com mostrador, velocidade máxima e média, aceleração e gráfico de altimetria dos últimos 10 km.">
+            <figcaption data-i18n="shot.painel-velocidade">Velocidade, com o gráfico de altimetria dos últimos 10 km</figcaption>
           </figure>
           <figure class="shot">
-            <img src="assets/images/painel-fc.webp" width="1500" height="420" loading="lazy" alt="Painel de frequência cardíaca com zona atual e gráfico dos últimos 10 minutos.">
-            <figcaption>Frequência cardíaca com zonas</figcaption>
+            <img src="assets/images/painel-fc.webp" width="1500" height="420" loading="lazy" data-i18n-alt="shot.painel-fc.alt" alt="Painel de frequência cardíaca com zona atual e gráfico dos últimos 10 minutos.">
+            <figcaption data-i18n="shot.painel-fc">Frequência cardíaca com zonas</figcaption>
           </figure>
           <figure class="shot">
-            <img src="assets/images/painel-altitude.webp" width="1500" height="420" loading="lazy" alt="Painel de altitude com gradiente verde e azul, máximo, mínimo e desnível acumulado.">
-            <figcaption>Altitude, com outro gradiente de cores</figcaption>
+            <img src="assets/images/painel-altitude.webp" width="1500" height="420" loading="lazy" data-i18n-alt="shot.painel-altitude.alt" alt="Painel de altitude com gradiente verde e azul, máximo, mínimo e desnível acumulado.">
+            <figcaption data-i18n="shot.painel-altitude">Altitude, com outro gradiente de cores</figcaption>
           </figure>
           <figure class="shot">
-            <img src="assets/images/painel-temperatura.webp" width="1500" height="420" loading="lazy" alt="Painel de temperatura com mínimo, máximo e variação.">
-            <figcaption>Temperatura</figcaption>
+            <img src="assets/images/painel-temperatura.webp" width="1500" height="420" loading="lazy" data-i18n-alt="shot.painel-temperatura.alt" alt="Painel de temperatura com mínimo, máximo e variação.">
+            <figcaption data-i18n="shot.painel-temperatura">Temperatura</figcaption>
           </figure>
         </div>
 
-        <h3 class="gallery__title">Gadgets</h3>
+        <h3 class="gallery__title" data-i18n="layers.gadgets">Gadgets</h3>
         <div class="gallery">
           <figure class="shot">
-            <img src="assets/images/mapa.webp" width="630" height="630" loading="lazy" alt="Mapa do traçado da volta com a parte já percorrida destacada.">
-            <figcaption>Mapa do traçado</figcaption>
+            <img src="assets/images/mapa.webp" width="630" height="630" loading="lazy" data-i18n-alt="shot.mapa.alt" alt="Mapa do traçado da volta com a parte já percorrida destacada.">
+            <figcaption data-i18n="shot.mapa">Mapa do traçado</figcaption>
           </figure>
           <figure class="shot">
-            <img src="assets/images/perfil.webp" width="960" height="300" loading="lazy" alt="Perfil de altimetria da volta com a posição atual.">
-            <figcaption>Perfil de altimetria</figcaption>
+            <img src="assets/images/perfil.webp" width="960" height="300" loading="lazy" data-i18n-alt="shot.perfil.alt" alt="Perfil de altimetria da volta com a posição atual.">
+            <figcaption data-i18n="shot.perfil">Perfil de altimetria</figcaption>
           </figure>
           <figure class="shot">
-            <img src="assets/images/texto-speed.webp" loading="lazy" alt="Gadget de velocidade em km/h.">
-            <figcaption>Velocidade</figcaption>
+            <img src="assets/images/texto-speed.webp" loading="lazy" data-i18n-alt="shot.texto-speed.alt" alt="Gadget de velocidade em km/h.">
+            <figcaption data-i18n="shot.texto-speed">Velocidade</figcaption>
           </figure>
           <figure class="shot">
-            <img src="assets/images/texto-grade.webp" loading="lazy" alt="Gadget de inclinação em percentagem, com indicador por cor.">
-            <figcaption>Inclinação</figcaption>
+            <img src="assets/images/texto-grade.webp" loading="lazy" data-i18n-alt="shot.texto-grade.alt" alt="Gadget de inclinação em percentagem, com indicador por cor.">
+            <figcaption data-i18n="shot.texto-grade">Inclinação</figcaption>
           </figure>
           <figure class="shot">
-            <img src="assets/images/texto-heartRate.webp" loading="lazy" alt="Gadget de frequência cardíaca colorido pela zona.">
-            <figcaption>Frequência cardíaca</figcaption>
+            <img src="assets/images/texto-heartRate.webp" loading="lazy" data-i18n-alt="shot.texto-heartRate.alt" alt="Gadget de frequência cardíaca colorido pela zona.">
+            <figcaption data-i18n="shot.texto-heartRate">Frequência cardíaca</figcaption>
           </figure>
           <figure class="shot">
-            <img src="assets/images/texto-distance.webp" loading="lazy" alt="Gadget de distância percorrida em km.">
-            <figcaption>Distância</figcaption>
+            <img src="assets/images/texto-distance.webp" loading="lazy" data-i18n-alt="shot.texto-distance.alt" alt="Gadget de distância percorrida em km.">
+            <figcaption data-i18n="shot.texto-distance">Distância</figcaption>
           </figure>
         </div>
       </div>
@@ -220,22 +247,22 @@
     <!-- Demonstração -->
     <section class="section section--alt" id="demo" aria-labelledby="demo-titulo">
       <div class="container container--narrow">
-        <h2 id="demo-titulo">Demonstração</h2>
-        <p class="section__lead">Do ficheiro do ciclocomputador ao vídeo final em poucos minutos.</p>
+        <h2 id="demo-titulo" data-i18n="demo.title">Demonstração</h2>
+        <p class="section__lead" data-i18n="demo.lead">Do ficheiro do ciclocomputador ao vídeo final em poucos minutos.</p>
         <!-- O ID do vídeo do YouTube é definido em script.js (SITE_CONFIG.youtubeId) -->
         <div class="video js-video">
           <img class="video__poster js-video-poster" alt="" hidden>
-          <button class="video__play" type="button" aria-label="Reproduzir a demonstração no YouTube">
+          <button class="video__play" type="button" aria-label="Reproduzir a demonstração no YouTube" data-i18n-aria-label="demo.play">
             <span class="video__icon" aria-hidden="true"></span>
             <span class="video__label js-video-label">Vídeo de demonstração em breve</span>
           </button>
         </div>
-        <p class="video-credit">
+        <p class="video-credit" data-i18n="demo.credit">
           Vídeo cedido por cortesia de <strong>Alves na Roda</strong> ·
           <a href="https://www.youtube.com/channel/UCBBXkj3p9e81YS1_LJHircw" target="_blank" rel="noopener">YouTube</a> ·
           <a href="https://www.instagram.com/alvesnaroda.oficial/" target="_blank" rel="noopener">Instagram</a>
         </p>
-        <p class="fine">A imagem de pré-visualização vem do YouTube; o vídeo em si (modo de privacidade reforçada) só é carregado quando carrega em reproduzir.</p>
+        <p class="fine" data-i18n="demo.fine">A imagem de pré-visualização vem do YouTube; o vídeo em si (modo de privacidade reforçada) só é carregado quando carrega em reproduzir.</p>
       </div>
     </section>
 
@@ -243,18 +270,18 @@
     <section class="section" id="download" aria-labelledby="download-titulo">
       <div class="container download">
         <div>
-          <h2 id="download-titulo">Download</h2>
-          <p class="section__lead">Versão <span class="js-version">0.3.2</span> para Windows 10/11 (64 bits) · cerca de 86 MB · gratuita.</p>
+          <h2 id="download-titulo" data-i18n="download.title">Download</h2>
+          <p class="section__lead"><span data-i18n="download.version">Versão</span> <span class="js-version">0.3.2</span> <span data-i18n="download.lead">para Windows 10/11 (64 bits) · cerca de 86 MB · gratuita.</span></p>
           <ol class="download__steps">
-            <li>Descarregue e extraia o ZIP (botão direito → <em>Extrair tudo</em>).</li>
-            <li>Faça duplo clique em <b>Iniciar telemeSYNC.bat</b>. A aplicação abre no browser.</li>
-            <li>Mantenha a janela preta aberta enquanto usa o programa.</li>
+            <li data-i18n="download.step1">Descarregue e extraia o ZIP (botão direito → <em>Extrair tudo</em>).</li>
+            <li data-i18n="download.step2">Faça duplo clique em <b>Iniciar telemeSYNC.bat</b>. A aplicação abre no browser.</li>
+            <li data-i18n="download.step3">Mantenha a janela preta aberta enquanto usa o programa.</li>
           </ol>
         </div>
         <div class="download__actions">
-          <a class="btn btn--primary btn--big js-download" href="https://github.com/gmindd/telemeSYNC/raw/downloads/telemeSYNC-0.3.2-windows.zip">Descarregar telemeSYNC</a>
-          <a class="btn btn--ghost" href="https://github.com/gmindd/telemeSYNC/raw/downloads/Instrucoes-telemeSYNC.pdf">Instruções em PDF</a>
-          <p class="fine">Ao descarregar aceita os termos de utilização incluídos no ficheiro LICENCA.txt.</p>
+          <a class="btn btn--primary btn--big js-download" href="https://github.com/gmindd/telemeSYNC/raw/downloads/telemeSYNC-0.3.2-windows.zip" data-i18n="download.button">Descarregar telemeSYNC</a>
+          <a class="btn btn--ghost" href="https://github.com/gmindd/telemeSYNC/raw/downloads/Instrucoes-telemeSYNC.pdf" data-i18n="download.pdf">Instruções em PDF</a>
+          <p class="fine" data-i18n="download.fine">Ao descarregar aceita os termos de utilização incluídos no ficheiro LICENCA.txt.</p>
         </div>
       </div>
     </section>
@@ -262,23 +289,23 @@
     <!-- Roadmap -->
     <section class="section section--alt" id="roadmap" aria-labelledby="roadmap-titulo">
       <div class="container container--narrow">
-        <h2 id="roadmap-titulo">Roadmap</h2>
-        <p class="section__lead">Em que estou a trabalhar neste momento.</p>
+        <h2 id="roadmap-titulo" data-i18n="roadmap.title">Roadmap</h2>
+        <p class="section__lead" data-i18n="roadmap.lead">Em que estou a trabalhar neste momento.</p>
         <ul class="roadmap">
           <li class="roadmap__item">
-            <span class="tag tag--progress">Em curso</span>
-            <h3>Melhoria do algoritmo de sincronização automática</h3>
-            <p>Menos ajustes manuais: alinhar os clips com a telemetria de forma mais fiável, em mais câmaras.</p>
+            <span class="tag tag--progress" data-i18n="roadmap.inProgress">Em curso</span>
+            <h3 data-i18n="roadmap.i1">Melhoria do algoritmo de sincronização automática</h3>
+            <p data-i18n="roadmap.i1text">Menos ajustes manuais: alinhar os clips com a telemetria de forma mais fiável, em mais câmaras.</p>
           </li>
           <li class="roadmap__item">
-            <span class="tag tag--progress">Em curso</span>
-            <h3>Melhoria dos formatos de exportação e do tamanho dos ficheiros</h3>
-            <p>Ficheiros mais leves e compatíveis com mais editores de vídeo.</p>
+            <span class="tag tag--progress" data-i18n="roadmap.inProgress">Em curso</span>
+            <h3 data-i18n="roadmap.i2">Melhoria dos formatos de exportação e do tamanho dos ficheiros</h3>
+            <p data-i18n="roadmap.i2text">Ficheiros mais leves e compatíveis com mais editores de vídeo.</p>
           </li>
           <li class="roadmap__item">
-            <span class="tag tag--progress">Em curso</span>
-            <h3>Novos designs e gadgets</h3>
-            <p>Mais estilos de painéis e novos gadgets para mostrar a telemetria.</p>
+            <span class="tag tag--progress" data-i18n="roadmap.inProgress">Em curso</span>
+            <h3 data-i18n="roadmap.i3">Novos designs e gadgets</h3>
+            <p data-i18n="roadmap.i3text">Mais estilos de painéis e novos gadgets para mostrar a telemetria.</p>
           </li>
         </ul>
       </div>
@@ -287,50 +314,50 @@
     <!-- Novidades -->
     <section class="section" id="novidades" aria-labelledby="novidades-titulo">
       <div class="container container--narrow">
-        <h2 id="novidades-titulo">Novidades</h2>
+        <h2 id="novidades-titulo" data-i18n="news.title">Novidades</h2>
         <div class="changelog">
           <article class="release">
             <header class="release__head">
-              <h3>Versão 0.3.2</h3>
-              <time datetime="2026-10-15">15 de outubro de 2026</time>
+              <h3><span data-i18n="news.version">Versão</span> 0.3.2</h3>
+              <time class="js-date" datetime="2026-10-15">15 de outubro de 2026</time>
             </header>
             <ul>
-              <li><b>Aviso de atualizações:</b> ao abrir, o programa avisa quando há uma versão nova, com ligações para as novidades e para o download. Sem internet, abre normalmente.</li>
-              <li><b>Para todas as voltas:</b> estrada, gravel, BTT, downhill… os textos do programa deixam de falar só de BTT.</li>
+              <li data-i18n="news.032.1"><b>Aviso de atualizações:</b> ao abrir, o programa avisa quando há uma versão nova, com ligações para as novidades e para o download. Sem internet, abre normalmente.</li>
+              <li data-i18n="news.032.2"><b>Para todas as voltas:</b> estrada, gravel, BTT, downhill… os textos do programa deixam de falar só de BTT.</li>
             </ul>
           </article>
           <article class="release">
             <header class="release__head">
-              <h3>Versão 0.3.1</h3>
-              <time datetime="2026-10-14">14 de outubro de 2026</time>
+              <h3><span data-i18n="news.version">Versão</span> 0.3.1</h3>
+              <time class="js-date" datetime="2026-10-14">14 de outubro de 2026</time>
             </header>
             <ul>
-              <li><b>Ficheiros até 10× mais leves:</b> o formato predefinido passa a ser QuickTime Animation (.mov, sem perdas). Uma composição Full HD de 21 minutos passa de cerca de 19 GB para cerca de 1,8 GB.</li>
-              <li><b>Escolha do formato de exportação:</b> QuickTime Animation, ProRes 4444, FFV1 (.mkv, para o DaVinci Resolve), WebM VP9 (experimental) e sequência PNG, com indicação dos editores que mantêm a transparência.</li>
-              <li><b>Máximo 30 fps:</b> com clips a 50/60 fps, os overlays podem ser exportados a metade do frame rate (metade do tamanho), sem perder o alinhamento com o vídeo.</li>
-              <li><b>Painéis ao ritmo dos números:</b> o mostrador e o gráfico atualizam com os números, o que deixa os ficheiros dos painéis cerca de 3× mais leves e mais rápidos a renderizar.</li>
+              <li data-i18n="news.031.1"><b>Ficheiros até 10× mais leves:</b> o formato predefinido passa a ser QuickTime Animation (.mov, sem perdas). Uma composição Full HD de 21 minutos passa de cerca de 19 GB para cerca de 1,8 GB.</li>
+              <li data-i18n="news.031.2"><b>Escolha do formato de exportação:</b> QuickTime Animation, ProRes 4444, FFV1 (.mkv, para o DaVinci Resolve), WebM VP9 (experimental) e sequência PNG, com indicação dos editores que mantêm a transparência.</li>
+              <li data-i18n="news.031.3"><b>Máximo 30 fps:</b> com clips a 50/60 fps, os overlays podem ser exportados a metade do frame rate (metade do tamanho), sem perder o alinhamento com o vídeo.</li>
+              <li data-i18n="news.031.4"><b>Painéis ao ritmo dos números:</b> o mostrador e o gráfico atualizam com os números, o que deixa os ficheiros dos painéis cerca de 3× mais leves e mais rápidos a renderizar.</li>
             </ul>
           </article>
           <article class="release">
             <header class="release__head">
-              <h3>Versão 0.3.0</h3>
-              <time datetime="2026-10-14">14 de outubro de 2026</time>
+              <h3><span data-i18n="news.version">Versão</span> 0.3.0</h3>
+              <time class="js-date" datetime="2026-10-14">14 de outubro de 2026</time>
             </header>
             <ul>
-              <li><b>Painéis:</b> mostrador, estatísticas da volta e gráfico recente para velocidade, potência, frequência cardíaca, cadência, temperatura, altitude e inclinação.</li>
-              <li>Gradiente de duas cores à escolha, fundo ajustável e zonas de potência a partir do FTP.</li>
-              <li>O gráfico de cada painel pode mostrar outra métrica, nos últimos minutos ou quilómetros.</li>
-              <li>Corrigido: a exportação falhava na versão para Windows.</li>
+              <li data-i18n="news.030.1"><b>Painéis:</b> mostrador, estatísticas da volta e gráfico recente para velocidade, potência, frequência cardíaca, cadência, temperatura, altitude e inclinação.</li>
+              <li data-i18n="news.030.2">Gradiente de duas cores à escolha, fundo ajustável e zonas de potência a partir do FTP.</li>
+              <li data-i18n="news.030.3">O gráfico de cada painel pode mostrar outra métrica, nos últimos minutos ou quilómetros.</li>
+              <li data-i18n="news.030.4">Corrigido: a exportação falhava na versão para Windows.</li>
             </ul>
           </article>
           <article class="release">
             <header class="release__head">
-              <h3>Versão 0.2.0</h3>
-              <time datetime="2026-10-14">14 de outubro de 2026</time>
+              <h3><span data-i18n="news.version">Versão</span> 0.2.0</h3>
+              <time class="js-date" datetime="2026-10-14">14 de outubro de 2026</time>
             </header>
             <ul>
-              <li>Página de boas-vindas, avisos legais e ligação de apoio.</li>
-              <li>Leitura de ficheiros FIT com descodificador próprio.</li>
+              <li data-i18n="news.020.1">Página de boas-vindas, avisos legais e ligação de apoio.</li>
+              <li data-i18n="news.020.2">Leitura de ficheiros FIT com descodificador próprio.</li>
             </ul>
           </article>
         </div>
@@ -342,16 +369,16 @@
       <div class="container container--narrow author">
         <div class="author__avatar" aria-hidden="true">GP</div>
         <div>
-          <h2 id="autor-titulo">Feito por Gabriel Pereira</h2>
-          <p class="author__role">Web designer e consultor digital</p>
-          <p>
+          <h2 id="autor-titulo" data-i18n="author.title">Feito por Gabriel Pereira</h2>
+          <p class="author__role" data-i18n="author.role">Web designer e consultor digital</p>
+          <p data-i18n="author.text">
             O telemeSYNC nasceu da vontade de juntar duas paixões: o BTT e o digital bem feito. É o mesmo cuidado que ponho nos projetos
             para empresas e profissionais: websites e landing pages, product design e desenvolvimento, automações e estratégia digital.
             Mais de 20 projetos entregues, em Portugal e no estrangeiro, entre eles o site, a loja online e o aluguer de bicicletas da ViaBike, no Caminho de Santiago.
           </p>
-          <p>O telemeSYNC é freeware. Se precisa de um site ou de um projeto digital, conheça os meus serviços.</p>
+          <p data-i18n="author.text2">O telemeSYNC é freeware. Se precisa de um site ou de um projeto digital, conheça os meus serviços.</p>
           <div class="author__actions">
-            <a class="btn btn--primary" href="https://www.pereiragabriel.com/" target="_blank" rel="noopener">Conhecer os serviços ↗</a>
+            <a class="btn btn--primary" href="https://www.pereiragabriel.com/" target="_blank" rel="noopener" data-i18n="author.cta">Conhecer os serviços ↗</a>
             <a class="btn btn--ghost" href="mailto:hello@pereiragabriel.com">hello@pereiragabriel.com</a>
           </div>
         </div>
@@ -361,13 +388,13 @@
 
   <footer class="site-footer">
     <div class="container site-footer__inner">
-      <p>© 2026 <a href="https://www.pereiragabriel.com/" target="_blank" rel="noopener">Gabriel Pereira</a> · telemeSYNC é gratuito (freeware).</p>
+      <p data-i18n="footer.copy">© 2026 <a href="https://www.pereiragabriel.com/" target="_blank" rel="noopener">Gabriel Pereira</a> · telemeSYNC é gratuito (freeware).</p>
       <p class="visits js-visits" hidden>
         <span class="visits__dot" aria-hidden="true"></span>
-        <span><b class="js-visits-count">—</b> visitas ao site</span>
+        <span><b class="js-visits-count">—</b> <span data-i18n="footer.visits">visitas ao site</span></span>
       </p>
-      <p><a href="legal.html">Aviso legal, termos e privacidade</a></p>
-      <p class="fine">
+      <p><a href="legal.html" data-i18n="footer.legal">Aviso legal, termos e privacidade</a></p>
+      <p class="fine" data-i18n="footer.fine">
         GoPro, DJI, Insta360, Garmin, Bryton, iGPSPORT, DaVinci Resolve, Premiere Pro e Final Cut Pro são marcas dos respetivos titulares,
         referidas apenas para indicar compatibilidade. Estatísticas de visitas anónimas, sem cookies.
       </p>

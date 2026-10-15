@@ -102,6 +102,7 @@ Ver também [`docs/architecture.md`](docs/architecture.md) e [`docs/camera-times
 1. Subir a versão no `package.json` da raiz e de `apps/*` e gerar o pacote (`scripts/package-windows.sh`).
 2. Carregar o `.zip` para o branch `downloads`.
 3. No site: acrescentar a versão em **Novidades** (`site/index.html`) e atualizar `site/data/latest.json` (versão, data e resumo de uma linha).
+   Para as outras línguas, dar a cada ponto novo um `data-i18n="news.<versão sem pontos>.<n>"` (ex.: `news.033.1`) e acrescentar a tradução com a mesma chave em `site/i18n/en.json`, `fr.json`, `es.json` e `de.json`. Um texto sem tradução aparece em português.
 4. Enviar para o `main` e fazer *Redeploy* no Coolify.
 
 Ao abrir, o programa lê `https://telemesync.pereiragabriel.com/data/latest.json` e, se a versão for mais recente do que a sua, mostra um aviso com os links para as novidades e o download. O site usa o mesmo ficheiro para a versão e o link dos botões de download.
