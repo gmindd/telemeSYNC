@@ -1,7 +1,7 @@
 {
-  "version": "0.3.1",
-  "date": "2026-10-14",
-  "summary": "Ficheiros até 10× mais leves e escolha do formato de exportação.",
-  "downloadUrl": "https://github.com/gmindd/telemeSYNC/raw/downloads/telemeSYNC-windows.zip",
+  "version": "0.3.2",
+  "date": "2026-10-15",
+  "summary": "Aviso de atualizações ao abrir o programa e textos para todas as voltas de bicicleta.",
+  "downloadUrl": "https://github.com/gmindd/telemeSYNC/raw/downloads/telemeSYNC-0.3.2-windows.zip",
   "changelogUrl": "https://telemesync.pereiragabriel.com/#novidades"
 }
