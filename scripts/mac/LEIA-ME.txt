@@ -1,0 +1,40 @@
+telemeSYNC - gerador de overlays de telemetria para vídeos de bicicleta (macOS)
+==============================================================================
+
+Funciona em Macs com Apple Silicon (M1, M2, M3, M4…) e com processador Intel, macOS 11 Big Sur ou mais recente.
+Não é preciso instalar nada: tudo o que a aplicação precisa já vem dentro desta pasta.
+
+COMO ARRANCAR
+1. Abra o ZIP descarregado (o Safari costuma abri-lo sozinho e deixar a pasta "telemeSYNC" nas Transferências).
+   Pode mover a pasta para onde quiser, por exemplo Documentos ou Aplicações.
+2. Abra a pasta "telemeSYNC" e faça duplo clique em "Iniciar telemeSYNC.command".
+3. Abre-se uma janela do Terminal e o browser abre em http://localhost:5174.
+   Mantenha a janela do Terminal aberta enquanto usa a aplicação.
+
+NA PRIMEIRA VEZ O MAC MOSTRA UM AVISO
+O telemeSYNC ainda não está registado na Apple, por isso o macOS bloqueia-o na primeira vez:
+
+  macOS 15 Sequoia ou mais recente
+    a) Aparece "Não foi possível abrir 'Iniciar telemeSYNC.command'". Clique em "Concluído".
+    b) Abra Definições do Sistema > Privacidade e Segurança.
+    c) Desça até ao fim: aparece "'Iniciar telemeSYNC.command' foi bloqueado…". Clique em "Abrir mesmo assim"
+       e confirme com a palavra-passe ou o Touch ID.
+
+  macOS 14 Sonoma ou anterior
+    Clique com o botão direito (ou Control+clique) em "Iniciar telemeSYNC.command" > Abrir > Abrir.
+
+Só é preciso fazer isto uma vez. Depois basta o duplo clique.
+
+OUTROS AVISOS QUE PODEM APARECER
+- "O Terminal pretende aceder a ficheiros da pasta Documentos": clique em "Permitir". É onde os vídeos
+  gerados são guardados (Documentos/telemeSYNC); pode escolher outra pasta no programa.
+- Ao fechar a janela: "Pretende terminar os processos nesta janela?": clique em "Terminar".
+
+PARA TERMINAR
+Feche a janela do Terminal (ou carregue em Control+C dentro dela).
+
+VÍDEOS HEVC (H.265)
+Se o preview não mostrar o vídeo, abra o endereço http://localhost:5174 no Safari, que reproduz HEVC.
+A sincronização e a exportação funcionam na mesma.
+
+Os seus vídeos nunca saem do computador: a aplicação lê apenas os metadados (data, duração, fps).

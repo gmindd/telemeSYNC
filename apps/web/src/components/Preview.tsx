@@ -15,6 +15,7 @@ import {
   type RideData,
 } from '@telemesync/core';
 import { useApp } from '../lib/store.ts';
+import { currentPlatform } from '../lib/updates.ts';
 
 type PlayState = 'loading' | 'ok' | 'error' | 'nofile' | 'unsupported';
 
@@ -22,8 +23,12 @@ function reasonText(state: PlayState, clip: Clip): string {
   if (state === 'nofile') return 'O ficheiro de vídeo não está associado (projeto reaberto). Arraste-o de novo no passo "Clips" para ver o vídeo. Abaixo mostram-se só os dados.';
   if (state === 'unsupported') return `O browser não reproduz ficheiros ${clip.meta.fileName.split('.').pop()?.toUpperCase()} (vídeo 360° em bruto). Mostram-se só os dados — use o slider para percorrer o clip.`;
   const hevc = clip.meta.codec === 'hvc1' || clip.meta.codec === 'hev1';
+  const hevcHelp =
+    currentPlatform() === 'mac'
+      ? 'No Mac, abra o telemeSYNC no Safari (http://localhost:5174), que reproduz HEVC.'
+      : 'No Windows pode instalar as "Extensões de Vídeo HEVC" da Microsoft Store, ou usar o Edge.';
   return hevc
-    ? 'O browser não consegue reproduzir este vídeo HEVC (H.265). No Windows pode instalar as "Extensões de Vídeo HEVC" da Microsoft Store, ou usar o Edge. Mostram-se só os dados.'
+    ? `O browser não consegue reproduzir este vídeo HEVC (H.265). ${hevcHelp} Mostram-se só os dados.`
     : 'O browser não consegue reproduzir este ficheiro. Mostram-se só os dados — use o slider para percorrer o clip.';
 }
 

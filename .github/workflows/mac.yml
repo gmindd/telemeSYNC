@@ -1,0 +1,79 @@
+# macOS: runs the test suite on a Mac, builds the self-contained package (one ZIP for Apple Silicon and Intel)
+# and smoke-tests it on both architectures, the way a tester opens it: extracted by Archive Utility, in quarantine.
+# The ZIP is kept as an artifact of the run (Actions → this run → Artifacts) for upload to the downloads branch.
+name: macOS
+
+on:
+  push:
+    paths:
+      - 'apps/**'
+      - 'packages/**'
+      - 'scripts/package-mac.sh'
+      - 'scripts/zip-unix.py'
+      - 'scripts/third-party-notices.mjs'
+      - 'scripts/mac/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/mac.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+
+  package:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: bash scripts/package-mac.sh dist-release
+      - name: Binaries are signed (Apple Silicon refuses unsigned code)
+        run: |
+          mkdir -p "$RUNNER_TEMP/check" && ditto -x -k dist-release/telemeSYNC-*-macos.zip "$RUNNER_TEMP/check"
+          cd "$RUNNER_TEMP/check/telemeSYNC"
+          for f in runtime/darwin-*/node runtime/darwin-*/ffmpeg node_modules/@esbuild/darwin-*/bin/esbuild node_modules/@napi-rs/canvas-darwin-*/*.node; do
+            lipo -archs "$f" | xargs echo "$f:"
+            codesign -v "$f"
+          done
+      - uses: actions/upload-artifact@v4
+        with:
+          name: telemeSYNC-macos
+          path: dist-release/telemeSYNC-*-macos.zip
+          compression-level: 0
+
+  smoke:
+    needs: package
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [macos-15, macos-15-intel]
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/download-artifact@v4
+        with:
+          name: telemeSYNC-macos
+      - name: Extract like a downloaded file (Archive Utility, quarantined)
+        run: |
+          ditto -x -k telemeSYNC-*-macos.zip "$RUNNER_TEMP/app"
+          find "$RUNNER_TEMP/app/telemeSYNC" -type f -exec xattr -w com.apple.quarantine "0083;$(printf %x "$(date +%s)");Safari;" {} \;
+      - run: node scripts/mac/smoke-test.mjs "$RUNNER_TEMP/app/telemeSYNC"

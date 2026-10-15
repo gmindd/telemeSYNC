@@ -1,7 +1,11 @@
 {
-  "version": "0.3.2",
+  "version": "0.4.0",
   "date": "2026-10-15",
-  "summary": "Aviso de atualizações ao abrir o programa e textos para todas as voltas de bicicleta.",
-  "downloadUrl": "https://github.com/gmindd/telemeSYNC/raw/downloads/telemeSYNC-0.3.2-windows.zip",
+  "summary": "Versão para Mac (Apple Silicon e Intel) e aviso de atualizações com o download certo para cada sistema.",
+  "downloadUrl": "https://github.com/gmindd/telemeSYNC/raw/downloads/telemeSYNC-0.4.0-windows.zip",
+  "downloads": {
+    "windows": "https://github.com/gmindd/telemeSYNC/raw/downloads/telemeSYNC-0.4.0-windows.zip",
+    "mac": "https://github.com/gmindd/telemeSYNC/raw/downloads/telemeSYNC-0.4.0-macos.zip"
+  },
   "changelogUrl": "https://telemesync.pereiragabriel.com/#novidades"
 }

@@ -66,15 +66,15 @@
     <section class="hero" id="topo">
       <div class="container hero__grid">
         <div class="hero__text">
-          <p class="eyebrow" data-i18n="hero.eyebrow">Gratuito · Windows 10/11</p>
+          <p class="eyebrow" data-i18n="hero.eyebrow">Gratuito · Windows e macOS</p>
           <h1 data-i18n="hero.title">A telemetria das suas voltas de bicicleta, <span class="accent">por cima dos seus vídeos</span>.</h1>
           <p class="lead" data-i18n="hero.lead">
             O telemeSYNC sincroniza o ficheiro do ciclocomputador (FIT ou GPX) com os clips da action cam e gera gráficos transparentes:
             velocidade, inclinação, mapa, altimetria, frequência cardíaca e painéis completos. Arraste-os para o editor e já está.
           </p>
           <div class="hero__actions">
-            <a class="btn btn--primary btn--big js-download" href="https://github.com/gmindd/telemeSYNC/raw/downloads/telemeSYNC-0.3.2-windows.zip">
-              <span><span data-i18n="hero.download">Descarregar</span> v<span class="js-version">0.3.2</span></span>
+            <a class="btn btn--primary btn--big js-download" href="https://github.com/gmindd/telemeSYNC/raw/downloads/telemeSYNC-0.4.0-windows.zip">
+              <span><span data-i18n="hero.download">Descarregar</span> v<span class="js-version">0.4.0</span></span>
             </a>
             <a class="btn btn--ghost btn--big" href="#demo" data-i18n="hero.demo">Ver demonstração</a>
           </div>
@@ -266,23 +266,39 @@
       </div>
     </section>
 
-    <!-- Download -->
+    <!-- Download: one card per system; script.js puts the visitor's system first and points the hero button at it -->
     <section class="section" id="download" aria-labelledby="download-titulo">
-      <div class="container download">
-        <div>
-          <h2 id="download-titulo" data-i18n="download.title">Download</h2>
-          <p class="section__lead"><span data-i18n="download.version">Versão</span> <span class="js-version">0.3.2</span> <span data-i18n="download.lead">para Windows 10/11 (64 bits) · cerca de 86 MB · gratuita.</span></p>
-          <ol class="download__steps">
-            <li data-i18n="download.step1">Descarregue e extraia o ZIP (botão direito → <em>Extrair tudo</em>).</li>
-            <li data-i18n="download.step2">Faça duplo clique em <b>Iniciar telemeSYNC.bat</b>. A aplicação abre no browser.</li>
-            <li data-i18n="download.step3">Mantenha a janela preta aberta enquanto usa o programa.</li>
-          </ol>
+      <div class="container">
+        <h2 id="download-titulo" data-i18n="download.title">Download</h2>
+        <p class="section__lead"><span data-i18n="download.version">Versão</span> <span class="js-version">0.4.0</span> <span data-i18n="download.lead">· gratuita · não é preciso instalar nada.</span></p>
+        <div class="download">
+          <article class="download__os js-os" data-os="windows">
+            <h3>Windows</h3>
+            <p class="fine" data-i18n="download.winReq">Windows 10/11 (64 bits) · cerca de 86 MB</p>
+            <ol class="download__steps">
+              <li data-i18n="download.step1">Descarregue e extraia o ZIP (botão direito → <em>Extrair tudo</em>).</li>
+              <li data-i18n="download.step2">Faça duplo clique em <b>Iniciar telemeSYNC.bat</b>. A aplicação abre no browser.</li>
+              <li data-i18n="download.step3">Mantenha a janela preta aberta enquanto usa o programa.</li>
+            </ol>
+            <div class="download__actions">
+              <a class="btn btn--primary js-download" data-os="windows" href="https://github.com/gmindd/telemeSYNC/raw/downloads/telemeSYNC-0.4.0-windows.zip" data-i18n="download.buttonWin">Descarregar para Windows</a>
+              <a class="btn btn--ghost" href="https://github.com/gmindd/telemeSYNC/raw/downloads/Instrucoes-telemeSYNC.pdf" data-i18n="download.pdf">Instruções em PDF</a>
+            </div>
+          </article>
+          <article class="download__os js-os" data-os="mac">
+            <h3>macOS</h3>
+            <p class="fine" data-i18n="download.macReq">macOS 11 ou mais recente · Apple Silicon (M1 a M4) e Intel · cerca de 155 MB</p>
+            <ol class="download__steps">
+              <li data-i18n="download.mac1">Descarregue o ZIP. O Safari abre-o sozinho e deixa a pasta <b>telemeSYNC</b> nas Transferências.</li>
+              <li data-i18n="download.mac2">Faça duplo clique em <b>Iniciar telemeSYNC.command</b>. Da primeira vez, autorize-o em <em>Definições do Sistema → Privacidade e Segurança → Abrir mesmo assim</em>.</li>
+              <li data-i18n="download.mac3">Mantenha a janela do Terminal aberta enquanto usa o programa.</li>
+            </ol>
+            <div class="download__actions">
+              <a class="btn btn--primary js-download" data-os="mac" href="https://github.com/gmindd/telemeSYNC/raw/downloads/telemeSYNC-0.4.0-macos.zip" data-i18n="download.buttonMac">Descarregar para Mac</a>
+            </div>
+          </article>
         </div>
-        <div class="download__actions">
-          <a class="btn btn--primary btn--big js-download" href="https://github.com/gmindd/telemeSYNC/raw/downloads/telemeSYNC-0.3.2-windows.zip" data-i18n="download.button">Descarregar telemeSYNC</a>
-          <a class="btn btn--ghost" href="https://github.com/gmindd/telemeSYNC/raw/downloads/Instrucoes-telemeSYNC.pdf" data-i18n="download.pdf">Instruções em PDF</a>
-          <p class="fine" data-i18n="download.fine">Ao descarregar aceita os termos de utilização incluídos no ficheiro LICENCA.txt.</p>
-        </div>
+        <p class="fine download__fine" data-i18n="download.fine">Ao descarregar aceita os termos de utilização incluídos no ficheiro LICENCA.txt.</p>
       </div>
     </section>
 
@@ -316,6 +332,16 @@
       <div class="container container--narrow">
         <h2 id="novidades-titulo" data-i18n="news.title">Novidades</h2>
         <div class="changelog">
+          <article class="release">
+            <header class="release__head">
+              <h3><span data-i18n="news.version">Versão</span> 0.4.0</h3>
+              <time class="js-date" datetime="2026-10-15">15 de outubro de 2026</time>
+            </header>
+            <ul>
+              <li data-i18n="news.040.1"><b>Versão para Mac:</b> um só download para Macs com Apple Silicon (M1 a M4) e Intel, macOS 11 ou mais recente. Como no Windows, não é preciso instalar nada.</li>
+              <li data-i18n="news.040.2">O aviso de atualizações leva ao download certo para o seu sistema.</li>
+            </ul>
+          </article>
           <article class="release">
             <header class="release__head">
               <h3><span data-i18n="news.version">Versão</span> 0.3.2</h3>

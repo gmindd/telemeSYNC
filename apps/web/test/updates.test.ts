@@ -24,4 +24,13 @@ describe('parseRelease', () => {
     expect(parseRelease({ ...ok, downloadUrl: 'http://x/a.zip' })).toBeNull();
     expect(parseRelease({ ...ok, changelogUrl: 'javascript:alert(1)' })).toBeNull();
   });
+  it('picks the download for the system', () => {
+    const downloads = { windows: 'https://x/w.zip', mac: 'https://x/m.zip' };
+    expect(parseRelease({ ...ok, downloads }, 'mac')?.downloadUrl).toBe('https://x/m.zip');
+    expect(parseRelease({ ...ok, downloads }, 'windows')?.downloadUrl).toBe('https://x/w.zip');
+    expect(parseRelease(ok, 'windows')?.downloadUrl).toBe('https://x/a.zip');
+    // No Mac package yet, or a bad link: the Mac version sends people to the site, never to the Windows ZIP.
+    expect(parseRelease(ok, 'mac')?.downloadUrl).toBe('https://x/#novidades');
+    expect(parseRelease({ ...ok, downloads: { mac: 'http://x/m.zip' } }, 'mac')?.downloadUrl).toBe('https://x/#novidades');
+  });
 });

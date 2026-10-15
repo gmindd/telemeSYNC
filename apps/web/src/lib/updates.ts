@@ -1,3 +1,11 @@
+/** Systems with a download of their own in data/latest.json. */
+export type Platform = 'windows' | 'mac';
+
+/** The system the panel is open on (the server runs on the same computer). */
+export function currentPlatform(): Platform {
+  return /Mac/i.test(navigator.userAgent) ? 'mac' : 'windows';
+}
+
 /** Latest release, as published by the site in data/latest.json. */
 export interface Release {
   version: string;
@@ -19,28 +27,33 @@ export function isNewer(a: string, b: string): boolean {
   return false;
 }
 
-/** Validates data/latest.json; only https links are accepted. */
-export function parseRelease(data: unknown): Release | null {
+/**
+ * Validates data/latest.json; only https links are accepted. The download is `downloads[platform]`; `downloadUrl` is
+ * the Windows package (read by versions up to 0.3.2). Without a package for this system the link goes to the site.
+ */
+export function parseRelease(data: unknown, platform: Platform = 'windows'): Release | null {
   if (!data || typeof data !== 'object') return null;
   const r = data as Record<string, unknown>;
   const https = (u: unknown) => typeof u === 'string' && /^https:\/\//.test(u);
   if (typeof r.version !== 'string' || !/^v?\d+(\.\d+)*/.test(r.version.trim())) return null;
   if (!https(r.downloadUrl) || !https(r.changelogUrl)) return null;
+  const downloads = r.downloads && typeof r.downloads === 'object' ? (r.downloads as Record<string, unknown>) : {};
+  const download = https(downloads[platform]) ? downloads[platform] : platform === 'windows' ? r.downloadUrl : r.changelogUrl;
   return {
     version: r.version.trim().replace(/^v/i, ''),
     date: typeof r.date === 'string' ? r.date : undefined,
     summary: typeof r.summary === 'string' ? r.summary.slice(0, 200) : undefined,
-    downloadUrl: r.downloadUrl as string,
+    downloadUrl: download as string,
     changelogUrl: r.changelogUrl as string,
   };
 }
 
 /** Asks the site for the latest release; null when there is none newer or the site can't be reached (offline, timeout). */
-export async function checkForUpdate(url: string, current: string): Promise<Release | null> {
+export async function checkForUpdate(url: string, current: string, platform: Platform = currentPlatform()): Promise<Release | null> {
   try {
     const res = await fetch(url, { cache: 'no-store', signal: AbortSignal.timeout(8000) });
     if (!res.ok) return null;
-    const release = parseRelease(await res.json());
+    const release = parseRelease(await res.json(), platform);
     return release && isNewer(release.version, current) ? release : null;
   } catch {
     return null;

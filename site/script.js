@@ -159,13 +159,24 @@ function initNav() {
   });
 }
 
-// Writes the latest version and download link (data/latest.json) into the download buttons
+// Download buttons: the visitor's system comes first and the hero button points at its package; then the latest
+// version and links (data/latest.json) replace the ones written in the HTML. Buttons without data-os follow the visitor.
 function initVersion() {
+  const os = /Mac|iPhone|iPad/i.test(navigator.userAgent) ? 'mac' : 'windows';
+  document.querySelectorAll('.js-os').forEach((el) => el.classList.toggle('download__os--current', el.dataset.os === os));
+  const setLinks = (links) =>
+    document.querySelectorAll('.js-download').forEach((el) => {
+      const url = links[el.dataset.os || os];
+      if (url) el.href = url;
+    });
+  const fromHtml = {};
+  document.querySelectorAll('.js-download[data-os]').forEach((el) => (fromHtml[el.dataset.os] = el.href));
+  setLinks(fromHtml);
   fetch(SITE_CONFIG.latestUrl, { cache: 'no-cache' })
     .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
     .then((latest) => {
       if (latest.version) document.querySelectorAll('.js-version').forEach((el) => (el.textContent = latest.version));
-      if (latest.downloadUrl) document.querySelectorAll('.js-download').forEach((el) => (el.href = latest.downloadUrl));
+      setLinks({ windows: latest.downloadUrl, ...latest.downloads });
     })
     .catch(() => {
       /* keep the version and link written in the HTML */

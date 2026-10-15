@@ -28,9 +28,16 @@ Gerador de overlays de telemetria para vídeos de bicicleta. A partir de um fich
 
 > Se o PowerShell disser *"running scripts is disabled on this system"*, escreva `npm.cmd` em vez de `npm` (`npm.cmd install`, `npm.cmd start`), ou execute uma vez `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned`.
 
-### macOS
+## Instalação no macOS
 
-Instale o Node.js (<https://nodejs.org/pt> ou `brew install node`), depois no Terminal, dentro da pasta do projeto: `npm install` e `npm start`.
+**Pacote pronto (recomendado):** descarregue `telemeSYNC-…-macos.zip` (Macs Apple Silicon e Intel, macOS 11 ou mais recente), abra-o e faça duplo clique em **`Iniciar telemeSYNC.command`**. Não é preciso instalar nada. Como a aplicação não está registada na Apple, da primeira vez o macOS bloqueia-a:
+
+- **macOS 15 Sequoia ou mais recente:** *Concluído* → **Definições do Sistema → Privacidade e Segurança** → no fundo, **Abrir mesmo assim**.
+- **macOS 14 ou anterior:** botão direito (ou Control+clique) no ficheiro → **Abrir** → **Abrir**.
+
+O lançador retira a quarentena ao resto da pasta, por isso o Node.js e o FFmpeg incluídos já não voltam a pedir autorização. Mais detalhes no `LEIA-ME.txt` do pacote.
+
+**A partir do código:** instale o Node.js (<https://nodejs.org/pt> ou `brew install node`), depois no Terminal, dentro da pasta do projeto: `npm install` e `npm start`.
 
 ## Como usar
 
@@ -89,7 +96,10 @@ npm run dev        # servidor (watch) + Vite com hot reload em http://localhost:
 npm test           # testes unitários e de integração (Vitest)
 npm run typecheck
 scripts/package-windows.sh   # pacote Windows autónomo (Node portátil + dependências) em dist-release/
+scripts/package-mac.sh       # pacote macOS autónomo, universal (Apple Silicon + Intel), em dist-release/
 ```
+
+O pacote macOS pode ser gerado em qualquer sistema (também no Git Bash do Windows; o ZIP leva as permissões Unix através de `scripts/zip-unix.py`), mas só é testado num Mac a sério pelo workflow **macOS** do GitHub Actions (`.github/workflows/mac.yml`): corre os testes num Mac, gera o pacote, verifica as assinaturas dos binários e arranca-o em quarentena, como um download, num Mac Apple Silicon e num Intel, renderizando um clip. O ZIP testado fica nos *Artifacts* da execução.
 
 - `packages/core` — parsing FIT/GPX, métricas, sincronização, leitor de metadados MP4/MOV e **renderers** dos overlays (partilhados entre preview e exportação).
 - `apps/server` — Fastify: jobs de renderização (worker threads + FFmpeg), progresso por SSE, definições, abrir pasta.
@@ -99,13 +109,13 @@ Ver também [`docs/architecture.md`](docs/architecture.md) e [`docs/camera-times
 
 ### Publicar uma atualização
 
-1. Subir a versão no `package.json` da raiz e de `apps/*` e gerar o pacote (`scripts/package-windows.sh`).
-2. Carregar o `.zip` para o branch `downloads`.
-3. No site: acrescentar a versão em **Novidades** (`site/index.html`) e atualizar `site/data/latest.json` (versão, data e resumo de uma linha).
+1. Subir a versão no `package.json` da raiz, de `apps/*` e de `packages/core` e gerar os pacotes: Windows com `scripts/package-windows.sh`; macOS a partir dos *Artifacts* do workflow **macOS** (ou `scripts/package-mac.sh`).
+2. Carregar os `.zip` (`telemeSYNC-<versão>-windows.zip` e `telemeSYNC-<versão>-macos.zip`) para o branch `downloads`.
+3. No site: acrescentar a versão em **Novidades** (`site/index.html`), atualizar os links de download no HTML e `site/data/latest.json` (versão, data, resumo de uma linha e `downloads.windows`/`downloads.mac`; `downloadUrl` continua a ser o ZIP de Windows, lido pelas versões até à 0.3.2).
    Para as outras línguas, dar a cada ponto novo um `data-i18n="news.<versão sem pontos>.<n>"` (ex.: `news.033.1`) e acrescentar a tradução com a mesma chave em `site/i18n/en.json`, `fr.json`, `es.json` e `de.json`. Um texto sem tradução aparece em português.
 4. Enviar para o `main` e fazer *Redeploy* no Coolify.
 
-Ao abrir, o programa lê `https://telemesync.pereiragabriel.com/data/latest.json` e, se a versão for mais recente do que a sua, mostra um aviso com os links para as novidades e o download. O site usa o mesmo ficheiro para a versão e o link dos botões de download.
+Ao abrir, o programa lê `https://telemesync.pereiragabriel.com/data/latest.json` e, se a versão for mais recente do que a sua, mostra um aviso com os links para as novidades e o download do seu sistema. O site usa o mesmo ficheiro para a versão e os links dos botões de download, e põe primeiro o sistema de quem visita.
 
 ## Estado
 

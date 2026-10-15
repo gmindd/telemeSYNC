@@ -1,9 +1,11 @@
 // Writes LICENCAS-TERCEIROS.txt for a packaged app: every production dependency with its licence text.
-//   node scripts/third-party-notices.mjs <app-dir> <out-file>
+//   node scripts/third-party-notices.mjs <app-dir> <out-file> [--mac]
 import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 const [appDir, outFile] = process.argv.slice(2);
+// The macOS package ships Node and FFmpeg for both architectures under runtime/darwin-*, with Unix line endings.
+const mac = process.argv.includes('--mac');
 const nm = join(appDir, 'node_modules');
 const seen = new Map();
 
@@ -41,14 +43,14 @@ const items = [...seen.values()].sort((a, b) => a.name.localeCompare(b.name));
 let out = `telemeSYNC — Componentes de terceiros e respetivas licenças
 O telemeSYNC inclui os componentes abaixo, distribuídos de acordo com as suas licenças.
 ${sep}
-FFmpeg (executável ffmpeg.exe, não modificado) — GPL-3.0
+FFmpeg (executável ${mac ? 'runtime/darwin-*/ffmpeg' : 'ffmpeg.exe'}, não modificado) — GPL-3.0
 Compilação estática distribuída pelo pacote ffmpeg-static (https://github.com/eugeneware/ffmpeg-static).
 Código-fonte do FFmpeg: https://ffmpeg.org/download.html (e https://git.ffmpeg.org/ffmpeg.git).
 Oferta escrita: durante pelo menos três anos a contar da distribuição, o autor do telemeSYNC fornece,
 mediante pedido para hello@pereiragabriel.com, uma cópia do código-fonte correspondente do
 FFmpeg incluído, sem outro custo além do da sua disponibilização.
 ${sep}
-Node.js (runtime\\node.exe) — MIT e outras (ver runtime\\LICENSE)
+Node.js (${mac ? 'runtime/darwin-*/node' : 'runtime\\node.exe'}) — MIT e outras (ver runtime${mac ? '/' : '\\'}LICENSE)
 https://nodejs.org
 ${sep}
 Fonte Inter — SIL Open Font License 1.1 (ver packages/core/assets/fonts/inter/LICENSE.txt)
@@ -57,5 +59,5 @@ https://rsms.me/inter/
 for (const i of items) {
   out += `${sep}${i.name} ${i.version} — ${i.license}${i.url ? `\n${i.url.replace(/^git\+/, '')}` : ''}\n${i.text ? `\n${i.text}\n` : ''}`;
 }
-writeFileSync(outFile, out.replace(/\r?\n/g, '\r\n'));
+writeFileSync(outFile, mac ? out : out.replace(/\r?\n/g, '\r\n'));
 console.log(`${items.length} componentes → ${outFile}`);
