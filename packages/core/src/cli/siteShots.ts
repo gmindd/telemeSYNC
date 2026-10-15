@@ -3,7 +3,7 @@
  *   npm run site:shots -- <fit|gpx> [outDir]
  * Picks a climbing moment so speed, grade and heart rate look like a real ride.
  */
-import { createCanvas } from '@napi-rs/canvas';
+import { createCanvas, type Canvas } from '@napi-rs/canvas';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { buildRide, type RideData } from '../telemetry/ride.ts';
@@ -30,7 +30,7 @@ function climbInstant(r: RideData): number {
 const t = climbInstant(ride);
 const octx = { ride, clipStart: t - 30_000, clipEnd: t + 30_000 };
 
-async function save(name: string, canvas: ReturnType<typeof createCanvas>) {
+async function save(name: string, canvas: Canvas) {
   const path = join(outDir, `${name}.webp`);
   await writeFile(path, await canvas.encode('webp', 90));
   console.log(path);
