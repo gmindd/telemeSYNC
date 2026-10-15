@@ -109,11 +109,16 @@ Ver também [`docs/architecture.md`](docs/architecture.md) e [`docs/camera-times
 
 ### Publicar uma atualização
 
-1. Subir a versão no `package.json` da raiz, de `apps/*` e de `packages/core` e gerar os pacotes: Windows com `scripts/package-windows.sh`; macOS a partir dos *Artifacts* do workflow **macOS** (ou `scripts/package-mac.sh`).
-2. Carregar os `.zip` (`telemeSYNC-<versão>-windows.zip` e `telemeSYNC-<versão>-macos.zip`) para o branch `downloads`.
-3. No site: acrescentar a versão em **Novidades** (`site/index.html`), atualizar os links de download no HTML e `site/data/latest.json` (versão, data, resumo de uma linha e `downloads.windows`/`downloads.mac`; `downloadUrl` continua a ser o ZIP de Windows, lido pelas versões até à 0.3.2).
-   Para as outras línguas, dar a cada ponto novo um `data-i18n="news.<versão sem pontos>.<n>"` (ex.: `news.033.1`) e acrescentar a tradução com a mesma chave em `site/i18n/en.json`, `fr.json`, `es.json` e `de.json`. Um texto sem tradução aparece em português.
-4. Enviar para o `main` e fazer *Redeploy* no Coolify.
+1. Subir a versão no `package.json` da raiz, de `apps/*` e de `packages/core` (e no `package-lock.json`).
+2. Gerar os pacotes:
+   - Windows: `scripts/package-windows.sh` → `dist-release/telemeSYNC-<versão>-windows.zip`.
+   - macOS: fazer push e descarregar o ZIP dos *Artifacts* do workflow **macOS** (testado num Mac Apple Silicon e num Intel). Também se gera com `scripts/package-mac.sh`.
+3. Publicar os dois ZIPs numa **Release do GitHub** com a tag `v<versão>` (*Releases → Draft a new release*). O GitHub não aceita ficheiros acima de 100 MB num push, e o ZIP do Mac tem cerca de 155 MB; nas Releases o limite é 2 GB. Os links ficam
+   `https://github.com/gmindd/telemeSYNC/releases/download/v<versão>/telemeSYNC-<versão>-<windows|macos>.zip`.
+   O branch `downloads` mantém as versões até à 0.3.2 e o PDF de instruções.
+4. No site: acrescentar a versão em **Novidades** (`site/index.html`), atualizar os links de download no HTML e `site/data/latest.json` (versão, data, resumo de uma linha e `downloads.windows`/`downloads.mac`; `downloadUrl` continua a ser o ZIP de Windows, lido pelas versões até à 0.3.2).
+   Para as outras línguas, dar a cada ponto novo um `data-i18n="news.<versão sem pontos>.<n>"` (ex.: `news.101.1`) e acrescentar a tradução com a mesma chave em `site/i18n/en.json`, `fr.json`, `es.json` e `de.json`. Um texto sem tradução aparece em português.
+5. Enviar para o `main` **depois** de a Release estar publicada (o aviso de atualizações aponta logo para os novos links) e fazer *Redeploy* no Coolify.
 
 Ao abrir, o programa lê `https://telemesync.pereiragabriel.com/data/latest.json` e, se a versão for mais recente do que a sua, mostra um aviso com os links para as novidades e o download do seu sistema. O site usa o mesmo ficheiro para a versão e os links dos botões de download, e põe primeiro o sistema de quem visita.
 

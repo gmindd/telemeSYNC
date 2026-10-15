@@ -63,5 +63,15 @@ sed -i 's/\r\?$/\r/' "$APP/Iniciar telemeSYNC.bat" "$APP/LEIA-ME.txt" "$APP/LICE
 mkdir -p "$OUT"
 ZIP="$OUT/telemeSYNC-$VERSION-windows.zip"
 rm -f "$ZIP"
-(cd "$WORK" && zip -qr -9 "$ZIP" telemeSYNC)
+if command -v zip >/dev/null; then
+  (cd "$WORK" && zip -qr -9 "$ZIP" telemeSYNC)
+else
+  # Git Bash has no zip: Python writes it. The workspace links (junctions) become real copies first, as zip -r does.
+  for link in "$APP"/node_modules/@telemesync/*; do
+    src="$(readlink -f "$link")"; rm "$link"; cp -r "$src" "$link"
+  done
+  "$(command -v python3 || command -v python)" -c '
+import shutil, sys
+shutil.make_archive(sys.argv[1][:-4], "zip", sys.argv[2], "telemeSYNC")' "$ZIP" "$(cd "$WORK" && (pwd -W 2>/dev/null || pwd))"
+fi
 echo "✔ $ZIP ($(du -h "$ZIP" | cut -f1))"
