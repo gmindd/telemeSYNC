@@ -44,6 +44,18 @@ h2 { margin: 8px 0; }
 .error { color: var(--error); }
 .notice { color: var(--warn); }
 .notice-bar { background: #3a3220; color: var(--warn); padding: 8px 20px; display: flex; gap: 10px; align-items: center; }
+.update-bar {
+  background: rgba(255, 122, 26, 0.12); border-bottom: 1px solid rgba(255, 122, 26, 0.45); padding: 8px 20px;
+  display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; justify-content: space-between;
+}
+.update-bar b { color: var(--accent); }
+.update-actions { display: flex; gap: 8px; align-items: center; }
+.button-link {
+  display: inline-block; background: var(--panel2); border: 1px solid var(--border); border-radius: 6px; padding: 2px 8px;
+  font-size: 12px; color: var(--text); text-decoration: none;
+}
+.button-link:hover { border-color: var(--accent); }
+.button-link.primary { background: var(--accent); border-color: var(--accent); color: #1a0d00; font-weight: 700; }
 
 .dropzone {
   border: 2px dashed var(--border); border-radius: 10px; padding: 36px; text-align: center; color: var(--muted); cursor: pointer; margin: 12px 0;

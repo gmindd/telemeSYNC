@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { APP_INFO } from './config.ts';
 import { AboutDialog } from './components/AboutDialog.tsx';
+import { UpdateBanner } from './components/UpdateBanner.tsx';
 import { DonateButton, WebsiteLink } from './components/ExternalLinks.tsx';
 import { StepWelcome } from './steps/StepWelcome.tsx';
 import { useApp, type Step } from './lib/store.ts';
@@ -55,6 +56,7 @@ export function App() {
           />
         </div>
       </header>
+      <UpdateBanner />
       {notice ? (
         <div className="notice-bar">
           {notice} <button className="small" onClick={dismissNotice}>OK</button>
