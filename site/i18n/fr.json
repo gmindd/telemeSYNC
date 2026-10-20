@@ -156,5 +156,7 @@
   "shot.painel-compacto.alt": "Panneau compact avec la durée, la fréquence cardiaque moyenne, la vitesse moyenne et la distance.",
   "news.101.1": "<b>Cadrans :</b> un nouveau design de gadgets ronds avec une couronne de plateau — fréquence cardiaque avec zone, cadence, vitesse avec moyenne et maximum, pente et altitude avec le terrain, puissance avec zone, distance, temps et température.",
   "news.101.2": "<b>Carte ronde :</b> centrée sur vous et orientée dans votre sens de marche, avec le nord toujours indiqué sur la couronne.",
-  "news.101.3": "<b>Profil altimétrique en carte</b> avec le dénivelé positif et négatif, et un <b>panneau compact</b> avec les moyennes de la sortie."
+  "news.101.3": "<b>Profil altimétrique en carte</b> avec le dénivelé positif et négatif, et un <b>panneau compact</b> avec les moyennes de la sortie.",
+  "news.101.4": "<b>Liste des clips à la synchronisation :</b> chaque clip avec l’heure de début utilisée, son moment dans la sortie, l’origine de l’heure et son réglage fin. Un avertissement apparaît quand deux clips de la même caméra se chevauchent, signe d’une heure erronée.",
+  "news.101.5": "<b>Rapport de synchronisation :</b> chaque export enregistre un fichier <i>sincronizacao.txt</i> avec l’heure de début de chaque clip et les réglages appliqués, pour vérifier au montage que chaque overlay va sur le bon clip."
 }

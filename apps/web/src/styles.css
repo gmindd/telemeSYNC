@@ -89,6 +89,20 @@ progress { accent-color: var(--accent); height: 10px; }
 .camera-row .cam-label { width: 160px; font-weight: 600; }
 .camera-row .num { width: 80px; text-align: right; margin: 0 4px; }
 .nudges { display: inline-flex; gap: 3px; }
+.clip-list { margin-bottom: 12px; overflow-x: auto; }
+.clip-list table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.clip-list th { text-align: left; color: var(--muted); font-weight: 600; padding: 4px 8px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+.clip-list td { padding: 5px 8px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+.clip-list tbody tr { cursor: pointer; }
+.clip-list tbody tr:hover { background: var(--panel); }
+.clip-list tbody tr.active { background: var(--panel2); box-shadow: inset 3px 0 0 var(--accent); }
+.clip-list .cam-dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 6px; }
+.clip-list .clip-name { font-weight: 600; }
+.clip-list .clip-offset { display: inline-flex; align-items: center; gap: 3px; }
+.clip-list .clip-offset .num { width: 56px; text-align: right; }
+.clip-list .badge { margin: 0; }
+.clip-list .badge.ok { color: #4caf50; }
+.clip-list > p { margin: 6px 0 0; font-size: 12px; }
 
 .timeline { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 8px; }
 .timeline-toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }

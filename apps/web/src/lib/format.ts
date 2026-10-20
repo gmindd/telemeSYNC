@@ -5,15 +5,8 @@ export function fmtBytes(n: number): string {
   return `${(n / 1024 ** 3).toFixed(2)} GB`;
 }
 
-export function fmtOffset(ms: number): string {
-  const sign = ms < 0 ? '−' : '+';
-  const a = Math.abs(ms) / 1000;
-  const h = Math.floor(a / 3600);
-  const m = Math.floor((a % 3600) / 60);
-  const s = a % 60;
-  const ss = s.toFixed(1).padStart(4, '0').replace('.', ',');
-  return h ? `${sign}${h} h ${String(m).padStart(2, '0')} min ${ss} s` : m ? `${sign}${m} min ${ss} s` : `${sign}${ss} s`;
-}
+/** Offsets are formatted the same way in the app and in the sync report. */
+export { formatOffset as fmtOffset } from '@telemesync/core';
 
 export function fmtFps(f?: { num: number; den: number }): string {
   if (!f) return '—';

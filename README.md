@@ -48,11 +48,12 @@ O lançador retira a quarentena ao resto da pasta, por isso o Node.js e o FFmpeg
    - Botões ±1 min / ±1 s / ±0,1 s para afinar.
    - Selecione um clip para ver o vídeo com os overlays por cima, ao vivo. Valide numa **paragem**: a velocidade tem de ir a 0 quando a bicicleta para.
    - **Arraste os gadgets** no preview para os posicionar; o canto inferior direito muda o tamanho. *Repor posições* volta ao arranjo inicial.
-   - Avisos: clip fora da volta, desvio de exatamente 1 h/2 h (corrige-se com um clique), MP4 exportado do Insta360 Studio, etc.
+   - Avisos: clip fora da volta, desvio de exatamente 1 h/2 h (corrige-se com um clique), MP4 exportado do Insta360 Studio, clips da mesma câmara sobrepostos no tempo, etc.
+   - **Lista de clips**: todos os clips com a hora de início usada, o sítio na volta, a origem da hora (nome do ficheiro, data interna, manual…), o ajuste só desse clip e os avisos. Cada clip é exportado à parte, com a sua própria hora — clips de momentos diferentes da mesma volta não dependem uns dos outros, e as pausas do GPS não desalinham nada (os dados são lidos pela hora de cada ponto).
 4. **Overlays** — escolha as métricas e o estilo (cores, contorno, sombra, unidades métricas/imperiais, °C/°F, resolução…).
    - **Painéis**: um gadget por métrica com mostrador, máximo/média (ou zona, aceleração, variação) e gráfico dos últimos 10 min ou 10 km, num gradiente de duas cores à escolha. O gráfico pode mostrar outra métrica (ex.: velocidade com a altimetria dos últimos 10 km).
    - **Mostradores**: gadgets redondos com aro de prato (FC com zona, cadência, velocidade com média/máxima, inclinação e altitude com o terreno à frente, potência com zona, distância, tempo e temperatura), um mapa circular que roda com a direção, um perfil de altimetria em cartão (com ganho e perda) e um painel compacto com as médias.
-5. **Renderizar** — escolha a pasta de saída (predefinida: `Documentos\telemeSYNC`), o modo de exportação e carregue em Renderizar. No fim, **Abrir pasta**.
+5. **Renderizar** — escolha a pasta de saída (predefinida: `Documentos\telemeSYNC`), o modo de exportação e carregue em Renderizar. No fim, **Abrir pasta**. A pasta da volta leva um `sincronizacao.txt` com a hora de início usada em cada clip, de onde veio e os ajustes aplicados.
    - **Gadgets separados**: um `.mov` por gadget, do tamanho do gadget — os mesmos ficheiros servem para várias montagens (ex.: filmado em 1:1, recortado para 16:9 no YouTube e 9:16 no Instagram, posicionando cada gadget à mão).
    - **Composição única**: um `.mov` por clip com a proporção do vídeo (720p a 4K, predefinido Full HD) e os gadgets nas posições arrastadas no preview — é só pôr por cima do clip.
    - Pode escolher os dois.

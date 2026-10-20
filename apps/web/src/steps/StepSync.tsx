@@ -9,6 +9,7 @@ import {
   type Camera,
   type Clip,
 } from '@telemesync/core';
+import { ClipList } from '../components/ClipList.tsx';
 import { Preview } from '../components/Preview.tsx';
 import { Timeline } from '../components/Timeline.tsx';
 import { ValuesPanel } from '../components/ValuesPanel.tsx';
@@ -140,6 +141,7 @@ export function StepSync() {
         Cada câmara tem um offset global: alinhar um clip alinha todos os clips dessa câmara. Valide numa paragem (a velocidade tem de ir a 0 quando a bicicleta para).
       </p>
       <div className="cameras">{sync.cameras.map((c) => <CameraRow key={c.id} cam={c} />)}</div>
+      <ClipList ride={ride} sync={sync} activeClipId={clip?.id} onSelect={st.setActiveClip} onClipOffset={st.setClipOffset} />
       <Timeline
         ride={ride}
         sync={sync}

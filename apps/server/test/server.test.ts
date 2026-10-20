@@ -1,4 +1,4 @@
-import { existsSync, mkdtempSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
@@ -80,6 +80,12 @@ describe('server API', () => {
     const rideDir = join(out, 'Volta_ Sintra_');
     expect(existsSync(join(rideDir, 'GX010001', 'GX010001_velocidade.mov'))).toBe(true);
     expect(existsSync(join(rideDir, 'DJI_20240615093005_0001_D', 'DJI_20240615093005_0001_D_mapa.mov'))).toBe(true);
+    // Sync report next to the clip folders: one entry per clip with the start used.
+    const report = readFileSync(join(rideDir, 'sincronizacao.txt'), 'utf8');
+    expect(report).toMatch(/relatório de sincronização/);
+    expect(report).toContain('1. GX010001.MP4');
+    expect(report).toContain('2. DJI_20240615093005_0001_D.MP4');
+    expect(report).toContain('Na volta: de');
 
     // SSE stream for a finished job sends one snapshot and closes
     const sse = await app.inject({ url: `/api/jobs/${snap.id}/events` });

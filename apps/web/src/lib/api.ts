@@ -1,4 +1,4 @@
-import type { Fps, GadgetLayout, OutputFormat, OverlayId, OverlayStyle } from '@telemesync/core';
+import type { ClipSyncInfo, Fps, GadgetLayout, OutputFormat, OverlayId, OverlayStyle } from '@telemesync/core';
 
 export interface TaskState {
   clipId: string;
@@ -44,7 +44,7 @@ export const api = {
   async startRender(body: {
     rideId: string;
     rideName: string;
-    clips: { id: string; fileName: string; startUtcMs: number; durationMs: number; fps: Fps; frameCount?: number; width?: number; height?: number }[];
+    clips: { id: string; fileName: string; startUtcMs: number; durationMs: number; fps: Fps; frameCount?: number; width?: number; height?: number; sync?: ClipSyncInfo }[];
     overlays: OverlayId[];
     style: OverlayStyle;
     format: OutputFormat;

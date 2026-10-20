@@ -24,6 +24,7 @@ export * from './sync/resolve.ts';
 export * from './sync/chapters.ts';
 export * from './sync/sanity.ts';
 export * from './sync/session.ts';
+export * from './sync/report.ts';
 export * from './project/project.ts';
 export * from './overlays/layout.ts';
 export * from './export/formats.ts';

@@ -1,7 +1,7 @@
 {
   "version": "1.0.1",
   "date": "2026-10-20",
-  "summary": "Novos designs: mostradores redondos com aro de prato, mapa circular rotativo, perfil de altimetria em cartão e painel compacto.",
+  "summary": "Novos designs (mostradores, mapa circular, perfil em cartão, painel compacto), lista de clips na sincronização e relatório de sincronização.",
   "downloadUrl": "https://github.com/gmindd/telemeSYNC/releases/download/v1.0.1/telemeSYNC-1.0.1-windows.zip",
   "downloads": {
     "windows": "https://github.com/gmindd/telemeSYNC/releases/download/v1.0.1/telemeSYNC-1.0.1-windows.zip",

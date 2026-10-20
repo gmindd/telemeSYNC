@@ -1,4 +1,6 @@
 import { EventEmitter } from 'node:events';
+import { readFileSync } from 'node:fs';
+import { mkdir, writeFile } from 'node:fs/promises';
 import { availableParallelism } from 'node:os';
 import { join } from 'node:path';
 import {
@@ -12,7 +14,9 @@ import {
   type Fps,
   type OverlayId,
   type OverlayStyle,
+  type ClipSyncInfo,
   type RideData,
+  syncReport,
 } from '@telemesync/core';
 import { renderInWorker, type OutputFormat } from '@telemesync/core/node';
 
@@ -25,6 +29,8 @@ export interface RenderClipInput {
   frameCount?: number;
   width?: number;
   height?: number;
+  /** How the app placed this clip (start source, offsets, warnings), for the sync report. */
+  sync?: ClipSyncInfo;
 }
 
 export interface RenderRequest {
@@ -48,6 +54,15 @@ export interface RenderRequest {
 export type TaskStatus = 'queued' | 'running' | 'done' | 'error' | 'cancelled';
 
 export const COMPOSITE_SLUG = 'composicao';
+export const SYNC_REPORT_NAME = 'sincronizacao.txt';
+
+const APP_VERSION: string | undefined = (() => {
+  try {
+    return JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')).version;
+  } catch {
+    return undefined;
+  }
+})();
 
 export interface TaskState {
   clipId: string;
@@ -130,7 +145,40 @@ export class Job extends EventEmitter {
     this.abort.abort();
   }
 
+  /** sincronizacao.txt: start used for every clip, where it came from and the offsets applied. */
+  private async writeSyncReport() {
+    const text = syncReport({
+      rideName: this.req.rideName,
+      ride: this.ride,
+      timeZone: this.req.style.timeZone,
+      exportedAt: Date.now(),
+      version: APP_VERSION,
+      clips: this.req.clips.map(
+        (c): ClipSyncInfo =>
+          c.sync ?? {
+            fileName: c.fileName,
+            camera: '—',
+            timeZone: this.req.style.timeZone,
+            source: '—',
+            cameraOffsetMs: 0,
+            clipOffsetMs: 0,
+            startUtcMs: c.startUtcMs,
+            durationMs: c.durationMs,
+            fps: c.fps,
+            warnings: [],
+          },
+      ),
+    });
+    try {
+      await mkdir(this.rideDir, { recursive: true });
+      await writeFile(join(this.rideDir, SYNC_REPORT_NAME), text.replace(/\n/g, '\r\n'), 'utf8');
+    } catch {
+      /* the report is a help, never a reason to fail the export */
+    }
+  }
+
   async run(): Promise<void> {
+    await this.writeSyncReport();
     const clipsById = new Map(this.req.clips.map((c) => [c.id, c]));
     let next = 0;
     const worker = async () => {

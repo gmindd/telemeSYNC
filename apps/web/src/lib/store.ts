@@ -7,6 +7,8 @@ import {
   DEFAULT_OUTPUT_FORMAT,
   DEFAULT_STYLE,
   defaultCamera,
+  clipOverlaps,
+  clipSyncInfo,
   effectiveStart,
   getOverlay,
   parseProject,
@@ -326,6 +328,7 @@ export const useApp = create<State & Actions>((set, get) => ({
     const st = get();
     if (!st.rideId || !st.ride) return;
     const cams = new Map(st.sync.cameras.map((c) => [c.id, c]));
+    const overlaps = clipOverlaps(st.sync);
     const clips = st.sync.clips
       .filter((c) => st.selected[c.id])
       .map((c: Clip) => ({
@@ -337,6 +340,7 @@ export const useApp = create<State & Actions>((set, get) => ({
         frameCount: c.meta.frameCount,
         width: c.meta.width,
         height: c.meta.height,
+        sync: clipSyncInfo(c, cams.get(c.cameraId)!, st.ride, overlaps.get(c.id)),
       }))
       .filter((c) => c.startUtcMs !== undefined && c.fps);
     set({ renderError: undefined });
