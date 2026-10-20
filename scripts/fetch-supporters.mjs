@@ -1,5 +1,5 @@
 // Writes site/data/supporters.json with the latest Buy Me a Coffee supporters, for the landing page.
-// Run by the GitHub Action with the BMC_TOKEN secret (personal access token from
+// Run inside the site container (Dockerfile, scripts/supporters-loop.sh) with the BMC_TOKEN environment variable (personal access token from
 // https://developers.buymeacoffee.com). Only the public name, number of coffees and date are kept:
 // no e-mails, notes or amounts. Without a token it writes an empty list.
 //   BMC_TOKEN=… node scripts/fetch-supporters.mjs [out.json]
