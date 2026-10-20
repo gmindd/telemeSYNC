@@ -168,6 +168,8 @@ p { margin: 0 0 var(--spacing-sm); }
   background: repeating-conic-gradient(#2b3742 0% 25%, #222c35 0% 50%) 0 0 / 22px 22px;
 }
 .gallery:not(.gallery--wide) .shot img { aspect-ratio: 16 / 10; }
+.gallery.gallery--dials .shot img { aspect-ratio: 1 / 1; }
+.gallery--cards .shot img { aspect-ratio: 16 / 7; }
 .shot figcaption { color: var(--color-muted); font-size: 0.9rem; }
 
 /* Video */

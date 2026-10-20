@@ -52,6 +52,18 @@ await shot('painel-temperatura', 'panelTemperature', { ...base, gradientFrom: '#
 await shot('mapa', 'map', base);
 await shot('perfil', 'elevationProfile', base);
 for (const id of ['speed', 'grade', 'heartRate', 'distance'] as OverlayId[]) await shot(`texto-${id}`, id, base);
+// Mostradores (round gadgets, minimap, profile card, compact panel).
+const dials: [string, OverlayId][] = [
+  ['mostrador-fc', 'dialHeartRate'],
+  ['mostrador-velocidade', 'dialSpeed'],
+  ['mostrador-altitude', 'dialAltitude'],
+  ['mostrador-inclinacao', 'dialGrade'],
+  ['mapa-circular', 'dialMap'],
+  ['mostrador-tempo', 'dialTime'],
+  ['perfil-cartao', 'dialProfile'],
+  ['painel-compacto', 'dialSummary'],
+];
+for (const [name, id] of dials) await shot(name, id, base);
 
 // Hero: a 16:9 composition as it would sit over a clip.
 const W = 1920;
