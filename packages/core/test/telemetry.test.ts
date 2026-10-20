@@ -98,15 +98,22 @@ describe('ride metrics and interpolation', () => {
       const s = sampleAt(rr, ride.samples[0].t + k * 1000 + 300);
       expect(s.heartRate).toBe(ride.samples[100].heartRate);
     }
+    // Every instant of the climb and the flat parts has a value (no dashes between readings).
+    for (let ms = 20_000; ms < 590_000; ms += 250) expect(Number.isNaN(sampleAt(rr, ride.samples[0].t + ms).heartRate)).toBe(false);
+    // Readings further apart than the hold leave a dash once the hold runs out.
+    const sparser = ride.samples.map((p, i) => (i % 10 === 0 ? p : { ...p, heartRate: undefined }));
+    const r10 = buildRide(parseFit(encodeFit(sparser)));
+    expect(Number.isNaN(sampleAt(r10, ride.samples[0].t + 103_000).heartRate)).toBe(false);
+    expect(Number.isNaN(sampleAt(r10, ride.samples[0].t + 106_000).heartRate)).toBe(true);
   });
 
-  it('a held reading expires after 30 s and never crosses a pause', () => {
-    const t = Float64Array.from([0, 1000, 20_000, 40_000, 41_000, 60_000]);
-    const v = Float64Array.from([150, NaN, NaN, NaN, NaN, NaN]);
-    expect([...holdLast(t, v, 30_000, 10_000)].map((x) => (Number.isNaN(x) ? null : x))).toEqual([150, 150, null, null, null, null]);
-    const t2 = Float64Array.from([0, 1000, 2000, 3000]);
+  it('a held reading expires after the hold time and never crosses a pause', () => {
+    const t = Float64Array.from([0, 1000, 4000, 5000, 20_000, 21_000]);
+    const v = Float64Array.from([150, NaN, NaN, NaN, 160, NaN]);
+    expect([...holdLast(t, v, 4_000, 10_000)].map((x) => (Number.isNaN(x) ? null : x))).toEqual([150, 150, 150, null, 160, 160]);
+    const t2 = Float64Array.from([0, 1000, 12_000, 13_000]);
     const v2 = Float64Array.from([150, NaN, NaN, NaN]);
-    expect([...holdLast(t2, v2, 30_000, 10_000)]).toEqual([150, 150, 150, 150]);
+    expect([...holdLast(t2, v2, 30_000, 10_000)].map((x) => (Number.isNaN(x) ? null : x))).toEqual([150, 150, null, null]);
   });
 
   it('records with the same timestamp are merged (GPS in one, heart rate in the other)', () => {

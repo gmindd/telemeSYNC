@@ -149,8 +149,9 @@ export function buildRide(raw: RawTelemetry, opts: RideOptions = {}): RideData {
   if (hasAny(temperatureRaw)) channels.add('temperature');
 
   // Sensors that do not write a value in every record (watches often measure heart rate every few
-  // seconds): the last reading stays until the next one, for up to 30 s and never across a pause.
-  const hold = (a: Float64Array) => holdLast(t, a, opts.sensorHoldMs ?? 30_000, gapThresholdMs);
+  // seconds): the last reading stays until the next one, for up to 4 s and never across a pause.
+  // With 1 s records, a reading every 5 s is then shown without dashes in between.
+  const hold = (a: Float64Array) => holdLast(t, a, opts.sensorHoldMs ?? 4_000, gapThresholdMs);
   const heartRate = hold(heartRateRaw);
   const cadence = hold(cadenceRaw);
   const power = hold(powerRaw);
