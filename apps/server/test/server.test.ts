@@ -98,6 +98,23 @@ describe('server API', () => {
     expect((await app.inject({ method: 'POST', url: '/api/open-folder', payload: { path: tmpdir() } })).statusCode).toBe(403);
   });
 
+  it('incomplete sync data from the app never stops the export (the report is only a help)', async () => {
+    const rideId = await uploadRide();
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/render',
+      payload: {
+        rideId,
+        rideName: 'relatorio',
+        clips: [{ id: 'r', fileName: 'DJI_r.MP4', startUtcMs: synth.climb.startT, durationMs: 200, fps: { num: 25, den: 1 }, sync: { fileName: 'DJI_r.MP4' } }],
+        overlays: ['speed'],
+        format: 'prores',
+      },
+    });
+    expect(res.statusCode).toBe(200);
+    expect((await waitJob(res.json().id)).status).toBe('done');
+  });
+
   it('renders a composite (all gadgets positioned) at the clip aspect, Full HD', async () => {
     const rideId = await uploadRide();
     const res = await app.inject({

@@ -147,29 +147,29 @@ export class Job extends EventEmitter {
 
   /** sincronizacao.txt: start used for every clip, where it came from and the offsets applied. */
   private async writeSyncReport() {
-    const text = syncReport({
-      rideName: this.req.rideName,
-      ride: this.ride,
-      timeZone: this.req.style.timeZone,
-      exportedAt: Date.now(),
-      version: APP_VERSION,
-      clips: this.req.clips.map(
-        (c): ClipSyncInfo =>
-          c.sync ?? {
-            fileName: c.fileName,
-            camera: '—',
-            timeZone: this.req.style.timeZone,
-            source: '—',
-            cameraOffsetMs: 0,
-            clipOffsetMs: 0,
-            startUtcMs: c.startUtcMs,
-            durationMs: c.durationMs,
-            fps: c.fps,
-            warnings: [],
-          },
-      ),
-    });
     try {
+      const text = syncReport({
+        rideName: this.req.rideName,
+        ride: this.ride,
+        timeZone: this.req.style.timeZone,
+        exportedAt: Date.now(),
+        version: APP_VERSION,
+        clips: this.req.clips.map(
+          (c): ClipSyncInfo =>
+            c.sync ?? {
+              fileName: c.fileName,
+              camera: '—',
+              timeZone: this.req.style.timeZone,
+              source: '—',
+              cameraOffsetMs: 0,
+              clipOffsetMs: 0,
+              startUtcMs: c.startUtcMs,
+              durationMs: c.durationMs,
+              fps: c.fps,
+              warnings: [],
+            },
+        ),
+      });
       await mkdir(this.rideDir, { recursive: true });
       await writeFile(join(this.rideDir, SYNC_REPORT_NAME), text.replace(/\n/g, '\r\n'), 'utf8');
     } catch {
