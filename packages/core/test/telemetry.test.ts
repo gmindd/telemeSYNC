@@ -79,6 +79,17 @@ describe('ride metrics and interpolation', () => {
     expect(s.lat).toBeCloseTo(before.lat, 7);
   });
 
+  it('a pause in the recording does not shift what comes after it (matched by clock time, not by sample count)', () => {
+    const resumeIdx = ride.samples.findIndex((p) => p.t >= ride.gap.endT);
+    const resume = ride.samples[resumeIdx];
+    for (const dt of [0, 5_000, 60_000]) {
+      const s = sampleAt(r, resume.t + dt);
+      const truth = ride.samples.find((p) => p.t === resume.t + dt)!;
+      expect(s.inGap).toBe(false);
+      expect(s.distance).toBeCloseTo(truth.distance!, 1);
+    }
+  });
+
   it('speed goes to 0 when stopped', () => {
     const s = sampleAt(r, ride.stop.startT + 30_000);
     expect(s.speed).toBeLessThan(0.05);
