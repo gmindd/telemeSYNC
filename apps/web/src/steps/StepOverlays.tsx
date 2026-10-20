@@ -2,6 +2,7 @@ import {
   availableOverlays,
   DEFAULT_STYLE,
   effectiveStart,
+  isDialOverlay,
   PANEL_METRIC_INFO,
   PANEL_METRICS,
   panelMetricOf,
@@ -28,7 +29,8 @@ export function StepOverlays() {
   const { ride, overlays, toggleOverlay, style, setStyle, sync, activeClipId, playhead, setStep } = useApp();
   if (!ride) return <section><p>Carregue primeiro a telemetria.</p></section>;
   const all = availableOverlays(ride);
-  const defs = all.filter((d) => !panelMetricOf(d.id));
+  const defs = all.filter((d) => !panelMetricOf(d.id) && !isDialOverlay(d.id));
+  const dials = all.filter((d) => isDialOverlay(d.id));
   const panels = all.filter((d) => panelMetricOf(d.id));
   const chartMetrics = PANEL_METRICS.filter((m) => ride.available.has(m));
   const distUnit = style.units.system === 'metric' ? 'km' : 'mi';
@@ -47,6 +49,20 @@ export function StepOverlays() {
       <p className="lead">Cada overlay escolhido gera um vídeo transparente por clip. Só aparecem as métricas que existem no ficheiro.</p>
       <div className="overlay-grid">
         {defs.map((d) => (
+          <label key={d.id} className={`overlay-card${overlays.includes(d.id) ? ' on' : ''}`}>
+            <input type="checkbox" checked={overlays.includes(d.id)} onChange={(e) => toggleOverlay(d.id, e.target.checked)} />
+            <span>{d.label}</span>
+            <div className="checker">
+              <OverlayCanvas id={d.id} ride={ride} style={style} t={t} clipStart={clipStart} clipEnd={clipEnd} cssScale={0.45} fitHeight={190} />
+            </div>
+          </label>
+        ))}
+      </div>
+
+      <h3>Mostradores</h3>
+      <p className="lead">Gadgets redondos com aro de prato, mapa circular que roda com a direção, perfil de altimetria e painel compacto com as médias. Usam o fundo dos painéis e a cor de destaque.</p>
+      <div className="overlay-grid">
+        {dials.map((d) => (
           <label key={d.id} className={`overlay-card${overlays.includes(d.id) ? ' on' : ''}`}>
             <input type="checkbox" checked={overlays.includes(d.id)} onChange={(e) => toggleOverlay(d.id, e.target.checked)} />
             <span>{d.label}</span>

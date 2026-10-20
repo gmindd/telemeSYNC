@@ -15,6 +15,7 @@ export * from './overlays/registry.ts';
 export { hrZone, gradeColor } from './overlays/text/metrics.ts';
 export * from './overlays/fonts.ts';
 export { PANEL_IDS, panelMetricOf } from './overlays/panel/panel.ts';
+export { isDialOverlay } from './overlays/dial/index.ts';
 export { PANEL_METRIC_INFO, PANEL_METRICS, panelOptions } from './overlays/panel/series.ts';
 export * from './sync/types.ts';
 export * from './sync/profiles.ts';

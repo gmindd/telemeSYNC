@@ -4,7 +4,9 @@ import type { OverlayStyle, PanelMetric, PanelOptions } from '../types.ts';
 import { convert } from '../units.ts';
 
 export type StatKind = 'max' | 'min' | 'avg' | 'delta' | 'accel' | 'zone' | 'gain';
-export type IconId = 'gauge' | 'bolt' | 'thermo' | 'heart' | 'cadence' | 'mountain' | 'grade' | 'up' | 'down' | 'trend' | 'zone' | 'accel';
+export type IconId =
+  | 'gauge' | 'bolt' | 'thermo' | 'heart' | 'cadence' | 'mountain' | 'grade' | 'up' | 'down' | 'trend' | 'zone' | 'accel'
+  | 'clock' | 'link' | 'sun';
 
 export interface PanelMetricInfo {
   id: PanelMetric;

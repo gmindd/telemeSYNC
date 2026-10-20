@@ -22,6 +22,7 @@ export interface Ctx2D {
   quadraticCurveTo(cpx: number, cpy: number, x: number, y: number): void;
   bezierCurveTo(cp1x: number, cp1y: number, cp2x: number, cp2y: number, x: number, y: number): void;
   createLinearGradient(x0: number, y0: number, x1: number, y1: number): CanvasGradientLike;
+  createRadialGradient(x0: number, y0: number, r0: number, x1: number, y1: number, r1: number): CanvasGradientLike;
   fill(): void;
   stroke(): void;
   fillText(text: string, x: number, y: number): void;
@@ -66,7 +67,19 @@ export type OverlayId =
   | 'panelHeartRate'
   | 'panelCadence'
   | 'panelPower'
-  | 'panelTemperature';
+  | 'panelTemperature'
+  | 'dialHeartRate'
+  | 'dialCadence'
+  | 'dialSpeed'
+  | 'dialGrade'
+  | 'dialAltitude'
+  | 'dialPower'
+  | 'dialDistance'
+  | 'dialTime'
+  | 'dialTemperature'
+  | 'dialMap'
+  | 'dialProfile'
+  | 'dialSummary';
 
 /** Metrics that have a dashboard panel (gauge + stats + chart), and that a panel chart can show. */
 export type PanelMetric = 'speed' | 'altitude' | 'grade' | 'heartRate' | 'cadence' | 'power' | 'temperature';

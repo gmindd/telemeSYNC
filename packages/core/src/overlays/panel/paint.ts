@@ -146,6 +146,44 @@ export function drawIcon(ctx: Ctx2D, icon: IconId, cx: number, cy: number, s: nu
       ctx.fillRect(cx - s * 0.1, cy - s * 0.12, s * 0.2, s * 0.44);
       ctx.fillRect(cx + s * 0.22, cy - s * 0.32, s * 0.2, s * 0.64);
       break;
+    case 'clock':
+      ctx.beginPath();
+      ctx.arc(cx, cy, s * 0.42, 0, Math.PI * 2);
+      ctx.stroke();
+      line([[0, -0.24], [0, 0], [0.18, 0.12]]);
+      break;
+    case 'link': {
+      // Two interlocked chain links, tilted.
+      ctx.lineWidth = Math.max(2, s * 0.12);
+      const link = (ox: number, oy: number) => {
+        ctx.beginPath();
+        const a = -Math.PI / 4;
+        const ux = Math.cos(a);
+        const uy = Math.sin(a);
+        const half = s * 0.16;
+        const r = s * 0.13;
+        const x0 = cx + ox * s - ux * half;
+        const y0 = cy + oy * s - uy * half;
+        const x1 = cx + ox * s + ux * half;
+        const y1 = cy + oy * s + uy * half;
+        ctx.arc(x0, y0, r, a + Math.PI / 2, a + (Math.PI * 3) / 2);
+        ctx.arc(x1, y1, r, a - Math.PI / 2, a + Math.PI / 2);
+        ctx.closePath();
+        ctx.stroke();
+      };
+      link(-0.13, 0.13);
+      link(0.13, -0.13);
+      break;
+    }
+    case 'sun':
+      ctx.beginPath();
+      ctx.arc(cx, cy, s * 0.2, 0, Math.PI * 2);
+      ctx.fill();
+      for (let k = 0; k < 8; k++) {
+        const a = (k * Math.PI) / 4;
+        line([[Math.cos(a) * 0.31, Math.sin(a) * 0.31], [Math.cos(a) * 0.46, Math.sin(a) * 0.46]]);
+      }
+      break;
   }
   ctx.restore();
 }

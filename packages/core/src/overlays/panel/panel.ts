@@ -39,8 +39,8 @@ const CHART_X0 = 462;
 const CHART_X1 = W - 4;
 
 /** Coggan power zones as fractions of FTP (upper bounds of Z1..Z6). */
-const POWER_ZONES = [0.55, 0.75, 0.9, 1.05, 1.2, 1.5];
-const POWER_ZONE_COLORS = ['#2f80ed', '#14b8c4', '#6cc644', '#f5c400', '#ff9500', '#ff5a1f', '#e8202a'];
+export const POWER_ZONES = [0.55, 0.75, 0.9, 1.05, 1.2, 1.5];
+export const POWER_ZONE_COLORS = ['#2f80ed', '#14b8c4', '#6cc644', '#f5c400', '#ff9500', '#ff5a1f', '#e8202a'];
 const BRAKE_COLOR = '#4fc3f7';
 
 export const PANEL_IDS: Record<PanelMetric, OverlayId> = {

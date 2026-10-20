@@ -28,3 +28,25 @@ export function cumulativeGain(alt: Float64Array, threshold = 2.5): Float64Array
   }
   return out;
 }
+
+/** Cumulative elevation loss (positive metres), same hysteresis as `cumulativeGain`. */
+export function cumulativeLoss(alt: Float64Array, threshold = 2.5): Float64Array {
+  const n = alt.length;
+  const out = new Float64Array(n);
+  let loss = 0;
+  let ref = NaN;
+  for (let i = 0; i < n; i++) {
+    const a = alt[i];
+    if (!Number.isNaN(a)) {
+      if (Number.isNaN(ref)) ref = a;
+      else if (ref - a >= threshold) {
+        loss += ref - a;
+        ref = a;
+      } else if (a - ref >= threshold) {
+        ref = a;
+      }
+    }
+    out[i] = loss;
+  }
+  return out;
+}
