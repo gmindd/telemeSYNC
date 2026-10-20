@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildRide, parseFit, parseGpx, parseTelemetryFile, sampleAt } from '../src/index.ts';
+import { buildRide, holdLast, parseFit, parseGpx, parseTelemetryFile, sampleAt } from '../src/index.ts';
 import { encodeFit, encodeGpx, syntheticRide } from './helpers/synthetic.ts';
 
 const ride = syntheticRide();
@@ -88,6 +88,35 @@ describe('ride metrics and interpolation', () => {
       expect(s.inGap).toBe(false);
       expect(s.distance).toBeCloseTo(truth.distance!, 1);
     }
+  });
+
+  it('a sensor that reads every few seconds keeps its last value until the next reading (no dashes in between)', () => {
+    // Heart rate only every 5th record, as some watches write it.
+    const sparse = ride.samples.map((p, i) => (i % 5 === 0 ? p : { ...p, heartRate: undefined }));
+    const rr = buildRide(parseFit(encodeFit(sparse)));
+    for (let k = 101; k < 105; k++) {
+      const s = sampleAt(rr, ride.samples[0].t + k * 1000 + 300);
+      expect(s.heartRate).toBe(ride.samples[100].heartRate);
+    }
+  });
+
+  it('a held reading expires after 30 s and never crosses a pause', () => {
+    const t = Float64Array.from([0, 1000, 20_000, 40_000, 41_000, 60_000]);
+    const v = Float64Array.from([150, NaN, NaN, NaN, NaN, NaN]);
+    expect([...holdLast(t, v, 30_000, 10_000)].map((x) => (Number.isNaN(x) ? null : x))).toEqual([150, 150, null, null, null, null]);
+    const t2 = Float64Array.from([0, 1000, 2000, 3000]);
+    const v2 = Float64Array.from([150, NaN, NaN, NaN]);
+    expect([...holdLast(t2, v2, 30_000, 10_000)]).toEqual([150, 150, 150, 150]);
+  });
+
+  it('records with the same timestamp are merged (GPS in one, heart rate in the other)', () => {
+    const base = ride.samples.slice(0, 50);
+    const split = base.flatMap((p) => [{ ...p, heartRate: undefined }, { t: p.t, heartRate: p.heartRate }]);
+    const rr = buildRide({ ...parseFit(encodeFit(base)), samples: split });
+    expect(rr.t.length).toBe(50);
+    const s = sampleAt(rr, base[20].t);
+    expect(s.heartRate).toBe(base[20].heartRate);
+    expect(s.lat).toBeCloseTo(base[20].lat!, 6);
   });
 
   it('speed goes to 0 when stopped', () => {

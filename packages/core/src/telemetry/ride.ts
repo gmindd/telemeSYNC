@@ -3,7 +3,7 @@ import { lowerIndex } from '../util/search.ts';
 import { cumulativeGain, filterAltitude } from '../metrics/elevation.ts';
 import { gradeOverDistance } from '../metrics/grade.ts';
 import { movingAverageByTime } from '../metrics/smoothing.ts';
-import type { ChannelKey, RawTelemetry } from './types.ts';
+import type { ChannelKey, RawSample, RawTelemetry } from './types.ts';
 
 export type MetricKey =
   | 'speed'
@@ -31,6 +31,28 @@ export interface RideOptions {
   gradeMaxAbs?: number;
   /** Elevation gain hysteresis (m). */
   gainThresholdM?: number;
+  /** How long a sensor reading is kept when the next records have no value (ms). */
+  sensorHoldMs?: number;
+}
+
+/**
+ * Fills missing values with the last reading, for at most `maxHoldMs` after it and never across a
+ * gap longer than `gapMs` (a pause or a lost signal shows no data instead of an old value).
+ */
+export function holdLast(t: Float64Array, arr: Float64Array, maxHoldMs: number, gapMs: number): Float64Array {
+  const out = new Float64Array(arr.length);
+  let lastV = NaN;
+  let lastT = -Infinity;
+  for (let i = 0; i < arr.length; i++) {
+    if (i > 0 && t[i] - t[i - 1] > gapMs) lastV = NaN;
+    const v = arr[i];
+    if (!Number.isNaN(v)) {
+      lastV = v;
+      lastT = t[i];
+      out[i] = v;
+    } else out[i] = !Number.isNaN(lastV) && t[i] - lastT <= maxHoldMs ? lastV : NaN;
+  }
+  return out;
 }
 
 /** Normalised, derived telemetry for a whole ride. All arrays share the same index. */
@@ -88,9 +110,18 @@ function hasAny(a: Float64Array, minCount = 2): boolean {
 
 export function buildRide(raw: RawTelemetry, opts: RideOptions = {}): RideData {
   const gapThresholdMs = opts.gapThresholdMs ?? 10_000;
-  // Sort + dedupe timestamps.
+  // Sort, and merge records that share a timestamp (some watches write GPS and heart rate as
+  // separate records of the same second): a field missing in one is taken from the other.
   const sorted = [...raw.samples].sort((a, b) => a.t - b.t);
-  const dedup = sorted.filter((s, i) => i === 0 || s.t !== sorted[i - 1].t);
+  const dedup: RawSample[] = [];
+  for (const s of sorted) {
+    const last = dedup[dedup.length - 1];
+    if (last && last.t === s.t) {
+      for (const k of Object.keys(s) as (keyof RawSample)[]) {
+        if (last[k] === undefined && s[k] !== undefined) (last as unknown as Record<string, number>)[k] = s[k] as number;
+      }
+    } else dedup.push({ ...s });
+  }
   if (dedup.length < 2) throw new Error('A telemetria tem pontos insuficientes.');
   const r: RawTelemetry = { ...raw, samples: dedup };
   const n = dedup.length;
@@ -101,10 +132,10 @@ export function buildRide(raw: RawTelemetry, opts: RideOptions = {}): RideData {
   const altitudeRaw = column(r, 'altitude');
   const speedRaw = column(r, 'speed');
   const distRaw = column(r, 'distance');
-  const heartRate = column(r, 'heartRate');
-  const cadence = column(r, 'cadence');
-  const power = column(r, 'power');
-  const temperature = column(r, 'temperature');
+  const heartRateRaw = column(r, 'heartRate');
+  const cadenceRaw = column(r, 'cadence');
+  const powerRaw = column(r, 'power');
+  const temperatureRaw = column(r, 'temperature');
 
   const channels = new Set<ChannelKey>();
   const hasPos = hasAny(lat);
@@ -112,10 +143,18 @@ export function buildRide(raw: RawTelemetry, opts: RideOptions = {}): RideData {
   if (hasAny(altitudeRaw)) channels.add('altitude');
   if (hasAny(speedRaw)) channels.add('speed');
   if (hasAny(distRaw)) channels.add('distance');
-  if (hasAny(heartRate)) channels.add('heartRate');
-  if (hasAny(cadence)) channels.add('cadence');
-  if (hasAny(power)) channels.add('power');
-  if (hasAny(temperature)) channels.add('temperature');
+  if (hasAny(heartRateRaw)) channels.add('heartRate');
+  if (hasAny(cadenceRaw)) channels.add('cadence');
+  if (hasAny(powerRaw)) channels.add('power');
+  if (hasAny(temperatureRaw)) channels.add('temperature');
+
+  // Sensors that do not write a value in every record (watches often measure heart rate every few
+  // seconds): the last reading stays until the next one, for up to 30 s and never across a pause.
+  const hold = (a: Float64Array) => holdLast(t, a, opts.sensorHoldMs ?? 30_000, gapThresholdMs);
+  const heartRate = hold(heartRateRaw);
+  const cadence = hold(cadenceRaw);
+  const power = hold(powerRaw);
+  const temperature = hold(temperatureRaw);
 
   // Distance: device distance if present (monotonic), else integrated haversine.
   const distance = new Float64Array(n);
