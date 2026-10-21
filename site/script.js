@@ -263,12 +263,25 @@ function createSupporterItem(s) {
   const text = document.createElement('div');
   const name = document.createElement('div');
   name.className = 'supporter__name';
-  name.textContent = s.name || t('ui.someone');
+  if (s.name && typeof s.url === 'string' && s.url.startsWith('https://')) {
+    const link = document.createElement('a');
+    link.href = s.url;
+    link.target = '_blank';
+    link.rel = 'noopener';
+    link.textContent = s.name;
+    name.append(link);
+  } else name.textContent = s.name || t('ui.someone');
   const meta = document.createElement('div');
   meta.className = 'supporter__meta';
   const coffees = Number(s.coffees) || 1;
   meta.textContent = `${coffees} ${t(coffees === 1 ? 'ui.coffeeOne' : 'ui.coffeeMany')}${s.date ? ` · ${timeAgo(s.date)}` : ''}`;
   text.append(name, meta);
+  if (s.message) {
+    const note = document.createElement('q');
+    note.className = 'supporter__note';
+    note.textContent = s.message;
+    text.append(note);
+  }
   li.append(cup, text);
   return li;
 }
@@ -283,6 +296,13 @@ function createEmptySupporter() {
 
 // Turns an ISO date into "há 3 dias" style text in the current language
 function timeAgo(iso) {
+  // Date without a time (supporters added by hand): "hoje", "ontem", "há 3 dias".
+  if (/^\d{4}-\d{2}-\d{2}$/.test(String(iso))) {
+    const [y, m, d] = iso.split('-').map(Number);
+    const today = new Date();
+    const days = Math.round((Date.UTC(y, m - 1, d) - Date.UTC(today.getFullYear(), today.getMonth(), today.getDate())) / 86_400_000);
+    return new Intl.RelativeTimeFormat(t('locale'), { numeric: 'auto' }).format(days, 'day');
+  }
   const then = new Date(iso);
   if (Number.isNaN(then.getTime())) return '';
   const rtf = new Intl.RelativeTimeFormat(t('locale'), { numeric: 'auto' });

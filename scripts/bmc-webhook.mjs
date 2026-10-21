@@ -7,7 +7,8 @@
 // Files:
 //   $BMC_DATA_DIR/supporters.json   received supporters; keep this folder on a persistent volume,
 //                                   or the list starts empty again after every redeploy
-//   <site>/data/supporters-manual.json   supporters added by hand (e.g. from before the webhook existed)
+//   <site>/data/supporters-manual.json   supporters added by hand (e.g. from before the webhook existed);
+//                                   these may also carry a link (https) and a short message, with consent
 //   <site>/data/supporters.json     public list read by the page (manual + received, newest first)
 //   <site>/data/supporters-status.json   last event and any error, to check the setup from outside
 import { createHmac, timingSafeEqual } from 'node:crypto';
@@ -70,11 +71,22 @@ async function loadStore() {
   return Array.isArray(s.supporters) ? s.supporters : [];
 }
 
+const day = (date) => String(date ?? '').slice(0, 10);
+
 /** Public list: manual entries + received ones, newest first. */
 async function publish(stored) {
-  const manual = await readJson(MANUAL, { supporters: [] });
-  const all = [...(Array.isArray(manual.supporters) ? manual.supporters : []), ...stored]
-    .map((s) => ({ name: String(s.name ?? '').slice(0, 40), coffees: Number(s.coffees) || 1, date: s.date ?? null }))
+  const manualFile = await readJson(MANUAL, { supporters: [] });
+  const manual = (Array.isArray(manualFile.supporters) ? manualFile.supporters : []).map((s) => {
+    const entry = { name: String(s.name ?? '').slice(0, 40), coffees: Number(s.coffees) || 1, date: s.date ?? null };
+    if (typeof s.url === 'string' && /^https:\/\/[^\s"<>]{1,200}$/.test(s.url)) entry.url = s.url;
+    if (typeof s.message === 'string' && s.message.trim()) entry.message = s.message.trim().slice(0, 160);
+    return entry;
+  });
+  // A support added by hand and also delivered by the webhook (same name, same day) is listed once.
+  const received = stored
+    .filter((s) => !manual.some((m) => m.name && m.name === s.name && day(m.date) === day(s.date)))
+    .map((s) => ({ name: String(s.name ?? '').slice(0, 40), coffees: Number(s.coffees) || 1, date: s.date ?? null }));
+  const all = [...manual, ...received]
     .sort((a, b) => String(b.date).localeCompare(String(a.date)))
     .slice(0, MAX_PUBLIC);
   await writeJson(PUBLIC, { updatedAt: new Date().toISOString(), supporters: all });
