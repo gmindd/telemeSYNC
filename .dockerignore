@@ -1,5 +1,5 @@
 *
 !site/
-!scripts/fetch-supporters.mjs
-!scripts/supporters-loop.sh
+!scripts/bmc-webhook.mjs
+!scripts/bmc-webhook.sh
 !scripts/nginx-site.conf
