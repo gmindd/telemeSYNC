@@ -158,5 +158,9 @@
   "news.101.2": "<b>Carte ronde :</b> centrée sur vous et orientée dans votre sens de marche, avec le nord toujours indiqué sur la couronne.",
   "news.101.3": "<b>Profil altimétrique en carte</b> avec le dénivelé positif et négatif, et un <b>panneau compact</b> avec les moyennes de la sortie.",
   "news.101.4": "<b>Liste des clips à la synchronisation :</b> chaque clip avec l’heure de début utilisée, son moment dans la sortie, l’origine de l’heure et son réglage fin. Un avertissement apparaît quand deux clips de la même caméra se chevauchent, signe d’une heure erronée.",
-  "news.101.5": "<b>Rapport de synchronisation :</b> chaque export enregistre un fichier <i>sincronizacao.txt</i> avec l’heure de début de chaque clip et les réglages appliqués, pour vérifier au montage que chaque overlay va sur le bon clip."
+  "news.101.5": "<b>Rapport de synchronisation :</b> chaque export enregistre un fichier <i>sincronizacao.txt</i> avec l’heure de début de chaque clip et les réglages appliqués, pour vérifier au montage que chaque overlay va sur le bon clip.",
+  "featured.title": "Soutiens à l’honneur",
+  "featured.first": "☕ Premier soutien de telemeSYNC",
+  "featured.alvesText": "Merci pour le soutien et pour la vidéo de démo. Suivez ses sorties :",
+  "featured.alvesAlt": "Logo d’Alves na Roda"
 }

@@ -4,7 +4,7 @@
 // no e-mails, notes or amounts. Without a token it writes an empty list.
 //   BMC_TOKEN=… node scripts/fetch-supporters.mjs [out.json]
 import { mkdir, writeFile } from 'node:fs/promises';
-import { dirname } from 'node:path';
+import { dirname, join } from 'node:path';
 
 const OUT = process.argv[2] ?? 'site/data/supporters.json';
 const MAX = 20;
@@ -44,7 +44,25 @@ async function fetchSupporters() {
     .slice(0, MAX);
 }
 
-const supporters = await fetchSupporters();
+// supporters-status.json next to the list: when the last refresh ran and why it failed, readable on
+// the site (data/supporters-status.json) so a broken refresh can be diagnosed without the server log.
+// It never contains the token.
+const STATUS = join(dirname(OUT), 'supporters-status.json');
+async function writeStatus(status) {
+  await mkdir(dirname(OUT), { recursive: true });
+  await writeFile(STATUS, JSON.stringify({ checkedAt: new Date().toISOString(), ...status }, null, 2) + '\n');
+}
+
+let supporters;
+try {
+  supporters = await fetchSupporters();
+} catch (e) {
+  const message = (e instanceof Error ? e.message : String(e)).slice(0, 300);
+  await writeStatus({ ok: false, message });
+  console.error(message);
+  process.exit(1);
+}
 await mkdir(dirname(OUT), { recursive: true });
 await writeFile(OUT, JSON.stringify({ updatedAt: new Date().toISOString(), supporters }, null, 2) + '\n');
+await writeStatus({ ok: true, count: supporters.length, message: token ? 'ok' : 'BMC_TOKEN not set' });
 console.log(`${supporters.length} supporters → ${OUT}`);
