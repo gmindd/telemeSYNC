@@ -265,6 +265,7 @@ p { margin: 0 0 var(--spacing-sm); }
 .supporter__cup { font-size: 1.3rem; }
 .supporter__name { font-weight: 700; }
 .supporter__meta { color: var(--color-muted); font-size: 0.85rem; }
+.supporter__note { display: block; margin-top: 2px; color: var(--color-text); font-style: italic; font-size: 0.9rem; }
 .supporters__empty { color: var(--color-muted); }
 
 /* Sponsors */

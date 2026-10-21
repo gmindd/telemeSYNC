@@ -1,4 +1,12 @@
 {
-  "note": "Apoios recebidos antes do webhook do Buy Me a Coffee, ou acrescentados à mão. Só o nome público, o número de cafés e a data (AAAA-MM-DD). Deixe o nome vazio para aparecer como \"Alguém\".",
-  "supporters": []
+  "note": "Apoios recebidos antes do webhook do Buy Me a Coffee, ou acrescentados à mão. Só o nome público, o número de cafés e a data (AAAA-MM-DD). Deixe o nome vazio para aparecer como \"Alguém\". Com autorização, pode ter também \"url\" (https) e \"message\".",
+  "supporters": [
+    {
+      "name": "Alves na Roda",
+      "coffees": 1,
+      "date": "2026-10-21",
+      "url": "https://www.instagram.com/alvesnaroda/",
+      "message": "Simplesmente genial ... Obrigado"
+    }
+  ]
 }
