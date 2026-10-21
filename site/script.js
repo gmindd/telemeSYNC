@@ -226,7 +226,7 @@ function loadPoster(img, id) {
   img.src = `${base}/maxresdefault.jpg`;
 }
 
-// Fetches the latest Buy Me a Coffee supporters (JSON built by the GitHub Action) and lists them
+// Fetches the latest Buy Me a Coffee supporters (JSON kept up to date by the webhook receiver) and lists them
 async function loadSupporters() {
   if (!document.querySelector('.js-supporters')) return;
   let supporters = [];
