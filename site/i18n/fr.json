@@ -73,7 +73,7 @@
   "demo.title": "Démo",
   "demo.lead": "Du fichier du compteur à la vidéo finale en quelques minutes.",
   "demo.play": "Lire la démo sur YouTube",
-  "demo.credit": "Vidéo offerte par <strong>Alves na Roda</strong> · <a href=\"https://www.youtube.com/channel/UCBBXkj3p9e81YS1_LJHircw\" target=\"_blank\" rel=\"noopener\">YouTube</a> · <a href=\"https://www.instagram.com/alvesnaroda.oficial/\" target=\"_blank\" rel=\"noopener\">Instagram</a>",
+  "demo.credit": "Vidéo offerte par <strong>Alves na Roda</strong> · <a href=\"https://www.youtube.com/channel/UCBBXkj3p9e81YS1_LJHircw\" target=\"_blank\" rel=\"noopener\">YouTube</a> · <a href=\"https://www.instagram.com/alvesnaroda/\" target=\"_blank\" rel=\"noopener\">Instagram</a>",
   "demo.fine": "L’image d’aperçu vient de YouTube ; la vidéo elle-même (mode de confidentialité renforcée) ne se charge que lorsque vous lancez la lecture.",
   "download.title": "Téléchargement",
   "download.version": "Version",
@@ -159,8 +159,5 @@
   "news.101.3": "<b>Profil altimétrique en carte</b> avec le dénivelé positif et négatif, et un <b>panneau compact</b> avec les moyennes de la sortie.",
   "news.101.4": "<b>Liste des clips à la synchronisation :</b> chaque clip avec l’heure de début utilisée, son moment dans la sortie, l’origine de l’heure et son réglage fin. Un avertissement apparaît quand deux clips de la même caméra se chevauchent, signe d’une heure erronée.",
   "news.101.5": "<b>Rapport de synchronisation :</b> chaque export enregistre un fichier <i>sincronizacao.txt</i> avec l’heure de début de chaque clip et les réglages appliqués, pour vérifier au montage que chaque overlay va sur le bon clip.",
-  "featured.title": "Soutiens à l’honneur",
-  "featured.first": "☕ Premier soutien de telemeSYNC",
-  "featured.alvesText": "Merci pour le soutien et pour la vidéo de démo. Suivez ses sorties :",
-  "featured.alvesAlt": "Logo d’Alves na Roda"
+  "sponsors.alvesAlt": "Logo d’Alves na Roda"
 }

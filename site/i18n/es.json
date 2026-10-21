@@ -73,7 +73,7 @@
   "demo.title": "Demo",
   "demo.lead": "Del archivo del ciclocomputador al vídeo final en pocos minutos.",
   "demo.play": "Reproducir la demo en YouTube",
-  "demo.credit": "Vídeo cedido por cortesía de <strong>Alves na Roda</strong> · <a href=\"https://www.youtube.com/channel/UCBBXkj3p9e81YS1_LJHircw\" target=\"_blank\" rel=\"noopener\">YouTube</a> · <a href=\"https://www.instagram.com/alvesnaroda.oficial/\" target=\"_blank\" rel=\"noopener\">Instagram</a>",
+  "demo.credit": "Vídeo cedido por cortesía de <strong>Alves na Roda</strong> · <a href=\"https://www.youtube.com/channel/UCBBXkj3p9e81YS1_LJHircw\" target=\"_blank\" rel=\"noopener\">YouTube</a> · <a href=\"https://www.instagram.com/alvesnaroda/\" target=\"_blank\" rel=\"noopener\">Instagram</a>",
   "demo.fine": "La imagen de vista previa viene de YouTube; el vídeo en sí (modo de privacidad mejorada) solo se carga al pulsar reproducir.",
   "download.title": "Descarga",
   "download.version": "Versión",
@@ -159,8 +159,5 @@
   "news.101.3": "<b>Perfil de altimetría en tarjeta</b> con el desnivel positivo y negativo, y un <b>panel compacto</b> con las medias de la salida.",
   "news.101.4": "<b>Lista de clips en la sincronización:</b> cada clip con la hora de inicio usada, su momento en la salida, de dónde viene la hora y su ajuste fino. Avisa cuando dos clips de la misma cámara se solapan en el tiempo, señal de una hora errónea.",
   "news.101.5": "<b>Informe de sincronización:</b> cada exportación guarda un <i>sincronizacao.txt</i> con la hora de inicio de cada clip y los ajustes aplicados, para comprobar en la edición que cada overlay va en el clip correcto.",
-  "featured.title": "Apoyos destacados",
-  "featured.first": "☕ Primer apoyo de telemeSYNC",
-  "featured.alvesText": "Gracias por el apoyo y por el vídeo de la demo. Sigue sus salidas:",
-  "featured.alvesAlt": "Logotipo de Alves na Roda"
+  "sponsors.alvesAlt": "Logotipo de Alves na Roda"
 }
