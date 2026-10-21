@@ -1,5 +1,5 @@
 # Landing page (site/) for Coolify or any Docker host: nginx serves the static files and the
-# Buy Me a Coffee supporters list is refreshed at start-up and every 6 hours.
+# Buy Me a Coffee supporters list is refreshed at start-up and every hour.
 # Set BMC_TOKEN as an environment variable of the container (in Coolify: Environment Variables).
 FROM nginx:1.27-alpine
 RUN apk add --no-cache nodejs

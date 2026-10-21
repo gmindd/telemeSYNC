@@ -18,8 +18,15 @@ async function fetchSupporters() {
   const res = await fetch('https://developers.buymeacoffee.com/api/v1/supporters?page=1', {
     headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' },
   });
-  if (!res.ok) throw new Error(`Buy Me a Coffee API: HTTP ${res.status}`);
-  const body = await res.json();
+  const text = await res.text();
+  // The API answers 404 while the page has no supporters yet: that is an empty list, not an error.
+  if (res.status === 404) {
+    console.log(`Buy Me a Coffee: no supporters yet (HTTP 404 ${text.slice(0, 120)})`);
+    return [];
+  }
+  // 401 = token wrong or expired (create a new one at developers.buymeacoffee.com).
+  if (!res.ok) throw new Error(`Buy Me a Coffee API: HTTP ${res.status} ${text.slice(0, 200)}`);
+  const body = JSON.parse(text);
   const rows = Array.isArray(body?.data) ? body.data : [];
   return rows
     .filter((r) => !r.is_refunded && r.refunded !== true)
