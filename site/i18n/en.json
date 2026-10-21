@@ -73,7 +73,7 @@
   "demo.title": "Demo",
   "demo.lead": "From the bike computer file to the final video in a few minutes.",
   "demo.play": "Play the demo on YouTube",
-  "demo.credit": "Video courtesy of <strong>Alves na Roda</strong> · <a href=\"https://www.youtube.com/channel/UCBBXkj3p9e81YS1_LJHircw\" target=\"_blank\" rel=\"noopener\">YouTube</a> · <a href=\"https://www.instagram.com/alvesnaroda.oficial/\" target=\"_blank\" rel=\"noopener\">Instagram</a>",
+  "demo.credit": "Video courtesy of <strong>Alves na Roda</strong> · <a href=\"https://www.youtube.com/channel/UCBBXkj3p9e81YS1_LJHircw\" target=\"_blank\" rel=\"noopener\">YouTube</a> · <a href=\"https://www.instagram.com/alvesnaroda/\" target=\"_blank\" rel=\"noopener\">Instagram</a>",
   "demo.fine": "The preview image comes from YouTube; the video itself (privacy-enhanced mode) only loads when you press play.",
   "download.title": "Download",
   "download.version": "Version",
@@ -159,8 +159,5 @@
   "news.101.3": "<b>Elevation profile card</b> with elevation gain and loss, and a <b>compact panel</b> with your ride averages.",
   "news.101.4": "<b>Clip list in the sync step:</b> each clip with the start time used, its moment in the ride, where the time came from and its own fine adjustment. It warns when two clips of the same camera overlap in time, a sign of a wrong start time.",
   "news.101.5": "<b>Sync report:</b> every export writes a <i>sincronizacao.txt</i> with each clip’s start time and the adjustments applied, so you can check in your editor that each overlay goes on the right clip.",
-  "featured.title": "Featured supporters",
-  "featured.first": "☕ First telemeSYNC supporter",
-  "featured.alvesText": "Thank you for the support and for the demo video. Follow his rides:",
-  "featured.alvesAlt": "Alves na Roda logo"
+  "sponsors.alvesAlt": "Alves na Roda logo"
 }

@@ -73,7 +73,7 @@
   "demo.title": "Demo",
   "demo.lead": "Von der Radcomputer-Datei zum fertigen Video in wenigen Minuten.",
   "demo.play": "Demo auf YouTube abspielen",
-  "demo.credit": "Video mit freundlicher Genehmigung von <strong>Alves na Roda</strong> · <a href=\"https://www.youtube.com/channel/UCBBXkj3p9e81YS1_LJHircw\" target=\"_blank\" rel=\"noopener\">YouTube</a> · <a href=\"https://www.instagram.com/alvesnaroda.oficial/\" target=\"_blank\" rel=\"noopener\">Instagram</a>",
+  "demo.credit": "Video mit freundlicher Genehmigung von <strong>Alves na Roda</strong> · <a href=\"https://www.youtube.com/channel/UCBBXkj3p9e81YS1_LJHircw\" target=\"_blank\" rel=\"noopener\">YouTube</a> · <a href=\"https://www.instagram.com/alvesnaroda/\" target=\"_blank\" rel=\"noopener\">Instagram</a>",
   "demo.fine": "Das Vorschaubild kommt von YouTube; das Video selbst (erweiterter Datenschutzmodus) lädt erst, wenn du auf Abspielen klickst.",
   "download.title": "Download",
   "download.version": "Version",
@@ -159,8 +159,5 @@
   "news.101.3": "<b>Höhenprofil als Karte</b> mit Anstieg und Abstieg, und ein <b>kompaktes Panel</b> mit den Durchschnittswerten der Tour.",
   "news.101.4": "<b>Clip-Liste bei der Synchronisierung:</b> jeder Clip mit der verwendeten Startzeit, seinem Zeitpunkt in der Tour, der Herkunft der Zeit und seiner eigenen Feinkorrektur. Eine Warnung erscheint, wenn sich zwei Clips derselben Kamera zeitlich überschneiden – ein Zeichen für eine falsche Startzeit.",
   "news.101.5": "<b>Synchronisierungsbericht:</b> Jeder Export schreibt eine Datei <i>sincronizacao.txt</i> mit der Startzeit jedes Clips und den angewandten Korrekturen, damit du im Schnitt prüfen kannst, dass jedes Overlay auf dem richtigen Clip liegt.",
-  "featured.title": "Unterstützer im Rampenlicht",
-  "featured.first": "☕ Erster telemeSYNC-Unterstützer",
-  "featured.alvesText": "Danke für die Unterstützung und das Demo-Video. Folge seinen Touren:",
-  "featured.alvesAlt": "Logo von Alves na Roda"
+  "sponsors.alvesAlt": "Logo von Alves na Roda"
 }
