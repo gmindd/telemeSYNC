@@ -1,8 +1,9 @@
 // Buy Me a Coffee webhook receiver for the landing page. Runs inside the site container, behind nginx:
 // Buy Me a Coffee → POST https://<site>/api/bmc-webhook → 127.0.0.1:8081.
 // Every request is checked against the webhook's signing secret (BMC_WEBHOOK_SECRET). donation.created
-// adds a supporter, donation.refunded removes it. Only the public name ("" when the supporter hid it),
-// the number of coffees and the date are kept: no e-mails, notes or amounts.
+// adds a supporter, donation.refunded removes it. Kept: the name the supporter shows on Buy Me a Coffee
+// ("" when anonymous), the message when they left it public, the number of coffees and the date.
+// Never e-mails or amounts.
 //
 // Files:
 //   $BMC_DATA_DIR/supporters.json   received supporters; keep this folder on a persistent volume,
@@ -51,12 +52,22 @@ async function setStatus(status) {
   }
 }
 
-/** Name the supporter chose to show; "" when hidden (the page then shows "Alguém"). */
+/**
+ * Name the supporter shows on Buy Me a Coffee (a plain name or a social handle like "@alvesnaroda");
+ * "" when anonymous (Buy Me a Coffee shows "Someone", the page shows "Alguém").
+ */
 export function publicName(d) {
-  if (d.supporter_name_type && d.supporter_name_type !== 'default') return '';
+  if (/anon|private|hidden|someone/i.test(String(d.supporter_name_type ?? ''))) return '';
   const name = String(d.supporter_name ?? '').trim();
-  if (!name || /@/.test(name) || /^someone$/i.test(name)) return '';
+  if (!name || /^someone$/i.test(name) || /\S+@\S+\.\S+/.test(name)) return '';
   return name.slice(0, 40);
+}
+
+/** The message, only when the supporter left it public (note_hidden is "true" when hidden). */
+export function publicNote(d) {
+  if (d.note_hidden === true || d.note_hidden === 'true') return '';
+  const note = String(d.support_note ?? d.message ?? '').trim();
+  return note.slice(0, 160);
 }
 
 export function verifySignature(raw, signature, secret) {
@@ -82,10 +93,16 @@ async function publish(stored) {
     if (typeof s.message === 'string' && s.message.trim()) entry.message = s.message.trim().slice(0, 160);
     return entry;
   });
-  // A support added by hand and also delivered by the webhook (same name, same day) is listed once.
+  // A support added by hand and also delivered by the webhook is listed once (the hand-added entry
+  // wins): same name on the same day, or exactly the same time (the hand entry copies it).
+  const sameTime = (a, b) => a && b && String(a).length > 10 && Date.parse(a) === Date.parse(b);
   const received = stored
-    .filter((s) => !manual.some((m) => m.name && m.name === s.name && day(m.date) === day(s.date)))
-    .map((s) => ({ name: String(s.name ?? '').slice(0, 40), coffees: Number(s.coffees) || 1, date: s.date ?? null }));
+    .filter((s) => !manual.some((m) => (m.name && m.name === s.name && day(m.date) === day(s.date)) || sameTime(m.date, s.date)))
+    .map((s) => {
+      const entry = { name: String(s.name ?? '').slice(0, 40), coffees: Number(s.coffees) || 1, date: s.date ?? null };
+      if (s.message) entry.message = String(s.message).slice(0, 160);
+      return entry;
+    });
   const all = [...manual, ...received]
     .sort((a, b) => String(b.date).localeCompare(String(a.date)))
     .slice(0, MAX_PUBLIC);
@@ -101,6 +118,7 @@ async function apply(event) {
     const entry = {
       id: d.id ?? event.event_id,
       name: publicName(d),
+      message: publicNote(d),
       coffees: Number(d.coffee_count) || 1,
       date: new Date((Number(d.created_at) || event.created || Date.now() / 1000) * 1000).toISOString(),
     };
