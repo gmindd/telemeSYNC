@@ -66,15 +66,15 @@
     <section class="hero" id="topo">
       <div class="container hero__grid">
         <div class="hero__text">
-          <p class="eyebrow" data-i18n="hero.eyebrow">Gratuito · Windows e macOS</p>
+          <p class="eyebrow" data-i18n="hero.eyebrow">Gratuito · Windows e macOS · Em 5 línguas</p>
           <h1 data-i18n="hero.title">A telemetria das suas voltas de bicicleta, <span class="accent">por cima dos seus vídeos</span>.</h1>
           <p class="lead" data-i18n="hero.lead">
             O telemeSYNC sincroniza o ficheiro do ciclocomputador (FIT ou GPX) com os clips da action cam e gera gráficos transparentes:
             velocidade, inclinação, mapa, altimetria, frequência cardíaca e painéis completos. Arraste-os para o editor e já está.
           </p>
           <div class="hero__actions">
-            <a class="btn btn--primary btn--big js-download" href="https://github.com/gmindd/telemeSYNC/releases/download/v1.0.1/telemeSYNC-1.0.1-windows.zip">
-              <span><span data-i18n="hero.download">Descarregar</span> v<span class="js-version">1.0.1</span></span>
+            <a class="btn btn--primary btn--big js-download" href="https://github.com/gmindd/telemeSYNC/releases/download/v1.0.2/telemeSYNC-1.0.2-windows.zip">
+              <span><span data-i18n="hero.download">Descarregar</span> v<span class="js-version">1.0.2</span></span>
             </a>
             <a class="btn btn--ghost btn--big" href="#demo" data-i18n="hero.demo">Ver demonstração</a>
           </div>
@@ -313,7 +313,7 @@
     <section class="section" id="download" aria-labelledby="download-titulo">
       <div class="container">
         <h2 id="download-titulo" data-i18n="download.title">Download</h2>
-        <p class="section__lead"><span data-i18n="download.version">Versão</span> <span class="js-version">1.0.1</span> <span data-i18n="download.lead">· gratuita · não é preciso instalar nada.</span></p>
+        <p class="section__lead"><span data-i18n="download.version">Versão</span> <span class="js-version">1.0.2</span> <span data-i18n="download.lead">· gratuita · não é preciso instalar nada · em 5 línguas.</span></p>
         <div class="download">
           <article class="download__os js-os" data-os="windows">
             <h3>Windows</h3>
@@ -324,7 +324,7 @@
               <li data-i18n="download.step3">Mantenha a janela preta aberta enquanto usa o programa.</li>
             </ol>
             <div class="download__actions">
-              <a class="btn btn--primary js-download" data-os="windows" href="https://github.com/gmindd/telemeSYNC/releases/download/v1.0.1/telemeSYNC-1.0.1-windows.zip" data-i18n="download.buttonWin">Descarregar para Windows</a>
+              <a class="btn btn--primary js-download" data-os="windows" href="https://github.com/gmindd/telemeSYNC/releases/download/v1.0.2/telemeSYNC-1.0.2-windows.zip" data-i18n="download.buttonWin">Descarregar para Windows</a>
               <a class="btn btn--ghost" href="https://github.com/gmindd/telemeSYNC/raw/downloads/Instrucoes-telemeSYNC.pdf" data-i18n="download.pdf">Instruções em PDF</a>
             </div>
           </article>
@@ -337,7 +337,7 @@
               <li data-i18n="download.mac3">Mantenha a janela do Terminal aberta enquanto usa o programa.</li>
             </ol>
             <div class="download__actions">
-              <a class="btn btn--primary js-download" data-os="mac" href="https://github.com/gmindd/telemeSYNC/releases/download/v1.0.1/telemeSYNC-1.0.1-macos.zip" data-i18n="download.buttonMac">Descarregar para Mac</a>
+              <a class="btn btn--primary js-download" data-os="mac" href="https://github.com/gmindd/telemeSYNC/releases/download/v1.0.2/telemeSYNC-1.0.2-macos.zip" data-i18n="download.buttonMac">Descarregar para Mac</a>
             </div>
           </article>
         </div>
@@ -375,6 +375,17 @@
       <div class="container container--narrow">
         <h2 id="novidades-titulo" data-i18n="news.title">Novidades</h2>
         <div class="changelog">
+          <article class="release">
+            <header class="release__head">
+              <h3><span data-i18n="news.version">Versão</span> 1.0.2</h3>
+              <time class="js-date" datetime="2026-10-22">22 de outubro de 2026</time>
+            </header>
+            <ul>
+              <li data-i18n="news.102.1"><b>Em 5 línguas:</b> o programa está agora em português, inglês, francês, espanhol e alemão, à escolha nas bandeiras no topo (inglês por predefinição). Os textos desenhados nos overlays, os avisos e o relatório de sincronização acompanham a língua, e os overlays podem ter uma língua própria.</li>
+              <li data-i18n="news.102.2"><b>Frequência cardíaca sem falhas:</b> com relógios que só medem a FC de vez em quando (ex.: Huawei Watch GT 5 Pro), o overlay mostrava "—" entre leituras. Agora fica o último valor até à leitura seguinte (no máximo 4 s; numa pausa continua a mostrar "—"). O mesmo para cadência, potência e temperatura.</li>
+              <li data-i18n="news.102.3"><b>Registos repetidos juntos:</b> quando o ficheiro tem dois registos com a mesma hora (ex.: GPS num, FC no outro), os dois são juntos em vez de se perder o segundo.</li>
+            </ul>
+          </article>
           <article class="release">
             <header class="release__head">
               <h3><span data-i18n="news.version">Versão</span> 1.0.1</h3>

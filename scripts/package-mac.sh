@@ -80,11 +80,11 @@ if command -v codesign >/dev/null; then
 fi
 
 echo "› Lançador e instruções"
-cp "$ROOT/scripts/mac/Iniciar telemeSYNC.command" "$ROOT/scripts/mac/LEIA-ME.txt" "$ROOT/LICENCA.txt" "$APP/"
+cp "$ROOT/scripts/mac/Iniciar telemeSYNC.command" "$ROOT/scripts/mac/LEIA-ME.txt" "$ROOT/scripts/mac/README.txt" "$ROOT/LICENCA.txt" "$APP/"
 node "$ROOT/scripts/third-party-notices.mjs" "$APP" "$APP/LICENCAS-TERCEIROS.txt" --mac
 [ -f "$OUT/Instrucoes-telemeSYNC-Mac.pdf" ] && cp "$OUT/Instrucoes-telemeSYNC-Mac.pdf" "$APP/"
 # Unix line endings, even when the checkout uses CRLF.
-sed -i.bak 's/\r$//' "$APP/Iniciar telemeSYNC.command" "$APP/LEIA-ME.txt" "$APP/LICENCA.txt" "$APP/LICENCAS-TERCEIROS.txt"
+sed -i.bak 's/\r$//' "$APP/Iniciar telemeSYNC.command" "$APP/LEIA-ME.txt" "$APP/README.txt" "$APP/LICENCA.txt" "$APP/LICENCAS-TERCEIROS.txt"
 rm -f "$APP"/*.bak
 
 mkdir -p "$OUT"

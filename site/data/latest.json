@@ -1,11 +1,18 @@
 {
-  "version": "1.0.1",
-  "date": "2026-10-20",
-  "summary": "Novos designs (mostradores, mapa circular, perfil em cartão, painel compacto), lista de clips na sincronização e relatório de sincronização.",
-  "downloadUrl": "https://github.com/gmindd/telemeSYNC/releases/download/v1.0.1/telemeSYNC-1.0.1-windows.zip",
+  "version": "1.0.2",
+  "date": "2026-10-22",
+  "summary": "O programa em 5 línguas (português, inglês, francês, espanhol e alemão) e frequência cardíaca sem falhas entre leituras.",
+  "summaries": {
+    "en": "The program in 5 languages (Portuguese, English, French, Spanish and German) and heart rate without gaps between readings.",
+    "pt": "O programa em 5 línguas (português, inglês, francês, espanhol e alemão) e frequência cardíaca sem falhas entre leituras.",
+    "fr": "Le programme en 5 langues (portugais, anglais, français, espagnol et allemand) et une fréquence cardiaque sans trous entre les mesures.",
+    "es": "El programa en 5 idiomas (portugués, inglés, francés, español y alemán) y frecuencia cardíaca sin huecos entre lecturas.",
+    "de": "Das Programm in 5 Sprachen (Portugiesisch, Englisch, Französisch, Spanisch und Deutsch) und Herzfrequenz ohne Lücken zwischen den Messungen."
+  },
+  "downloadUrl": "https://github.com/gmindd/telemeSYNC/releases/download/v1.0.2/telemeSYNC-1.0.2-windows.zip",
   "downloads": {
-    "windows": "https://github.com/gmindd/telemeSYNC/releases/download/v1.0.1/telemeSYNC-1.0.1-windows.zip",
-    "mac": "https://github.com/gmindd/telemeSYNC/releases/download/v1.0.1/telemeSYNC-1.0.1-macos.zip"
+    "windows": "https://github.com/gmindd/telemeSYNC/releases/download/v1.0.2/telemeSYNC-1.0.2-windows.zip",
+    "mac": "https://github.com/gmindd/telemeSYNC/releases/download/v1.0.2/telemeSYNC-1.0.2-macos.zip"
   },
   "changelogUrl": "https://telemesync.pereiragabriel.com/#novidades"
 }

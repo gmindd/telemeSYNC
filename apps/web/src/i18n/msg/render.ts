@@ -19,7 +19,7 @@ export const RENDER = {
     'exporte noutro formato: no DaVinci Resolve use ProRes 4444 ou FFV1; no CapCut, ProRes 4444. O Canva não aceita vídeos com transparência (converte o fundo em preto).',
     'exportez dans un autre format : dans DaVinci Resolve, utilisez ProRes 4444 ou FFV1 ; dans CapCut, ProRes 4444. Canva n’accepte pas les vidéos avec transparence (le fond devient noir).',
     'exporta en otro formato: en DaVinci Resolve usa ProRes 4444 o FFV1; en CapCut, ProRes 4444. Canva no acepta vídeos con transparencia (convierte el fondo en negro).',
-    'exportieren Sie in einem anderen Format: in DaVinci Resolve ProRes 4444 oder FFV1, in CapCut ProRes 4444. Canva akzeptiert keine Videos mit Transparenz (der Hintergrund wird schwarz).',
+    'exportiere in einem anderen Format: in DaVinci Resolve ProRes 4444 oder FFV1, in CapCut ProRes 4444. Canva akzeptiert keine Videos mit Transparenz (der Hintergrund wird schwarz).',
   ],
   'render.separate': ['Separate gadgets', 'Gadgets separados', 'Gadgets séparés', 'Gadgets separados', 'Separate Gadgets'],
   'render.separateText': [
@@ -57,7 +57,7 @@ export const RENDER = {
     'Não foi possível contactar o servidor local. Arrancou a app com "Iniciar telemeSYNC" (ou "npm start")?',
     'Impossible de joindre le serveur local. Avez-vous lancé l’application avec « Iniciar telemeSYNC » (ou « npm start ») ?',
     'No se pudo contactar con el servidor local. ¿Arrancaste la app con «Iniciar telemeSYNC» (o «npm start»)?',
-    'Der lokale Server ist nicht erreichbar. Haben Sie die App mit „Iniciar telemeSYNC“ (oder „npm start“) gestartet?',
+    'Der lokale Server ist nicht erreichbar. Hast du die App mit „Iniciar telemeSYNC“ (oder „npm start“) gestartet?',
   ],
   'notice.outputSaved': ['Output folder saved.', 'Pasta de saída guardada.', 'Dossier de sortie enregistré.', 'Carpeta de salida guardada.', 'Ausgabeordner gespeichert.'],
   'notice.projectOpened': [
@@ -65,7 +65,7 @@ export const RENDER = {
     'Projeto aberto. Carregue a telemetria{file} e volte a arrastar os vídeos para os pré-visualizar.',
     'Projet ouvert. Chargez la télémétrie{file} et glissez à nouveau les vidéos pour les prévisualiser.',
     'Proyecto abierto. Carga la telemetría{file} y vuelve a arrastrar los vídeos para previsualizarlos.',
-    'Projekt geöffnet. Laden Sie die Telemetrie{file} und ziehen Sie die Videos erneut herein, um sie in der Vorschau zu sehen.',
+    'Projekt geöffnet. Lade die Telemetrie{file} und zieh die Videos erneut herein, um sie in der Vorschau zu sehen.',
   ],
   'api.error': ['Error {status}', 'Erro {status}', 'Erreur {status}', 'Error {status}', 'Fehler {status}'],
   'store.defaultRide': ['ride', 'volta', 'sortie', 'ruta', 'fahrt'],

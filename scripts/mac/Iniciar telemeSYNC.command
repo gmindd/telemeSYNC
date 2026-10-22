@@ -3,12 +3,13 @@
 cd "$(dirname "$0")" || exit 1
 clear
 echo
-echo "  telemeSYNC - gerador de overlays de telemetria"
-echo "  ---------------------------------------------"
-echo "  A aplicação vai abrir no browser em http://localhost:5174"
+echo "  telemeSYNC - telemetry overlays for bike videos"
+echo "  ------------------------------------------------"
+echo "  The app opens in your browser at http://localhost:5174"
+echo "  KEEP THIS WINDOW OPEN while you use the app. To stop, close it (or press Control+C)."
 echo
-echo "  MANTENHA ESTA JANELA ABERTA enquanto usa a aplicação."
-echo "  Para terminar, feche esta janela (ou carregue em Control+C)."
+echo "  A aplicação abre no browser em http://localhost:5174"
+echo "  MANTENHA ESTA JANELA ABERTA enquanto usa a aplicação. Para terminar, feche-a (ou Control+C)."
 echo
 
 # Files downloaded from the internet carry the quarantine flag: once this launcher is allowed, it is removed from
@@ -21,7 +22,7 @@ arch="$(uname -m)"
 case "$arch" in
   arm64) runtime="runtime/darwin-arm64" ;;
   x86_64) runtime="runtime/darwin-x64" ;;
-  *) echo "  Este Mac ($arch) não é suportado."; read -r -n 1 -s -p "  Carregue numa tecla para fechar."; exit 1 ;;
+  *) echo "  This Mac ($arch) is not supported. / Este Mac ($arch) não é suportado."; read -r -n 1 -s -p "  Press a key to close. / Carregue numa tecla para fechar."; exit 1 ;;
 esac
 chmod +x "$runtime/node" "$runtime/ffmpeg" node_modules/@esbuild/*/bin/esbuild 2>/dev/null
 # Apple Silicon kills unsigned code ("Killed: 9"): anything left unsigned gets an ad-hoc signature, once.
@@ -35,6 +36,7 @@ export FFMPEG_PATH="$PWD/$runtime/ffmpeg"
 "$runtime/node" --import tsx apps/server/src/main.ts
 
 echo
+echo "  The app has stopped. If an error appears above, take a screenshot (Cmd+Shift+4) and send it."
 echo "  A aplicação terminou. Se apareceu um erro acima, tire uma captura de ecrã (Cmd+Shift+4) e envie-a."
-read -r -n 1 -s -p "  Carregue numa tecla para fechar."
+read -r -n 1 -s -p "  Press a key to close. / Carregue numa tecla para fechar."
 echo

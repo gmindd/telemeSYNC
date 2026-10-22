@@ -1,12 +1,12 @@
 // Step 3: sync, timeline, preview and values panel. Order: en, pt, fr, es, de.
 export const SYNC = {
-  'sync.needRide': ['Load the telemetry first.', 'Carregue primeiro a telemetria.', 'Chargez d’abord la télémétrie.', 'Carga primero la telemetría.', 'Laden Sie zuerst die Telemetrie.'],
+  'sync.needRide': ['Load the telemetry first.', 'Carregue primeiro a telemetria.', 'Chargez d’abord la télémétrie.', 'Carga primero la telemetría.', 'Lade zuerst die Telemetrie.'],
   'sync.lead': [
     'Each camera has a global offset: lining up one clip lines up every clip of that camera. Check it at a stop (the speed must drop to 0 when the bike stops).',
     'Cada câmara tem um offset global: alinhar um clip alinha todos os clips dessa câmara. Valide numa paragem (a velocidade tem de ir a 0 quando a bicicleta para).',
     'Chaque caméra a un décalage global : caler un clip cale tous les clips de cette caméra. Vérifiez à un arrêt (la vitesse doit tomber à 0 quand le vélo s’arrête).',
     'Cada cámara tiene un desfase global: alinear un clip alinea todos los clips de esa cámara. Compruébalo en una parada (la velocidad tiene que bajar a 0 cuando la bici se para).',
-    'Jede Kamera hat einen globalen Versatz: Wird ein Clip ausgerichtet, sind alle Clips dieser Kamera ausgerichtet. Prüfen Sie es bei einem Halt (die Geschwindigkeit muss auf 0 fallen, wenn das Rad steht).',
+    'Jede Kamera hat einen globalen Versatz: Wird ein Clip ausgerichtet, sind alle Clips dieser Kamera ausgerichtet. Prüfe es bei einem Halt (die Geschwindigkeit muss auf 0 fallen, wenn das Rad steht).',
   ],
   'sync.offset': ['Offset', 'Offset', 'Décalage', 'Desfase', 'Versatz'],
   'sync.tzTitle': ['Time zone of the camera clock', 'Fuso horário do relógio da câmara', 'Fuseau horaire de l’horloge de la caméra', 'Zona horaria del reloj de la cámara', 'Zeitzone der Kamerauhr'],
@@ -33,10 +33,10 @@ export const SYNC = {
     'Arraste os gadgets para os posicionar; o canto inferior direito muda o tamanho. As posições são usadas na exportação "Composição".',
     'Faites glisser les gadgets pour les placer ; le coin inférieur droit change leur taille. Les positions sont utilisées par l’export « Composition ».',
     'Arrastra los gadgets para colocarlos; la esquina inferior derecha cambia el tamaño. Las posiciones se usan en la exportación «Composición».',
-    'Ziehen Sie die Gadgets, um sie zu platzieren; die untere rechte Ecke ändert die Größe. Die Positionen werden beim Export „Komposition“ verwendet.',
+    'Zieh die Gadgets, um sie zu platzieren; die untere rechte Ecke ändert die Größe. Die Positionen werden beim Export „Komposition“ verwendet.',
   ],
   'sync.resetLayout': ['Reset positions', 'Repor posições', 'Réinitialiser les positions', 'Restablecer posiciones', 'Positionen zurücksetzen'],
-  'sync.addClips': ['Add clips in step 2.', 'Adicione clips no passo 2.', 'Ajoutez des clips à l’étape 2.', 'Añade clips en el paso 2.', 'Fügen Sie in Schritt 2 Clips hinzu.'],
+  'sync.addClips': ['Add clips in step 2.', 'Adicione clips no passo 2.', 'Ajoutez des clips à l’étape 2.', 'Añade clips en el paso 2.', 'Füge in Schritt 2 Clips hinzu.'],
 
   'timeline.hint': [
     'Mouse wheel: zoom · Shift+wheel or drag the background: pan · Drag a clip: camera offset · Alt+drag: that clip only',
@@ -55,7 +55,7 @@ export const SYNC = {
     'O ficheiro de vídeo não está associado (projeto reaberto). Arraste-o de novo no passo "Clips" para ver o vídeo. Abaixo mostram-se só os dados.',
     'Le fichier vidéo n’est pas associé (projet rouvert). Glissez-le à nouveau à l’étape « Clips » pour voir la vidéo. Seules les données sont affichées ci-dessous.',
     'El archivo de vídeo no está asociado (proyecto reabierto). Vuelve a arrastrarlo en el paso «Clips» para ver el vídeo. Abajo solo se muestran los datos.',
-    'Die Videodatei ist nicht verknüpft (Projekt erneut geöffnet). Ziehen Sie sie im Schritt „Clips“ erneut herein, um das Video zu sehen. Unten werden nur die Daten angezeigt.',
+    'Die Videodatei ist nicht verknüpft (Projekt erneut geöffnet). Zieh sie im Schritt „Clips“ erneut herein, um das Video zu sehen. Unten werden nur die Daten angezeigt.',
   ],
   'preview.unsupported': [
     "The browser can't play {ext} files (raw 360° video). Only the data is shown — use the slider to move through the clip.",
@@ -69,14 +69,14 @@ export const SYNC = {
     'No Mac, abra o telemeSYNC no Safari (http://localhost:5174), que reproduz HEVC.',
     'Sur Mac, ouvrez telemeSYNC dans Safari (http://localhost:5174), qui lit le HEVC.',
     'En Mac, abre telemeSYNC en Safari (http://localhost:5174), que reproduce HEVC.',
-    'Öffnen Sie telemeSYNC auf dem Mac in Safari (http://localhost:5174), das HEVC abspielt.',
+    'Öffne telemeSYNC auf dem Mac in Safari (http://localhost:5174), das HEVC abspielt.',
   ],
   'preview.hevcWin': [
     'On Windows you can install the "HEVC Video Extensions" from the Microsoft Store, or use Edge.',
     'No Windows pode instalar as "Extensões de Vídeo HEVC" da Microsoft Store, ou usar o Edge.',
     'Sous Windows, vous pouvez installer les « Extensions vidéo HEVC » du Microsoft Store, ou utiliser Edge.',
     'En Windows puedes instalar las «Extensiones de vídeo HEVC» de Microsoft Store, o usar Edge.',
-    'Unter Windows können Sie die „HEVC-Videoerweiterungen“ aus dem Microsoft Store installieren oder Edge verwenden.',
+    'Unter Windows kannst du die „HEVC-Videoerweiterungen“ aus dem Microsoft Store installieren oder Edge verwenden.',
   ],
   'preview.hevc': [
     "The browser can't play this HEVC (H.265) video. {help} Only the data is shown.",

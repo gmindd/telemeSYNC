@@ -109,6 +109,18 @@ O pacote macOS pode ser gerado em qualquer sistema (também no Git Bash do Windo
 
 Ver também [`docs/architecture.md`](docs/architecture.md) e [`docs/camera-timestamps.md`](docs/camera-timestamps.md).
 
+### Línguas
+
+O programa está em inglês (predefinido), português, francês, espanhol e alemão; a escolha fica guardada no computador.
+Cada texto é um tuplo `[en, pt, fr, es, de]`, por isso o TypeScript recusa um texto sem as cinco traduções:
+
+- `apps/web/src/i18n/msg/*.ts` — textos da interface (`useT()` nos componentes, `t()` fora deles).
+- `packages/core/src/i18n/messages.ts` — textos desenhados nos overlays (curtos: os gadgets têm tamanho fixo), avisos de
+  sincronização, relatório de sincronização, nomes dos ficheiros exportados e mensagens de erro do servidor.
+
+Os overlays usam a língua de `style.language` (a da app ou outra escolhida no passo 4) e o separador decimal dessa língua
+(ponto em inglês, vírgula nas outras). O servidor responde na língua do cabeçalho `x-telemesync-lang`.
+
 ### Publicar uma atualização
 
 1. Subir a versão no `package.json` da raiz, de `apps/*` e de `packages/core` (e no `package-lock.json`).
@@ -118,7 +130,7 @@ Ver também [`docs/architecture.md`](docs/architecture.md) e [`docs/camera-times
 3. Publicar os dois ZIPs numa **Release do GitHub** com a tag `v<versão>` (*Releases → Draft a new release*). O GitHub não aceita ficheiros acima de 100 MB num push, e o ZIP do Mac tem cerca de 155 MB; nas Releases o limite é 2 GB. Os links ficam
    `https://github.com/gmindd/telemeSYNC/releases/download/v<versão>/telemeSYNC-<versão>-<windows|macos>.zip`.
    O branch `downloads` mantém as versões até à 0.3.2 e o PDF de instruções.
-4. No site: acrescentar a versão em **Novidades** (`site/index.html`), atualizar os links de download no HTML e `site/data/latest.json` (versão, data, resumo de uma linha e `downloads.windows`/`downloads.mac`; `downloadUrl` continua a ser o ZIP de Windows, lido pelas versões até à 0.3.2).
+4. No site: acrescentar a versão em **Novidades** (`site/index.html`), atualizar os links de download no HTML e `site/data/latest.json` (versão, data, resumo de uma linha em `summaries.<língua>` e em `summary`, lido em português pelas versões até à 1.0.1, e `downloads.windows`/`downloads.mac`; `downloadUrl` continua a ser o ZIP de Windows, lido pelas versões até à 0.3.2).
    Para as outras línguas, dar a cada ponto novo um `data-i18n="news.<versão sem pontos>.<n>"` (ex.: `news.101.1`) e acrescentar a tradução com a mesma chave em `site/i18n/en.json`, `fr.json`, `es.json` e `de.json`. Um texto sem tradução aparece em português.
 5. Enviar para o `main` **depois** de a Release estar publicada (o aviso de atualizações aponta logo para os novos links) e fazer *Redeploy* no Coolify.
 

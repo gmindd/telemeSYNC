@@ -82,7 +82,7 @@ const METRIC_SLUGS: Record<string, Translations> = {
   dialSummary: ['compact-panel', 'painel-compacto', 'panneau-compact', 'panel-compacto', 'kompakt-panel'],
 };
 const PANEL_PREFIX: Translations = ['panel', 'painel', 'panneau', 'panel', 'panel'];
-const DIAL_PREFIX: Translations = ['dial', 'mostrador', 'cadran', 'indicador', 'anzeige'];
+const DIAL_PREFIX: Translations = ['dial', 'mostrador', 'cadran', 'esfera', 'rundinstrument'];
 const DIAL_METRIC: Partial<Record<OverlayId, string>> = { dialTime: 'elapsedTime' };
 
 /** Metric behind a panel or dial id ("panelHeartRate" → "heartRate"). */

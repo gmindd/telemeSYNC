@@ -8,7 +8,7 @@ export const OVERLAYS_MSG = {
     'Cada overlay elegido genera un vídeo transparente por clip. Solo aparecen las métricas que existen en el archivo.',
     'Jedes gewählte Overlay erzeugt ein transparentes Video pro Clip. Es erscheinen nur Messwerte, die in der Datei vorhanden sind.',
   ],
-  'ov.dials': ['Dials', 'Mostradores', 'Cadrans', 'Indicadores', 'Rundanzeigen'],
+  'ov.dials': ['Dials', 'Mostradores', 'Cadrans', 'Esferas', 'Rundinstrumente'],
   'ov.dialsLead': [
     'Round gadgets with a chainring rim, a round map that turns with your direction, an elevation profile and a compact panel with the averages. They use the panel background and the accent colour.',
     'Gadgets redondos com aro de prato, mapa circular que roda com a direção, perfil de altimetria e painel compacto com as médias. Usam o fundo dos painéis e a cor de destaque.',

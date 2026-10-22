@@ -54,11 +54,11 @@ unzip -q -j "$WORK/node.zip" "node-v$NODE_VERSION-win-x64/node.exe" "node-v$NODE
 
 echo "› Lançador e instruções"
 cp "$ROOT/scripts/windows/Iniciar telemeSYNC.bat" "$APP/"
-cp "$ROOT/scripts/windows/LEIA-ME.txt" "$ROOT/LICENCA.txt" "$APP/"
+cp "$ROOT/scripts/windows/LEIA-ME.txt" "$ROOT/scripts/windows/README.txt" "$ROOT/LICENCA.txt" "$APP/"
 node "$ROOT/scripts/third-party-notices.mjs" "$APP" "$APP/LICENCAS-TERCEIROS.txt"
 [ -f "$OUT/Instrucoes-telemeSYNC.pdf" ] && cp "$OUT/Instrucoes-telemeSYNC.pdf" "$APP/"
 # CRLF line endings for Windows text files
-sed -i 's/\r\?$/\r/' "$APP/Iniciar telemeSYNC.bat" "$APP/LEIA-ME.txt" "$APP/LICENCA.txt"
+sed -i 's/\r\?$/\r/' "$APP/Iniciar telemeSYNC.bat" "$APP/LEIA-ME.txt" "$APP/README.txt" "$APP/LICENCA.txt"
 
 mkdir -p "$OUT"
 ZIP="$OUT/telemeSYNC-$VERSION-windows.zip"
