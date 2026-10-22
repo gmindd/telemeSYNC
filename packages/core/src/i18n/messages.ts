@@ -1,0 +1,157 @@
+// Core texts in every language, in the order en, pt, fr, es, de (see LANGS).
+// Overlay texts must stay short: they are drawn in fixed-size gadgets.
+
+type T = readonly [string, string, string, string, string];
+
+export const CORE_MESSAGES = {
+  // Metric names (gadget labels, panel and dial names in the app).
+  'metric.speed': ['Speed', 'Velocidade', 'Vitesse', 'Velocidad', 'Geschwindigkeit'],
+  'metric.altitude': ['Altitude', 'Altitude', 'Altitude', 'Altitud', 'Höhe'],
+  'metric.grade': ['Gradient', 'Inclinação', 'Pente', 'Pendiente', 'Steigung'],
+  'metric.heartRate': ['Heart rate', 'Freq. cardíaca', 'Fréq. cardiaque', 'Frec. cardíaca', 'Herzfrequenz'],
+  'metric.cadence': ['Cadence', 'Cadência', 'Cadence', 'Cadencia', 'Trittfrequenz'],
+  'metric.power': ['Power', 'Potência', 'Puissance', 'Potencia', 'Leistung'],
+  'metric.temperature': ['Temperature', 'Temperatura', 'Température', 'Temperatura', 'Temperatur'],
+  'metric.distance': ['Distance', 'Distância', 'Distance', 'Distancia', 'Distanz'],
+  'metric.elevationGain': ['Elevation gain', 'Desnível +', 'Dénivelé +', 'Desnivel +', 'Höhenmeter'],
+  'metric.elapsedTime': ['Time', 'Tempo', 'Temps', 'Tiempo', 'Zeit'],
+  'metric.localTime': ['Clock', 'Hora', 'Heure', 'Hora', 'Uhrzeit'],
+
+  // Overlay names in the app.
+  'overlay.map': ['Map', 'Mapa', 'Carte', 'Mapa', 'Karte'],
+  'overlay.elevationProfile': ['Elevation profile', 'Perfil de altimetria', 'Profil altimétrique', 'Perfil de altitud', 'Höhenprofil'],
+  'overlay.panel': ['Panel · {name}', 'Painel · {name}', 'Panneau · {name}', 'Panel · {name}', 'Panel · {name}'],
+  'overlay.dial': ['Dial · {name}', 'Mostrador · {name}', 'Cadran · {name}', 'Indicador · {name}', 'Anzeige · {name}'],
+  'overlay.dialMap': ['Round map (rotating)', 'Mapa circular (rotativo)', 'Carte ronde (rotative)', 'Mapa circular (giratorio)', 'Runde Karte (drehend)'],
+  'overlay.dialProfile': ['Elevation profile (card)', 'Perfil de altimetria (cartão)', 'Profil altimétrique (carte)', 'Perfil de altitud (tarjeta)', 'Höhenprofil (Karte)'],
+  'overlay.dialSummary': ['Compact panel (averages)', 'Painel compacto (médias)', 'Panneau compact (moyennes)', 'Panel compacto (medias)', 'Kompaktes Panel (Schnitte)'],
+
+  // Panels: chart names, subtitles, stats.
+  'chart.speed': ['speed', 'velocidade', 'vitesse', 'velocidad', 'Geschwindigkeit'],
+  'chart.altitude': ['elevation', 'altimetria', 'altimétrie', 'altimetría', 'Höhenprofil'],
+  'chart.grade': ['gradient', 'inclinação', 'pente', 'pendiente', 'Steigung'],
+  'chart.heartRate': ['heart rate', 'freq. cardíaca', 'fréq. cardiaque', 'frec. cardíaca', 'Herzfrequenz'],
+  'chart.cadence': ['cadence', 'cadência', 'cadence', 'cadencia', 'Trittfrequenz'],
+  'chart.power': ['power', 'potência', 'puissance', 'potencia', 'Leistung'],
+  'chart.temperature': ['temperature', 'temperatura', 'température', 'temperatura', 'Temperatur'],
+  'panel.chartOf': ['{name} chart', 'gráfico de {name}', 'graphique : {name}', 'gráfico de {name}', 'Diagramm: {name}'],
+  'panel.sub.speed': ['Current, max, average and acceleration', 'Atual, máxima, média e aceleração', 'Actuelle, max, moyenne et accélération', 'Actual, máxima, media y aceleración', 'Aktuell, Max., Schnitt und Beschleunigung'],
+  'panel.sub.power': ['Current effort, peak, average and zone', 'Esforço atual, pico, média e zona', 'Effort actuel, pic, moyenne et zone', 'Esfuerzo actual, pico, media y zona', 'Aktuelle Leistung, Spitze, Schnitt und Zone'],
+  'panel.sub.heartRate': ['Current, max, average and zone', 'Atual, máxima, média e zona', 'Actuelle, max, moyenne et zone', 'Actual, máxima, media y zona', 'Aktuell, Max., Schnitt und Zone'],
+  'panel.sub.cadence': ['Current, max, average and change', 'Atual, máxima, média e variação', 'Actuelle, max, moyenne et variation', 'Actual, máxima, media y variación', 'Aktuell, Max., Schnitt und Änderung'],
+  'panel.sub.temperature': ['Current, min, max and change', 'Atual, mínima, máxima e variação', 'Actuelle, min, max et variation', 'Actual, mínima, máxima y variación', 'Aktuell, Min., Max. und Änderung'],
+  'panel.sub.altitude': ['Current, max, min and total gain', 'Atual, máxima, mínima e D+', 'Actuelle, max, min et D+', 'Actual, máxima, mínima y D+', 'Aktuell, Max., Min. und Anstieg'],
+  'panel.sub.grade': ['Current, max, min and total gain', 'Atual, máxima, mínima e D+', 'Actuelle, max, min et D+', 'Actual, máxima, mínima y D+', 'Aktuell, Max., Min. und Anstieg'],
+  'panel.last': ['LAST {span}', 'ÚLTIMOS {span}', 'SUR {span}', 'ÚLTIMOS {span}', 'LETZTE {span}'],
+  'stat.peak': ['PEAK', 'PICO', 'PIC', 'PICO', 'SPITZE'],
+  'stat.max': ['MAX', 'MÁX', 'MAX', 'MÁX', 'MAX'],
+  'stat.min': ['MIN', 'MÍN', 'MIN', 'MÍN', 'MIN'],
+  'stat.avg': ['AVERAGE', 'MÉDIA', 'MOYENNE', 'MEDIA', 'SCHNITT'],
+  'stat.gain': ['TOTAL GAIN', 'D+ ACUMULADO', 'D+ CUMULÉ', 'DESNIVEL +', 'ANSTIEG GESAMT'],
+  'stat.delta': ['CHANGE ({span})', 'VARIAÇÃO ({span})', 'VARIATION ({span})', 'VARIACIÓN ({span})', 'ÄNDERUNG ({span})'],
+  'stat.accel': ['ACCELERATION', 'ACELERAÇÃO', 'ACCÉLÉRATION', 'ACELERACIÓN', 'BESCHLEUNIGUNG'],
+  'stat.zone': ['ZONE', 'ZONA', 'ZONE', 'ZONA', 'ZONE'],
+
+  // Dials and cards.
+  'dial.avg': ['AVG', 'MÉD', 'MOY', 'MED', 'Ø'],
+  'dial.max': ['MAX', 'MÁX', 'MAX', 'MÁX', 'MAX'],
+  'dial.total': ['TOTAL', 'TOTAL', 'TOTAL', 'TOTAL', 'GESAMT'],
+  'dial.zone': ['Zone {n}', 'Zona {n}', 'Zone {n}', 'Zona {n}', 'Zone {n}'],
+  'card.altitude': ['ALTITUDE', 'ALTITUDE', 'ALTITUDE', 'ALTITUD', 'HÖHE'],
+  'card.gain': ['GAIN', 'GANHO', 'GAIN', 'SUBIDA', 'ANSTIEG'],
+  'card.loss': ['LOSS', 'PERDA', 'PERTE', 'BAJADA', 'ABSTIEG'],
+  'card.elevation': ['ELEVATION', 'ALTIMETRIA', 'ALTIMÉTRIE', 'ALTIMETRÍA', 'HÖHENPROFIL'],
+  'summary.duration': ['DURATION', 'DURAÇÃO', 'DURÉE', 'DURACIÓN', 'DAUER'],
+  'summary.hr': ['AVG HR', 'FC MÉDIA', 'FC MOY.', 'FC MEDIA', 'Ø HF'],
+  'summary.power': ['AVG POWER', 'POT. MÉDIA', 'PUISS. MOY.', 'POT. MEDIA', 'Ø LEISTUNG'],
+  'summary.speed': ['AVG SPEED', 'VEL. MÉDIA', 'VIT. MOY.', 'VEL. MEDIA', 'Ø GESCHW.'],
+  'summary.cadence': ['AVG CADENCE', 'CAD. MÉDIA', 'CAD. MOY.', 'CAD. MEDIA', 'Ø TRITTFREQ.'],
+  'summary.distance': ['DISTANCE', 'DISTÂNCIA', 'DISTANCE', 'DISTANCIA', 'DISTANZ'],
+  'summary.gain': ['ELEV. GAIN', 'DESNÍVEL +', 'DÉNIVELÉ +', 'DESNIVEL +', 'HÖHENMETER'],
+
+  // Camera profiles.
+  'profile.generic': ['Generic', 'Genérico', 'Générique', 'Genérico', 'Generisch'],
+
+  // Where a clip's start time comes from.
+  'source.filename': ['file name', 'nome do ficheiro', 'nom du fichier', 'nombre del archivo', 'Dateiname'],
+  'source.creationTime': ["file's internal date (creation_time)", 'data interna do ficheiro (creation_time)', 'date interne du fichier (creation_time)', 'fecha interna del archivo (creation_time)', 'interne Dateizeit (creation_time)'],
+  'source.timecode': ['file timecode', 'timecode do ficheiro', 'timecode du fichier', 'timecode del archivo', 'Timecode der Datei'],
+  'source.gpmf': ['GoPro GPS (GPMF)', 'GPS da GoPro (GPMF)', 'GPS GoPro (GPMF)', 'GPS de la GoPro (GPMF)', 'GoPro-GPS (GPMF)'],
+  'source.manual': ['time entered by hand', 'hora indicada à mão', 'heure saisie à la main', 'hora introducida a mano', 'von Hand eingegebene Zeit'],
+  'source.chapter': ['GoPro chapter {n}, right after the previous one', 'capítulo {n} da GoPro, seguido ao anterior', 'chapitre {n} GoPro, à la suite du précédent', 'capítulo {n} de la GoPro, a continuación del anterior', 'GoPro-Kapitel {n}, direkt nach dem vorherigen'],
+  'source.none': ['none (no start time)', 'nenhuma (sem hora de início)', 'aucune (pas d’heure de début)', 'ninguna (sin hora de inicio)', 'keine (keine Startzeit)'],
+  'cand.manual': ['Time entered manually', 'Hora indicada manualmente', 'Heure saisie manuellement', 'Hora introducida manualmente', 'Manuell eingegebene Zeit'],
+  'cand.gpmf': ['GoPro GPS (GPMF)', 'GPS da GoPro (GPMF)', 'GPS GoPro (GPMF)', 'GPS de la GoPro (GPMF)', 'GoPro-GPS (GPMF)'],
+  'cand.creationTime': ["File's creation_time ({how})", 'creation_time do ficheiro ({how})', 'creation_time du fichier ({how})', 'creation_time del archivo ({how})', 'creation_time der Datei ({how})'],
+  'cand.localTime': ['local time', 'hora local', 'heure locale', 'hora local', 'Ortszeit'],
+  'cand.endOfRecording': [', end of recording', ', fim da gravação', ', fin de l’enregistrement', ', fin de la grabación', ', Ende der Aufnahme'],
+  'cand.filename': ['Date/time in the file name', 'Data/hora no nome do ficheiro', 'Date/heure dans le nom du fichier', 'Fecha/hora en el nombre del archivo', 'Datum/Uhrzeit im Dateinamen'],
+  'cand.timecode': ['Camera timecode (local time)', 'Timecode da câmara (hora local)', 'Timecode de la caméra (heure locale)', 'Timecode de la cámara (hora local)', 'Kamera-Timecode (Ortszeit)'],
+
+  // Sync warnings.
+  'warn.noTimestamp': ["Couldn't work out the start time. Enter it manually.", 'Não foi possível determinar a hora de início. Indique-a manualmente.', 'Impossible de déterminer l’heure de début. Saisissez-la manuellement.', 'No se pudo determinar la hora de inicio. Introdúcela manualmente.', 'Die Startzeit konnte nicht ermittelt werden. Bitte manuell eingeben.'],
+  'warn.outsideRide': ['The clip ({date}) is outside the time of the ride.', 'O clip ({date}) está fora da janela da volta.', 'Le clip ({date}) est en dehors de l’horaire de la sortie.', 'El clip ({date}) está fuera del horario de la ruta.', 'Der Clip ({date}) liegt außerhalb der Zeit der Fahrt.'],
+  'warn.timezoneSuspect': ['Exactly {h} h off: probably a time zone problem. Correct by {sign}{h} h?', 'Desvio de {h} h exata(s): provável problema de fuso horário. Corrigir {sign}{h} h?', 'Décalage d’exactement {h} h : probablement un problème de fuseau horaire. Corriger de {sign}{h} h ?', 'Desfase de exactamente {h} h: probable problema de zona horaria. ¿Corregir {sign}{h} h?', 'Genau {h} h Abweichung: wahrscheinlich ein Zeitzonenproblem. Um {sign}{h} h korrigieren?'],
+  'warn.partiallyOutside': ['Part of the clip is outside the ride (no data for that part).', 'Parte do clip fica fora da janela da volta (sem dados nesse troço).', 'Une partie du clip est en dehors de la sortie (pas de données sur ce tronçon).', 'Parte del clip queda fuera de la ruta (sin datos en ese tramo).', 'Ein Teil des Clips liegt außerhalb der Fahrt (dort keine Daten).'],
+  'warn.exportedSuspect': ['The creation_time is after the end of the ride: this looks like an exported MP4 (e.g. Insta360 Studio). Add the original .insv, use the file name or adjust manually.', 'O creation_time é posterior ao fim da volta: parece um MP4 exportado (ex.: Insta360 Studio). Associe o .insv original, use o nome do ficheiro ou ajuste manualmente.', 'Le creation_time est postérieur à la fin de la sortie : cela ressemble à un MP4 exporté (ex. Insta360 Studio). Ajoutez le .insv d’origine, utilisez le nom du fichier ou ajustez manuellement.', 'El creation_time es posterior al final de la ruta: parece un MP4 exportado (p. ej., Insta360 Studio). Añade el .insv original, usa el nombre del archivo o ajusta manualmente.', 'Die creation_time liegt nach dem Ende der Fahrt: Das sieht nach einer exportierten MP4 aus (z. B. Insta360 Studio). Original-.insv hinzufügen, den Dateinamen verwenden oder manuell anpassen.'],
+  'warn.resolversDisagree': ['The time sources differ by {s} s; using: {source}.', 'As fontes de hora divergem {s} s; foi usada: {source}.', 'Les sources d’heure diffèrent de {s} s ; utilisée : {source}.', 'Las fuentes de hora difieren {s} s; se usó: {source}.', 'Die Zeitquellen weichen um {s} s ab; verwendet: {source}.'],
+  'warn.overlap': ["Overlaps {names}: the same camera can't record two clips at once, so one of the start times is wrong.", 'Sobrepõe-se a {names}: a mesma câmara não grava dois clips ao mesmo tempo, por isso uma das horas de início está errada.', 'Chevauche {names} : la même caméra ne peut pas enregistrer deux clips à la fois, donc l’une des heures de début est fausse.', 'Se superpone a {names}: la misma cámara no graba dos clips a la vez, así que una de las horas de inicio es incorrecta.', 'Überschneidet sich mit {names}: Dieselbe Kamera kann nicht zwei Clips gleichzeitig aufnehmen, also ist eine der Startzeiten falsch.'],
+
+  // Sync report (sync-report.txt).
+  'report.title': ['sync report', 'relatório de sincronização', 'rapport de synchronisation', 'informe de sincronización', 'Synchronisationsbericht'],
+  'report.ride': ['Ride: {name}', 'Volta: {name}', 'Sortie : {name}', 'Ruta: {name}', 'Fahrt: {name}'],
+  'report.telemetry': ['Telemetry: {from} to {to} ({tz}), {dur}', 'Telemetria: {from} a {to} ({tz}), {dur}', 'Télémétrie : {from} à {to} ({tz}), {dur}', 'Telemetría: {from} a {to} ({tz}), {dur}', 'Telemetrie: {from} bis {to} ({tz}), {dur}'],
+  'report.exported': ['Exported: {date}', 'Exportado em: {date}', 'Exporté le : {date}', 'Exportado el: {date}', 'Exportiert am: {date}'],
+  'report.note1': ["Each clip has its own files, with the clip's length and the start time shown below.", 'Cada clip tem os seus próprios ficheiros, com a duração do clip e a hora de início indicada abaixo.', 'Chaque clip a ses propres fichiers, avec la durée du clip et l’heure de début indiquée ci-dessous.', 'Cada clip tiene sus propios archivos, con la duración del clip y la hora de inicio indicada abajo.', 'Jeder Clip hat eigene Dateien, mit der Länge des Clips und der unten angegebenen Startzeit.'],
+  'report.note2': ['For each clip, use the files in the folder with the same name as the clip, aligned to the start of the clip.', 'Para cada clip, use os ficheiros da pasta com o mesmo nome do clip, alinhados ao início do clip.', 'Pour chaque clip, utilisez les fichiers du dossier portant le même nom que le clip, alignés sur le début du clip.', 'Para cada clip, usa los archivos de la carpeta con el mismo nombre del clip, alineados al inicio del clip.', 'Verwenden Sie für jeden Clip die Dateien im gleichnamigen Ordner, am Anfang des Clips ausgerichtet.'],
+  'report.camera': ['Camera: {camera} · time zone {tz}', 'Câmara: {camera} · fuso {tz}', 'Caméra : {camera} · fuseau {tz}', 'Cámara: {camera} · zona horaria {tz}', 'Kamera: {camera} · Zeitzone {tz}'],
+  'report.noStart': ['No start time: not exported.', 'Sem hora de início: não exportado.', 'Pas d’heure de début : non exporté.', 'Sin hora de inicio: no exportado.', 'Keine Startzeit: nicht exportiert.'],
+  'report.start': ['Start used: {start} · end {end} · length {dur}{fps}', 'Início usado: {start} · fim {end} · duração {dur}{fps}', 'Début utilisé : {start} · fin {end} · durée {dur}{fps}', 'Inicio usado: {start} · fin {end} · duración {dur}{fps}', 'Verwendeter Start: {start} · Ende {end} · Dauer {dur}{fps}'],
+  'report.onRide': ['On the ride: from {from} to {to} after the start of the telemetry', 'Na volta: de {from} a {to} desde o início da telemetria', 'Sur la sortie : de {from} à {to} depuis le début de la télémétrie', 'En la ruta: de {from} a {to} desde el inicio de la telemetría', 'Auf der Fahrt: von {from} bis {to} ab Beginn der Telemetrie'],
+  'report.source': ['Time source: {source}', 'Origem da hora: {source}', 'Source de l’heure : {source}', 'Origen de la hora: {source}', 'Zeitquelle: {source}'],
+  'report.offsets': ['Camera offset: {camera} · this clip only: {clip}', 'Offset da câmara: {camera} · ajuste só deste clip: {clip}', 'Décalage de la caméra : {camera} · ce clip uniquement : {clip}', 'Desfase de la cámara: {camera} · solo este clip: {clip}', 'Kamera-Versatz: {camera} · nur dieser Clip: {clip}'],
+  'report.warnings': ['Warnings:', 'Avisos:', 'Avertissements :', 'Avisos:', 'Hinweise:'],
+  'report.none': ['none', 'nenhum', 'aucun', 'ninguno', 'keine'],
+  'file.report': ['sync-report.txt', 'sincronizacao.txt', 'synchronisation.txt', 'sincronizacion.txt', 'synchronisation.txt'],
+  'file.composite': ['composite', 'composicao', 'composition', 'composicion', 'komposition'],
+  'file.unnamed': ['unnamed', 'sem-nome', 'sans-nom', 'sin-nombre', 'unbenannt'],
+
+  // Export formats.
+  'format.animation': ['QuickTime Animation (.mov): the lightest lossless', 'QuickTime Animation (.mov): o mais leve sem perdas', 'QuickTime Animation (.mov) : le plus léger sans perte', 'QuickTime Animation (.mov): el más ligero sin pérdidas', 'QuickTime Animation (.mov): am kleinsten, verlustfrei'],
+  'format.animation.hint': ['About 10× smaller than ProRes. Transparency in Premiere Pro and Final Cut Pro.', 'Cerca de 10× mais pequeno do que ProRes. Transparência no Premiere Pro e no Final Cut Pro.', 'Environ 10× plus petit que ProRes. Transparence dans Premiere Pro et Final Cut Pro.', 'Unas 10× más pequeño que ProRes. Transparencia en Premiere Pro y Final Cut Pro.', 'Etwa 10× kleiner als ProRes. Transparenz in Premiere Pro und Final Cut Pro.'],
+  'format.prores': ['ProRes 4444 (.mov): the most compatible', 'ProRes 4444 (.mov): o mais compatível', 'ProRes 4444 (.mov) : le plus compatible', 'ProRes 4444 (.mov): el más compatible', 'ProRes 4444 (.mov): am kompatibelsten'],
+  'format.prores.hint': ['Transparency in DaVinci Resolve, Premiere Pro, Final Cut Pro and CapCut (PC). Very large files.', 'Transparência no DaVinci Resolve, Premiere Pro, Final Cut Pro e CapCut (PC). Ficheiros muito grandes.', 'Transparence dans DaVinci Resolve, Premiere Pro, Final Cut Pro et CapCut (PC). Fichiers très volumineux.', 'Transparencia en DaVinci Resolve, Premiere Pro, Final Cut Pro y CapCut (PC). Archivos muy grandes.', 'Transparenz in DaVinci Resolve, Premiere Pro, Final Cut Pro und CapCut (PC). Sehr große Dateien.'],
+  'format.ffv1': ['FFV1 (.mkv): for DaVinci Resolve', 'FFV1 (.mkv): para DaVinci Resolve', 'FFV1 (.mkv) : pour DaVinci Resolve', 'FFV1 (.mkv): para DaVinci Resolve', 'FFV1 (.mkv): für DaVinci Resolve'],
+  'format.ffv1.hint': ["Lossless, about 3× smaller than ProRes. Transparency in DaVinci Resolve; doesn't open in Premiere Pro.", 'Sem perdas, cerca de 3× mais pequeno do que ProRes. Transparência no DaVinci Resolve; não abre no Premiere Pro.', 'Sans perte, environ 3× plus petit que ProRes. Transparence dans DaVinci Resolve ; ne s’ouvre pas dans Premiere Pro.', 'Sin pérdidas, unas 3× más pequeño que ProRes. Transparencia en DaVinci Resolve; no se abre en Premiere Pro.', 'Verlustfrei, etwa 3× kleiner als ProRes. Transparenz in DaVinci Resolve; öffnet nicht in Premiere Pro.'],
+  'format.webm': ['WebM VP9 (.webm): very light, experimental', 'WebM VP9 (.webm): muito leve, experimental', 'WebM VP9 (.webm) : très léger, expérimental', 'WebM VP9 (.webm): muy ligero, experimental', 'WebM VP9 (.webm): sehr klein, experimentell'],
+  'format.webm.hint': ['Hundreds of times smaller, slightly lossy. For web editors and CapCut; no transparency in Premiere Pro or DaVinci Resolve.', 'Centenas de vezes mais pequeno, com ligeira perda. Para editores web e CapCut; sem transparência no Premiere Pro e no DaVinci Resolve.', 'Des centaines de fois plus petit, avec une légère perte. Pour les éditeurs web et CapCut ; pas de transparence dans Premiere Pro ni DaVinci Resolve.', 'Cientos de veces más pequeño, con una ligera pérdida. Para editores web y CapCut; sin transparencia en Premiere Pro ni DaVinci Resolve.', 'Hundertfach kleiner, leicht verlustbehaftet. Für Web-Editoren und CapCut; keine Transparenz in Premiere Pro und DaVinci Resolve.'],
+  'format.png': ['PNG sequence', 'Sequência PNG', 'Séquence PNG', 'Secuencia PNG', 'PNG-Sequenz'],
+  'format.png.hint': ['One folder of images per gadget. Works in almost every editor, but takes a lot of space.', 'Uma pasta de imagens por gadget. Funciona em quase todos os editores, mas ocupa muito espaço.', 'Un dossier d’images par gadget. Fonctionne dans presque tous les éditeurs, mais prend beaucoup de place.', 'Una carpeta de imágenes por gadget. Funciona en casi todos los editores, pero ocupa mucho espacio.', 'Ein Bildordner pro Gadget. Funktioniert in fast allen Editoren, braucht aber viel Platz.'],
+
+  // Errors shown in the app.
+  'err.gpxInvalid': ['The file is not a valid GPX.', 'O ficheiro não é um GPX válido.', 'Le fichier n’est pas un GPX valide.', 'El archivo no es un GPX válido.', 'Die Datei ist keine gültige GPX-Datei.'],
+  'err.gpxNoTime': ['The GPX file has no points with a time (trkpt/time).', 'O ficheiro GPX não tem pontos com hora (trkpt/time).', 'Le fichier GPX n’a aucun point horodaté (trkpt/time).', 'El archivo GPX no tiene puntos con hora (trkpt/time).', 'Die GPX-Datei hat keine Punkte mit Zeitangabe (trkpt/time).'],
+  'err.fitInvalid': ['The file is not a valid FIT.', 'O ficheiro não é um FIT válido.', 'Le fichier n’est pas un FIT valide.', 'El archivo no es un FIT válido.', 'Die Datei ist keine gültige FIT-Datei.'],
+  'err.fitCorrupt': ['Corrupted FIT file: {detail}', 'Ficheiro FIT corrompido: {detail}', 'Fichier FIT corrompu : {detail}', 'Archivo FIT dañado: {detail}', 'Beschädigte FIT-Datei: {detail}'],
+  'err.fitNoRecords': ['The FIT file has no activity records.', 'O ficheiro FIT não tem registos de atividade.', 'Le fichier FIT ne contient aucun enregistrement d’activité.', 'El archivo FIT no tiene registros de actividad.', 'Die FIT-Datei enthält keine Aktivitätsdaten.'],
+  'err.fitNoTime': ['The FIT file has no records with a time.', 'O ficheiro FIT não tem registos com hora.', 'Le fichier FIT n’a aucun enregistrement horodaté.', 'El archivo FIT no tiene registros con hora.', 'Die FIT-Datei enthält keine Datensätze mit Zeitangabe.'],
+  'err.fewPoints': ["The telemetry doesn't have enough points.", 'A telemetria tem pontos insuficientes.', 'La télémétrie n’a pas assez de points.', 'La telemetría no tiene suficientes puntos.', 'Die Telemetrie hat zu wenige Punkte.'],
+  'err.moov': ["Couldn't read the metadata (moov) of {file}. Is the file complete?", 'Não foi possível ler os metadados (moov) de {file}. O ficheiro está completo?', 'Impossible de lire les métadonnées (moov) de {file}. Le fichier est-il complet ?', 'No se pudieron leer los metadatos (moov) de {file}. ¿Está completo el archivo?', 'Die Metadaten (moov) von {file} konnten nicht gelesen werden. Ist die Datei vollständig?'],
+  'err.project': ['Invalid project file, or from an incompatible version.', 'Ficheiro de projeto inválido ou de uma versão incompatível.', 'Fichier de projet invalide ou d’une version incompatible.', 'Archivo de proyecto no válido o de una versión incompatible.', 'Ungültige Projektdatei oder inkompatible Version.'],
+  'err.ffmpegMissing': ['FFmpeg not found. Install the ffmpeg-static package or set FFMPEG_PATH.', 'FFmpeg não encontrado. Instale o pacote ffmpeg-static ou defina FFMPEG_PATH.', 'FFmpeg introuvable. Installez le paquet ffmpeg-static ou définissez FFMPEG_PATH.', 'FFmpeg no encontrado. Instala el paquete ffmpeg-static o define FFMPEG_PATH.', 'FFmpeg nicht gefunden. Installieren Sie das Paket ffmpeg-static oder setzen Sie FFMPEG_PATH.'],
+
+  // Local server replies.
+  'srv.outputAbsolute': ['The output folder must be an absolute path.', 'A pasta de saída tem de ser um caminho absoluto.', 'Le dossier de sortie doit être un chemin absolu.', 'La carpeta de salida debe ser una ruta absoluta.', 'Der Ausgabeordner muss ein absoluter Pfad sein.'],
+  'srv.emptyFile': ['Empty file.', 'Ficheiro vazio.', 'Fichier vide.', 'Archivo vacío.', 'Leere Datei.'],
+  'srv.rideMissing': ['Telemetry not found on the server. Load the file again.', 'Telemetria não encontrada no servidor. Volte a carregar o ficheiro.', 'Télémétrie introuvable sur le serveur. Rechargez le fichier.', 'Telemetría no encontrada en el servidor. Vuelve a cargar el archivo.', 'Telemetrie auf dem Server nicht gefunden. Bitte die Datei erneut laden.'],
+  'srv.noClips': ['No clip selected.', 'Nenhum clip selecionado.', 'Aucun clip sélectionné.', 'Ningún clip seleccionado.', 'Kein Clip ausgewählt.'],
+  'srv.noOverlays': ['No overlay selected.', 'Nenhum overlay selecionado.', 'Aucun overlay sélectionné.', 'Ningún overlay seleccionado.', 'Kein Overlay ausgewählt.'],
+  'srv.noOutput': ['Choose separate gadgets and/or composite.', 'Escolha gadgets separados e/ou composição.', 'Choisissez des gadgets séparés et/ou la composition.', 'Elige gadgets separados y/o composición.', 'Wählen Sie separate Gadgets und/oder Komposition.'],
+  'srv.noMetric': ["The metric {id} doesn't exist in this telemetry.", 'A métrica {id} não existe nesta telemetria.', 'La métrique {id} n’existe pas dans cette télémétrie.', 'La métrica {id} no existe en esta telemetría.', 'Die Metrik {id} gibt es in dieser Telemetrie nicht.'],
+  'srv.badClip': ['Invalid metadata in clip {file}.', 'Metadados inválidos no clip {file}.', 'Métadonnées invalides dans le clip {file}.', 'Metadatos no válidos en el clip {file}.', 'Ungültige Metadaten im Clip {file}.'],
+  'srv.jobMissing': ['Job not found.', 'Trabalho não encontrado.', 'Tâche introuvable.', 'Trabajo no encontrado.', 'Auftrag nicht gefunden.'],
+  'srv.onlyOutput': ['Only output folders can be opened.', 'Só é possível abrir pastas de saída.', 'Seuls les dossiers de sortie peuvent être ouverts.', 'Solo se pueden abrir carpetas de salida.', 'Nur Ausgabeordner können geöffnet werden.'],
+  'srv.notFound': ['Not found.', 'Não encontrado.', 'Introuvable.', 'No encontrado.', 'Nicht gefunden.'],
+} as const satisfies Record<string, T>;
+
+export type CoreKey = keyof typeof CORE_MESSAGES;

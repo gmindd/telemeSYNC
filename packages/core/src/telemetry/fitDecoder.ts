@@ -1,3 +1,4 @@
+import { LocalizedError } from '../i18n/index.ts';
 /**
  * Minimal FIT decoder (own implementation, no third-party code). Reads the binary FIT container
  * and returns raw field values per message, for the few messages telemeSYNC needs.
@@ -115,7 +116,7 @@ export function decodeFit(bytes: Uint8Array, wanted?: Set<number>): FitMessage[]
     const headerSize = view.getUint8(fileStart);
     const isFit = bytes[fileStart + 8] === 0x2e && bytes[fileStart + 9] === 0x46 && bytes[fileStart + 10] === 0x49 && bytes[fileStart + 11] === 0x54;
     if (!isFit || (headerSize !== 12 && headerSize !== 14)) {
-      if (files === 0) throw new Error('O ficheiro não é um FIT válido.');
+      if (files === 0) throw new LocalizedError('err.fitInvalid');
       break;
     }
     const dataSize = view.getUint32(fileStart + 4, true);
@@ -131,7 +132,7 @@ export function decodeFit(bytes: Uint8Array, wanted?: Set<number>): FitMessage[]
           const local = (header >> 5) & 0x03;
           const offset = header & 0x1f;
           const def = defs.get(local);
-          if (!def) throw new Error(`definição em falta (${local})`);
+          if (!def) throw new Error(`missing definition (${local})`);
           let ts = (lastTimestamp & ~0x1f) + offset;
           if (offset < (lastTimestamp & 0x1f)) ts += 0x20;
           lastTimestamp = ts;
@@ -170,7 +171,7 @@ export function decodeFit(bytes: Uint8Array, wanted?: Set<number>): FitMessage[]
           defs.set(local, { globalNum, littleEndian: le, fields, devBytes, totalSize: total + devBytes });
         } else {
           const def = defs.get(local);
-          if (!def) throw new Error(`definição em falta (${local})`);
+          if (!def) throw new Error(`missing definition (${local})`);
           const msg = readData(view, o, def, wanted);
           const ts = msg?.fields.get(TIMESTAMP_FIELD);
           if (typeof ts === 'number') lastTimestamp = ts;
@@ -193,7 +194,7 @@ export function decodeFit(bytes: Uint8Array, wanted?: Set<number>): FitMessage[]
       }
     } catch (e) {
       // Truncated file (e.g. device switched off): keep what was read.
-      if (out.length === 0) throw new Error(`Ficheiro FIT corrompido: ${(e as Error).message}`);
+      if (out.length === 0) throw new LocalizedError('err.fitCorrupt', { detail: (e as Error).message });
     }
     files++;
     fileStart = fileStart + headerSize + dataSize + 2; // + file CRC
@@ -203,7 +204,7 @@ export function decodeFit(bytes: Uint8Array, wanted?: Set<number>): FitMessage[]
 
 function readData(view: DataView, o: number, def: Definition, wanted?: Set<number>): FitMessage | undefined {
   if (wanted && !wanted.has(def.globalNum)) return undefined;
-  if (o + def.totalSize > view.byteLength) throw new Error('mensagem truncada');
+  if (o + def.totalSize > view.byteLength) throw new Error('truncated message');
   const fields = new Map<number, number | string>();
   let off = o;
   for (const f of def.fields) {

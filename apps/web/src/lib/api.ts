@@ -1,4 +1,10 @@
-import type { ClipSyncInfo, Fps, GadgetLayout, OutputFormat, OverlayId, OverlayStyle } from '@telemesync/core';
+import type { ClipSyncInfo, Fps, GadgetLayout, Lang, OutputFormat, OverlayId, OverlayStyle } from '@telemesync/core';
+import { currentLang, t } from '../i18n/index.tsx';
+
+/** Every request says the app language, so the server answers errors in it. */
+function headers(extra?: Record<string, string>): Record<string, string> {
+  return { 'x-telemesync-lang': currentLang(), ...extra };
+}
 
 export interface TaskState {
   clipId: string;
@@ -22,7 +28,7 @@ export interface JobSnapshot {
 
 async function json<T>(res: Response): Promise<T> {
   const body = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error((body as { error?: string }).error ?? `Erro ${res.status}`);
+  if (!res.ok) throw new Error((body as { error?: string }).error ?? t('api.error', { status: res.status }));
   return body as T;
 }
 
@@ -30,16 +36,16 @@ export const api = {
   async uploadTelemetry(file: File): Promise<{ id: string }> {
     const res = await fetch(`/api/telemetry?name=${encodeURIComponent(file.name)}`, {
       method: 'POST',
-      headers: { 'content-type': 'application/octet-stream' },
+      headers: headers({ 'content-type': 'application/octet-stream' }),
       body: file,
     });
     return json(res);
   },
   async getSettings(): Promise<{ outputDir: string }> {
-    return json(await fetch('/api/settings'));
+    return json(await fetch('/api/settings', { headers: headers() }));
   },
   async saveSettings(outputDir: string): Promise<{ outputDir: string }> {
-    return json(await fetch('/api/settings', { method: 'PUT', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ outputDir }) }));
+    return json(await fetch('/api/settings', { method: 'PUT', headers: headers({ 'content-type': 'application/json' }), body: JSON.stringify({ outputDir }) }));
   },
   async startRender(body: {
     rideId: string;
@@ -54,14 +60,15 @@ export const api = {
     composite: boolean;
     layout: GadgetLayout;
     compositeShortSide: number;
+    language: Lang;
   }): Promise<JobSnapshot> {
-    return json(await fetch('/api/render', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) }));
+    return json(await fetch('/api/render', { method: 'POST', headers: headers({ 'content-type': 'application/json' }), body: JSON.stringify(body) }));
   },
   async cancel(jobId: string): Promise<void> {
-    await json(await fetch(`/api/jobs/${jobId}/cancel`, { method: 'POST' }));
+    await json(await fetch(`/api/jobs/${jobId}/cancel`, { method: 'POST', headers: headers() }));
   },
   async openFolder(path?: string): Promise<void> {
-    await json(await fetch('/api/open-folder', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ path }) }));
+    await json(await fetch('/api/open-folder', { method: 'POST', headers: headers({ 'content-type': 'application/json' }), body: JSON.stringify({ path }) }));
   },
   watchJob(jobId: string, onSnapshot: (s: JobSnapshot) => void): () => void {
     const es = new EventSource(`/api/jobs/${jobId}/events`);

@@ -3,6 +3,7 @@ import type { ClipMetadata } from '../media/types.ts';
 import { DEFAULT_STYLE, type OverlayId, type OverlayStyle } from '../overlays/types.ts';
 import type { Camera } from '../sync/types.ts';
 import type { GadgetLayout } from '../overlays/layout.ts';
+import { LocalizedError } from '../i18n/index.ts';
 
 export const PROJECT_VERSION = 1;
 
@@ -34,7 +35,7 @@ export function serializeProject(p: ProjectFile): string {
 export function parseProject(json: string): ProjectFile {
   const p = JSON.parse(json);
   if (!p || typeof p !== 'object' || p.version !== PROJECT_VERSION || !Array.isArray(p.clips) || !Array.isArray(p.cameras)) {
-    throw new Error('Ficheiro de projeto inválido ou de uma versão incompatível.');
+    throw new LocalizedError('err.project');
   }
   return {
     ...p,

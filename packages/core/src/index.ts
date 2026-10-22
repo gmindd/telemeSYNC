@@ -1,3 +1,4 @@
+export * from './i18n/index.ts';
 export * from './telemetry/types.ts';
 export * from './telemetry/fit.ts';
 export * from './telemetry/gpx.ts';
@@ -16,7 +17,7 @@ export { hrZone, gradeColor } from './overlays/text/metrics.ts';
 export * from './overlays/fonts.ts';
 export { PANEL_IDS, panelMetricOf } from './overlays/panel/panel.ts';
 export { isDialOverlay } from './overlays/dial/index.ts';
-export { PANEL_METRIC_INFO, PANEL_METRICS, panelOptions } from './overlays/panel/series.ts';
+export { PANEL_METRIC_INFO, PANEL_METRICS, panelMetricName, panelOptions } from './overlays/panel/series.ts';
 export * from './sync/types.ts';
 export * from './sync/profiles.ts';
 export * from './sync/filename.ts';

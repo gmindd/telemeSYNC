@@ -1,12 +1,12 @@
 import type { MetricKey, RideSample } from '../../telemetry/ride.ts';
 import { formatDuration, formatTime } from '../../util/timezone.ts';
-import { drawText } from '../draw.ts';
+import { drawText, labelSize } from '../draw.ts';
 import type { Ctx2D, OverlayDefinition, OverlayId, OverlayStyle } from '../types.ts';
 import { convert, fmt } from '../units.ts';
+import { tr } from '../../i18n/index.ts';
 
 interface TextMetric {
-  id: Extract<OverlayId, MetricKey>;
-  label: string;
+  id: Exclude<Extract<OverlayId, MetricKey>, 'map' | 'elevationProfile'>;
   /** Widest expected value, used for a fixed layout (unit never moves). */
   template: (s: OverlayStyle) => string;
   value: (s: RideSample, style: OverlayStyle) => { text: string; color?: string };
@@ -41,21 +41,18 @@ const PAD = 14;
 const metrics: TextMetric[] = [
   {
     id: 'speed',
-    label: 'Velocidade',
     template: () => '88,8',
     value: (s, st) => ({ text: fmt(convert.speed(s.speed, st.units), 1) }),
     unit: (st) => convert.speedUnit(st.units),
   },
   {
     id: 'altitude',
-    label: 'Altitude',
     template: (st) => (st.units.system === 'metric' ? '8888' : '88888'),
     value: (s, st) => ({ text: fmt(convert.elevation(s.altitude, st.units), 0) }),
     unit: (st) => convert.elevationUnit(st.units),
   },
   {
     id: 'grade',
-    label: 'Inclinação',
     template: () => '-88',
     value: (s) => ({ text: fmt(s.grade, 0), color: gradeColor(s.grade) }),
     unit: () => '%',
@@ -92,7 +89,6 @@ const metrics: TextMetric[] = [
   },
   {
     id: 'heartRate',
-    label: 'Freq. cardíaca',
     template: () => '188',
     value: (s, st) => {
       const z = hrZone(s.heartRate, st.hrZones);
@@ -102,49 +98,42 @@ const metrics: TextMetric[] = [
   },
   {
     id: 'cadence',
-    label: 'Cadência',
     template: () => '188',
     value: (s) => ({ text: fmt(s.cadence, 0) }),
     unit: () => 'rpm',
   },
   {
     id: 'power',
-    label: 'Potência',
     template: () => '1888',
     value: (s) => ({ text: fmt(s.power, 0) }),
     unit: () => 'W',
   },
   {
     id: 'temperature',
-    label: 'Temperatura',
     template: () => '-88',
     value: (s, st) => ({ text: fmt(convert.temperature(s.temperature, st.units), 0) }),
     unit: (st) => convert.temperatureUnit(st.units),
   },
   {
     id: 'distance',
-    label: 'Distância',
     template: () => '188,88',
     value: (s, st) => ({ text: fmt(convert.distance(s.distance, st.units), 2) }),
     unit: (st) => convert.distanceUnit(st.units),
   },
   {
     id: 'elevationGain',
-    label: 'Desnível +',
     template: (st) => (st.units.system === 'metric' ? '8888' : '88888'),
     value: (s, st) => ({ text: fmt(convert.elevation(s.elevationGain, st.units), 0) }),
     unit: (st) => convert.elevationUnit(st.units),
   },
   {
     id: 'elapsedTime',
-    label: 'Tempo',
     template: () => '8:88:88',
     value: (s) => ({ text: formatDuration(s.elapsedMs) }),
     unit: () => '',
   },
   {
     id: 'localTime',
-    label: 'Hora',
     template: () => '88:88:88',
     value: (s, st) => ({ text: formatTime(s.t, st.timeZone) }),
     unit: () => '',
@@ -169,7 +158,7 @@ function layout(m: TextMetric, style: OverlayStyle) {
 function makeOverlay(m: TextMetric): OverlayDefinition {
   return {
     id: m.id,
-    label: m.label,
+    label: tr('en', `metric.${m.id}`),
     requires: m.id,
     textOnly: true,
     size: (style) => {
@@ -180,7 +169,9 @@ function makeOverlay(m: TextMetric): OverlayDefinition {
       const l = layout(m, style);
       const s = frame.textSample;
       if (style.showLabel) {
-        drawText(ctx, m.label.toUpperCase(), PAD, PAD + LABEL_SIZE * 0.8, style, { size: LABEL_SIZE, weight: 600, tabular: false });
+        const label = tr(style.language, `metric.${m.id}`).toLocaleUpperCase(style.language);
+        const size = labelSize(ctx, style, label, LABEL_SIZE, 600, l.width - PAD * 2);
+        drawText(ctx, label, PAD, PAD + LABEL_SIZE * 0.8, style, { size, weight: 600, tabular: false });
       }
       const v = m.value(s, style);
       const valueRight = PAD + l.valueW;

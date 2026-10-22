@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { clipWarnings, effectiveStart, formatTime, lowerIndex, type RideData, type SyncState } from '@telemesync/core';
+import { useLang, useT } from '../i18n/index.tsx';
+import { dec } from '../lib/format.ts';
 import type { Playhead } from '../lib/store.ts';
 
 const LANE_H = 26;
@@ -47,6 +49,8 @@ export function Timeline(p: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [p.ride]);
   const [view, setView] = useState<[number, number]>([fullRange[0], fullRange[1]]);
+  const t = useT();
+  const lang = useLang((s) => s.lang);
   useEffect(() => setView([fullRange[0], fullRange[1]]), [fullRange]);
 
   useEffect(() => {
@@ -135,10 +139,10 @@ export function Timeline(p: Props) {
     // labels
     ctx.textAlign = 'left';
     ctx.fillStyle = '#ff7a1a';
-    ctx.fillText('velocidade', 6, 12);
+    ctx.fillText(t('timeline.speed'), 6, 12);
     ctx.fillStyle = '#90a4ae';
-    ctx.fillText('altitude', 6, GRAPH_H - 6);
-  }, [p.ride, view, width, msPerPx, x, p.timeZone]);
+    ctx.fillText(t('timeline.altitude'), 6, GRAPH_H - 6);
+  }, [p.ride, view, width, msPerPx, x, p.timeZone, lang]);
 
   // Interaction state
   const drag = useRef<
@@ -203,8 +207,8 @@ export function Timeline(p: Props) {
   return (
     <div className="timeline">
       <div className="timeline-toolbar">
-        <span className="hint">Roda do rato: zoom · Shift+roda ou arrastar o fundo: deslocar · Arrastar um clip: offset da câmara · Alt+arrastar: só esse clip</span>
-        <button className="small" onClick={() => setView([fullRange[0], fullRange[1]])}>Ver tudo</button>
+        <span className="hint">{t('timeline.hint')}</span>
+        <button className="small" onClick={() => setView([fullRange[0], fullRange[1]])}>{t('timeline.all')}</button>
       </div>
       <div
         ref={wrap}
@@ -231,13 +235,13 @@ export function Timeline(p: Props) {
           const w = Math.max(4, clip.meta.durationMs / msPerPx);
           if (left > width + 50 || left + w < -50) return null;
           const lane = p.sync.cameras.indexOf(cam);
-          const warn = clipWarnings(clip, cam, p.ride.startTime, p.ride.endTime).some((x) => x.code !== 'resolversDisagree');
+          const warn = clipWarnings(clip, cam, p.ride.startTime, p.ride.endTime, lang).some((x) => x.code !== 'resolversDisagree');
           return (
             <div
               key={clip.id}
               className={`clip-block${clip.id === p.activeClipId ? ' active' : ''}${warn ? ' warn' : ''}`}
               style={{ left, width: w, top: lane * LANE_H + 3, height: LANE_H - 6, background: cam.color }}
-              title={`${clip.meta.fileName}\n${formatTime(s, cam.timeZone)} · ${(clip.meta.durationMs / 1000).toFixed(1)} s${clip.clipOffsetMs ? `\nAjuste do clip: ${(clip.clipOffsetMs / 1000).toFixed(1)} s` : ''}`}
+              title={`${clip.meta.fileName}\n${formatTime(s, cam.timeZone)} · ${dec(clip.meta.durationMs / 1000, 1, lang)} s${clip.clipOffsetMs ? `\n${t('timeline.clipOffset', { offset: dec(clip.clipOffsetMs / 1000, 1, lang) })}` : ''}`}
               onPointerDown={(e) => {
                 e.stopPropagation();
                 (e.target as Element).setPointerCapture?.(e.pointerId);

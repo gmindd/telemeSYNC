@@ -10,20 +10,23 @@ import { StepClips } from './steps/StepClips.tsx';
 import { StepSync } from './steps/StepSync.tsx';
 import { StepOverlays } from './steps/StepOverlays.tsx';
 import { StepRender } from './steps/StepRender.tsx';
+import { LangSwitch, useT } from './i18n/index.tsx';
+import type { MessageKey } from './i18n/messages.ts';
 
-const STEPS: { id: Step; label: string }[] = [
-  { id: 'welcome', label: 'Início' },
-  { id: 'telemetry', label: '1. Telemetria' },
-  { id: 'clips', label: '2. Clips' },
-  { id: 'sync', label: '3. Sincronização' },
-  { id: 'overlays', label: '4. Overlays' },
-  { id: 'render', label: '5. Renderizar' },
+const STEPS: { id: Step; label: MessageKey }[] = [
+  { id: 'welcome', label: 'nav.welcome' },
+  { id: 'telemetry', label: 'nav.telemetry' },
+  { id: 'clips', label: 'nav.clips' },
+  { id: 'sync', label: 'nav.sync' },
+  { id: 'overlays', label: 'nav.overlays' },
+  { id: 'render', label: 'nav.render' },
 ];
 
 export function App() {
   const { step, setStep, init, notice, dismissNotice, saveProject, openProject, ride, sync } = useApp();
   const projectInput = useRef<HTMLInputElement>(null);
   const [about, setAbout] = useState(false);
+  const t = useT();
   useEffect(() => {
     void init();
   }, [init]);
@@ -36,13 +39,13 @@ export function App() {
         <nav>
           {STEPS.map((s) => (
             <button key={s.id} className={step === s.id ? 'active' : ''} onClick={() => setStep(s.id)}>
-              {s.label}
+              {t(s.label)}
             </button>
           ))}
         </nav>
         <div className="project">
-          <button className="small" onClick={() => projectInput.current?.click()}>Abrir projeto</button>
-          <button className="small" onClick={saveProject} disabled={!ride && !sync.clips.length}>Guardar projeto</button>
+          <button className="small" onClick={() => projectInput.current?.click()}>{t('project.open')}</button>
+          <button className="small" onClick={saveProject} disabled={!ride && !sync.clips.length}>{t('project.save')}</button>
           <input
             ref={projectInput}
             type="file"
@@ -55,6 +58,7 @@ export function App() {
             }}
           />
         </div>
+        <LangSwitch />
       </header>
       <UpdateBanner />
       {notice ? (
@@ -72,11 +76,11 @@ export function App() {
       </main>
       <footer>
         <span>
-          {APP_INFO.name} v{APP_INFO.version} · gratuito · © {APP_INFO.year} {APP_INFO.author} · <WebsiteLink />
+          {APP_INFO.name} v{APP_INFO.version} · {t('footer.free')} · © {APP_INFO.year} {APP_INFO.author} · <WebsiteLink />
         </span>
         <span className="footer-actions">
           <button className="linklike" onClick={() => setAbout(true)}>
-            Sobre e avisos legais
+            {t('footer.about')}
           </button>
           <DonateButton />
         </span>

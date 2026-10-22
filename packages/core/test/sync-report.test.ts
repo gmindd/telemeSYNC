@@ -43,8 +43,9 @@ describe('clips of different moments of the same ride', () => {
     expect(o.get(s.clips[0].id)).toEqual(['DJI_20261018090500_0002_D.MP4']);
     expect(o.get(s.clips[1].id)).toEqual(['DJI_20261018090000_0001_D.MP4']);
     expect(o.has(s.clips[2].id)).toBe(false);
-    const info = clipSyncInfo(s.clips[0], s.cameras[0], ride, o.get(s.clips[0].id));
+    const info = clipSyncInfo(s.clips[0], s.cameras[0], ride, o.get(s.clips[0].id), 'pt');
     expect(info.warnings.join(' ')).toMatch(/Sobrepõe-se a DJI_20261018090500_0002_D\.MP4/);
+    expect(clipSyncInfo(s.clips[0], s.cameras[0], ride, o.get(s.clips[0].id)).warnings.join(' ')).toMatch(/^Overlaps DJI_20261018090500_0002_D\.MP4/);
   });
 
   it('touching files of one long recording are not an overlap', () => {
@@ -65,7 +66,8 @@ describe('clips of different moments of the same ride', () => {
       timeZone: 'Europe/Lisbon',
       exportedAt: ride.endTime,
       version: '1.0.1',
-      clips: s.clips.map((c) => clipSyncInfo(c, cam, ride)),
+      clips: s.clips.map((c) => clipSyncInfo(c, cam, ride, undefined, 'pt')),
+      lang: 'pt',
     });
     expect(text).toMatch(/^telemeSYNC 1\.0\.1 · relatório de sincronização/);
     expect(text).toContain('1. DJI_20261018090000_0001_D.MP4');
@@ -74,11 +76,17 @@ describe('clips of different moments of the same ride', () => {
     expect(text).toContain('Origem da hora: nome do ficheiro (18/10/2026 10:20:00,0)');
     expect(text).toContain('Offset da câmara: +00,0 s · ajuste só deste clip: −02,3 s');
     expect(text).toContain('Início usado: 18/10/2026 10:19:57,7');
+    const en = syncReport({ rideName: 'Race', ride, timeZone: 'Europe/Lisbon', exportedAt: ride.endTime, clips: s.clips.map((c) => clipSyncInfo(c, cam, ride)) });
+    expect(en).toMatch(/^telemeSYNC · sync report/);
+    expect(en).toContain('Start used: 18/10/2026 09:45:00.0 · end 18/10/2026 10:00:00.0 · length 0:15:00 · 50 fps');
+    expect(en).toContain('Time source: file name (18/10/2026 10:20:00.0)');
+    expect(en).toContain('Camera offset: +00.0 s · this clip only: −02.3 s');
   });
 
   it('formats offsets in seconds, minutes and hours', () => {
-    expect(formatOffset(1200)).toBe('+01,2 s');
-    expect(formatOffset(-123_000)).toBe('−2 min 03,0 s');
-    expect(formatOffset(3_600_000)).toBe('+1 h 00 min 00,0 s');
+    expect(formatOffset(1200, 'pt')).toBe('+01,2 s');
+    expect(formatOffset(-123_000, 'pt')).toBe('−2 min 03,0 s');
+    expect(formatOffset(3_600_000, 'pt')).toBe('+1 h 00 min 00,0 s');
+    expect(formatOffset(1200)).toBe('+01.2 s');
   });
 });

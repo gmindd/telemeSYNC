@@ -1,16 +1,20 @@
 import { useState } from 'react';
-import { clipOverlaps, clipSyncInfo, formatDuration, formatTime, type Clip, type RideData, type SyncState } from '@telemesync/core';
-import { fmtOffset } from '../lib/format.ts';
+import { clipOverlaps, clipSyncInfo, formatDuration, formatTime, tr, type Clip, type RideData, type SyncState } from '@telemesync/core';
+import { useLang, useT } from '../i18n/index.tsx';
+import { dec, fmtOffset, parseDecimal } from '../lib/format.ts';
 
 /** Seconds typed with a comma or a point → ms; undefined when not a number. */
 function parseSeconds(text: string): number | undefined {
-  const v = Number(text.trim().replace('−', '-').replace(',', '.'));
-  return Number.isFinite(v) ? Math.round(v * 1000) : undefined;
+  const v = parseDecimal(text);
+  return v === undefined ? undefined : Math.round(v * 1000);
 }
 
 function OffsetInput({ clip, onChange }: { clip: Clip; onChange: (ms: number) => void }) {
   const [text, setText] = useState<string | null>(null);
-  const shown = (clip.clipOffsetMs / 1000).toFixed(1).replace('.', ',');
+  const t = useT();
+  const lang = useLang((s) => s.lang);
+  const shown = dec(clip.clipOffsetMs / 1000, 1, lang);
+  const tenth = dec(0.1, 1, lang);
   const commit = () => {
     const ms = text === null ? undefined : parseSeconds(text);
     if (ms !== undefined) onChange(ms);
@@ -19,16 +23,16 @@ function OffsetInput({ clip, onChange }: { clip: Clip; onChange: (ms: number) =>
   return (
     <span className="clip-offset" onClick={(e) => e.stopPropagation()}>
       <button className="small" title="−1 s" onClick={() => onChange(clip.clipOffsetMs - 1000)}>−1 s</button>
-      <button className="small" title="−0,1 s" onClick={() => onChange(clip.clipOffsetMs - 100)}>−0,1</button>
+      <button className="small" title={`−${tenth} s`} onClick={() => onChange(clip.clipOffsetMs - 100)}>−{tenth}</button>
       <input
         className="num"
-        aria-label={`Ajuste de ${clip.meta.fileName} em segundos`}
+        aria-label={t('list.offsetOf', { file: clip.meta.fileName })}
         value={text ?? shown}
         onChange={(e) => setText(e.target.value)}
         onBlur={commit}
         onKeyDown={(e) => e.key === 'Enter' && (e.target as HTMLInputElement).blur()}
       />
-      <button className="small" title="+0,1 s" onClick={() => onChange(clip.clipOffsetMs + 100)}>+0,1</button>
+      <button className="small" title={`+${tenth} s`} onClick={() => onChange(clip.clipOffsetMs + 100)}>+{tenth}</button>
       <button className="small" title="+1 s" onClick={() => onChange(clip.clipOffsetMs + 1000)}>+1 s</button>
     </span>
   );
@@ -51,6 +55,8 @@ export function ClipList({
   onSelect: (id: string) => void;
   onClipOffset: (id: string, ms: number) => void;
 }) {
+  const t = useT();
+  const lang = useLang((s) => s.lang);
   const cams = new Map(sync.cameras.map((c) => [c.id, c]));
   const overlaps = clipOverlaps(sync);
   if (!sync.clips.length) return null;
@@ -59,21 +65,21 @@ export function ClipList({
       <table>
         <thead>
           <tr>
-            <th>Clip</th>
-            <th>Início</th>
-            <th>Na volta</th>
-            <th>Origem da hora</th>
-            <th>Ajuste só deste clip (s)</th>
-            <th>Estado</th>
+            <th>{t('list.clip')}</th>
+            <th>{t('list.start')}</th>
+            <th>{t('list.onRide')}</th>
+            <th>{t('list.source')}</th>
+            <th>{t('list.offset')}</th>
+            <th>{t('list.status')}</th>
           </tr>
         </thead>
         <tbody>
           {sync.clips.map((clip) => {
             const cam = cams.get(clip.cameraId)!;
-            const info = clipSyncInfo(clip, cam, ride, overlaps.get(clip.id));
+            const info = clipSyncInfo(clip, cam, ride, overlaps.get(clip.id), lang);
             const s = info.startUtcMs;
             return (
-              <tr key={clip.id} className={clip.id === activeClipId ? 'active' : ''} onClick={() => onSelect(clip.id)} title="Ver este clip na pré-visualização">
+              <tr key={clip.id} className={clip.id === activeClipId ? 'active' : ''} onClick={() => onSelect(clip.id)} title={t('list.preview')}>
                 <td>
                   <span className="cam-dot" style={{ background: cam.color }} />
                   <span className="clip-name">{clip.meta.fileName}</span>
@@ -83,14 +89,14 @@ export function ClipList({
                 <td className="muted">{s === undefined ? '—' : `${formatDuration(Math.max(0, s - ride.startTime))} → ${formatDuration(Math.max(0, s + clip.meta.durationMs - ride.startTime))}`}</td>
                 <td className="muted">
                   {info.source}
-                  {cam.offsetMs ? ` · câmara ${fmtOffset(cam.offsetMs)}` : ''}
+                  {cam.offsetMs ? ` · ${t('list.camera', { offset: fmtOffset(cam.offsetMs, lang) })}` : ''}
                 </td>
                 <td>
                   <OffsetInput clip={clip} onChange={(ms) => onClipOffset(clip.id, ms)} />
                 </td>
                 <td>
                   {info.warnings.length ? (
-                    <span className="badge warn" title={info.warnings.join('\n')}>⚠ {info.warnings.length === 1 ? '1 aviso' : `${info.warnings.length} avisos`}</span>
+                    <span className="badge warn" title={info.warnings.join('\n')}>⚠ {info.warnings.length === 1 ? t('list.warning1') : t('list.warningN', { n: info.warnings.length })}</span>
                   ) : (
                     <span className="badge ok">✓</span>
                   )}
@@ -100,10 +106,7 @@ export function ClipList({
           })}
         </tbody>
       </table>
-      <p className="muted">
-        Cada clip é exportado à parte, com a sua hora de início. Confirme cada um: escolha o clip, avance até uma paragem ou curva e acerte com o ajuste só desse clip.
-        A exportação grava um <b>sincronizacao.txt</b> com estes dados na pasta da volta.
-      </p>
+      <p className="muted">{t('list.note', { file: tr(lang, 'file.report') })}</p>
     </div>
   );
 }

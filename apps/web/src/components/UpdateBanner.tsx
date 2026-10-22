@@ -1,10 +1,13 @@
 import { useEffect, useState } from 'react';
 import { APP_INFO } from '../config.ts';
-import { checkForUpdate, type Release } from '../lib/updates.ts';
+import { useLang, useT } from '../i18n/index.tsx';
+import { checkForUpdate, releaseSummary, withLang, type Release } from '../lib/updates.ts';
 
-/** Bar shown at start-up when the site announces a newer version; "Agora não" hides it until the next start. */
+/** Bar shown at start-up when the site announces a newer version; "Not now" hides it until the next start. */
 export function UpdateBanner() {
   const [release, setRelease] = useState<Release | null>(null);
+  const t = useT();
+  const lang = useLang((s) => s.lang);
   useEffect(() => {
     if (!APP_INFO.updateUrl) return;
     let alive = true;
@@ -19,18 +22,18 @@ export function UpdateBanner() {
   return (
     <div className="update-bar" role="status">
       <span>
-        <b>Nova versão {release.version} disponível</b>
-        {release.summary ? <> · {release.summary}</> : null}
+        <b>{t('update.available', { version: release.version })}</b>
+        {releaseSummary(release, lang) ? <> · {releaseSummary(release, lang)}</> : null}
       </span>
       <span className="update-actions">
-        <a className="button-link small" href={release.changelogUrl} target="_blank" rel="noopener noreferrer">
-          Ver novidades
+        <a className="button-link small" href={withLang(release.changelogUrl, lang)} target="_blank" rel="noopener noreferrer">
+          {t('update.changelog')}
         </a>
         <a className="button-link small primary" href={release.downloadUrl} target="_blank" rel="noopener noreferrer">
-          Descarregar
+          {t('update.download')}
         </a>
         <button className="small" onClick={() => setRelease(null)}>
-          Agora não
+          {t('update.later')}
         </button>
       </span>
     </div>

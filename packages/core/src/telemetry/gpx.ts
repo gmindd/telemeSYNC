@@ -1,5 +1,6 @@
 import { XMLParser } from 'fast-xml-parser';
 import type { RawSample, RawTelemetry } from './types.ts';
+import { LocalizedError } from '../i18n/index.ts';
 
 function toNum(v: unknown): number | undefined {
   if (v === undefined || v === null || v === '') return undefined;
@@ -43,7 +44,7 @@ export function parseGpx(xml: string, name?: string): RawTelemetry {
   });
   const doc = parser.parse(xml);
   const gpx = doc?.gpx;
-  if (!gpx) throw new Error('O ficheiro não é um GPX válido.');
+  if (!gpx) throw new LocalizedError('err.gpxInvalid');
 
   const samples: RawSample[] = [];
   let trackName: string | undefined;
@@ -73,7 +74,7 @@ export function parseGpx(xml: string, name?: string): RawTelemetry {
       }
     }
   }
-  if (samples.length === 0) throw new Error('O ficheiro GPX não tem pontos com hora (trkpt/time).');
+  if (samples.length === 0) throw new LocalizedError('err.gpxNoTime');
   samples.sort((a, b) => a.t - b.t);
   const creator = typeof gpx['@creator'] === 'string' ? gpx['@creator'] : undefined;
   return { source: 'gpx', name: trackName ?? name, device: creator, samples };

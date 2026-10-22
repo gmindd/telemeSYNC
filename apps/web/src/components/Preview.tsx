@@ -5,6 +5,7 @@ import {
   type GadgetLayout,
   type GadgetPlacement,
   getOverlay,
+  overlayLabel,
   overlayPixelSize,
   renderOverlayFrame,
   type Camera,
@@ -14,22 +15,17 @@ import {
   type OverlayStyle,
   type RideData,
 } from '@telemesync/core';
+import { useLang, useT, type T } from '../i18n/index.tsx';
 import { useApp } from '../lib/store.ts';
 import { currentPlatform } from '../lib/updates.ts';
 
 type PlayState = 'loading' | 'ok' | 'error' | 'nofile' | 'unsupported';
 
-function reasonText(state: PlayState, clip: Clip): string {
-  if (state === 'nofile') return 'O ficheiro de vídeo não está associado (projeto reaberto). Arraste-o de novo no passo "Clips" para ver o vídeo. Abaixo mostram-se só os dados.';
-  if (state === 'unsupported') return `O browser não reproduz ficheiros ${clip.meta.fileName.split('.').pop()?.toUpperCase()} (vídeo 360° em bruto). Mostram-se só os dados — use o slider para percorrer o clip.`;
+function reasonText(state: PlayState, clip: Clip, t: T): string {
+  if (state === 'nofile') return t('preview.noFile');
+  if (state === 'unsupported') return t('preview.unsupported', { ext: clip.meta.fileName.split('.').pop()?.toUpperCase() ?? '' });
   const hevc = clip.meta.codec === 'hvc1' || clip.meta.codec === 'hev1';
-  const hevcHelp =
-    currentPlatform() === 'mac'
-      ? 'No Mac, abra o telemeSYNC no Safari (http://localhost:5174), que reproduz HEVC.'
-      : 'No Windows pode instalar as "Extensões de Vídeo HEVC" da Microsoft Store, ou usar o Edge.';
-  return hevc
-    ? `O browser não consegue reproduzir este vídeo HEVC (H.265). ${hevcHelp} Mostram-se só os dados.`
-    : 'O browser não consegue reproduzir este ficheiro. Mostram-se só os dados — use o slider para percorrer o clip.';
+  return hevc ? t('preview.hevc', { help: t(currentPlatform() === 'mac' ? 'preview.hevcMac' : 'preview.hevcWin') }) : t('preview.error');
 }
 
 /** One gadget on the preview: drag to move, drag the corner to resize. Positions are fractions of the frame. */
@@ -42,6 +38,8 @@ function Gadget(props: {
   onChange: (p: GadgetPlacement) => void;
 }) {
   const { id, p, style } = props;
+  const t = useT();
+  const lang = useLang((s) => s.lang);
   const { width, height } = overlayPixelSize(getOverlay(id), style);
   const drag = useRef<{ mode: 'move' | 'resize'; x0: number; y0: number; p0: GadgetPlacement; bw: number; bh: number } | null>(null);
   const start = (mode: 'move' | 'resize') => (e: React.PointerEvent) => {
@@ -64,7 +62,7 @@ function Gadget(props: {
     <div
       className="gadget"
       style={{ left: `${p.x * 100}%`, top: `${p.y * 100}%`, width: `${p.w * 100}%` }}
-      title={`${getOverlay(id).label}: arraste para mover, canto inferior direito para redimensionar`}
+      title={t('preview.gadget', { name: overlayLabel(id, lang) })}
       onPointerDown={start('move')}
       onPointerMove={move}
       onPointerUp={end}
@@ -87,6 +85,7 @@ export function Preview(props: {
 }) {
   const { clip, camera, file, ride, overlays, style } = props;
   const setPlayhead = useApp((s) => s.setPlayhead);
+  const t = useT();
   const playhead = useApp((s) => s.playhead);
   const start = effectiveStart(clip, camera);
   const startRef = useRef(start);
@@ -217,7 +216,7 @@ export function Preview(props: {
       </div>
       {state === 'error' || state === 'nofile' || state === 'unsupported' ? (
         <>
-          <p className="notice">{reasonText(state, clip)}</p>
+          <p className="notice">{reasonText(state, clip, t)}</p>
           <input
             type="range"
             className="scrub"

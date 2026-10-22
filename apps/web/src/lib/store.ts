@@ -3,10 +3,10 @@ import {
   addClips,
   blobSource,
   buildRide,
-  CAMERA_PROFILES,
   DEFAULT_OUTPUT_FORMAT,
   DEFAULT_STYLE,
   defaultCamera,
+  errorText,
   clipOverlaps,
   clipSyncInfo,
   effectiveStart,
@@ -22,6 +22,7 @@ import {
   type GadgetPlacement,
   type ClipMetadata,
   type Clip,
+  type Lang,
   type OverlayId,
   type OutputFormat,
   type OverlayStyle,
@@ -29,6 +30,7 @@ import {
   type RideData,
   type SyncState,
 } from '@telemesync/core';
+import { currentLang, t, useLang } from '../i18n/index.tsx';
 import { api, type JobSnapshot } from './api.ts';
 
 export type Step = 'welcome' | 'telemetry' | 'clips' | 'sync' | 'overlays' | 'render';
@@ -54,6 +56,8 @@ interface State {
   playhead?: Playhead;
   overlays: OverlayId[];
   style: OverlayStyle;
+  /** Language of the texts drawn in the overlays: the app language ('auto') or a fixed one. */
+  overlayLang: Lang | 'auto';
   format: OutputFormat;
   /** Cap on the overlay frame rate (0 = same as the clip). */
   maxFps: number;
@@ -85,6 +89,7 @@ interface Actions {
   setCameraLabel(cameraId: string, label: string): void;
   toggleOverlay(id: OverlayId, on: boolean): void;
   setStyle(p: Partial<OverlayStyle>): void;
+  setOverlayLang(v: Lang | 'auto'): void;
   setFormat(f: OutputFormat): void;
   setMaxFps(fps: number): void;
   setOutputDir(d: string): void;
@@ -106,6 +111,7 @@ const STYLE_KEY = 'telemesync.style';
 const LAYOUT_KEY = 'telemesync.layout';
 const FORMAT_KEY = 'telemesync.format';
 const MAX_FPS_KEY = 'telemesync.maxFps';
+const OVERLAY_LANG_KEY = 'telemesync.overlayLang';
 
 function loadStored<T>(key: string, fallback: T): T {
   try {
@@ -124,15 +130,23 @@ function store(key: string, v: unknown) {
   }
 }
 
-function loadStoredStyle(): OverlayStyle {
+/** Overlay language in effect: the app's when 'auto'. */
+function overlayLanguage(v: Lang | 'auto'): Lang {
+  return v === 'auto' ? currentLang() : v;
+}
+
+function loadStoredStyle(overlayLang: Lang | 'auto'): OverlayStyle {
+  const language = overlayLanguage(overlayLang);
   try {
     const s = JSON.parse(localStorage.getItem(STYLE_KEY) ?? 'null');
-    if (s) return { ...DEFAULT_STYLE, ...s, units: { ...DEFAULT_STYLE.units, ...s.units } };
+    if (s) return { ...DEFAULT_STYLE, ...s, units: { ...DEFAULT_STYLE.units, ...s.units }, language };
   } catch {
     /* ignore */
   }
-  return DEFAULT_STYLE;
+  return { ...DEFAULT_STYLE, language };
 }
+
+const initialOverlayLang = loadStored<Lang | 'auto'>(OVERLAY_LANG_KEY, 'auto');
 
 function rideNameFrom(ride: RideData, fileName: string): string {
   const d = new Date(ride.startTime);
@@ -148,11 +162,12 @@ export const useApp = create<State & Actions>((set, get) => ({
   selected: {},
   clipErrors: [],
   overlays: ['speed', 'grade', 'map', 'elevationProfile'],
-  style: loadStoredStyle(),
+  style: loadStoredStyle(initialOverlayLang),
+  overlayLang: initialOverlayLang,
   format: loadStored<OutputFormat>(FORMAT_KEY, DEFAULT_OUTPUT_FORMAT),
   maxFps: loadStored<number>(MAX_FPS_KEY, 0),
   outputDir: '',
-  rideName: 'volta',
+  rideName: t('store.defaultRide'),
   layout: loadStored<GadgetLayout>(LAYOUT_KEY, {}),
   exportSeparate: true,
   exportComposite: false,
@@ -165,7 +180,7 @@ export const useApp = create<State & Actions>((set, get) => ({
       const s = await api.getSettings();
       set({ outputDir: s.outputDir });
     } catch {
-      set({ notice: 'Não foi possível contactar o servidor local. Arrancou a app com "npm start"?' });
+      set({ notice: t('notice.noServer') });
     }
   },
 
@@ -188,7 +203,7 @@ export const useApp = create<State & Actions>((set, get) => ({
         rideLoading: false,
       });
     } catch (e) {
-      set({ rideLoading: false, rideError: e instanceof Error ? e.message : String(e) });
+      set({ rideLoading: false, rideError: errorText(e, currentLang()) });
     }
   },
 
@@ -211,11 +226,11 @@ export const useApp = create<State & Actions>((set, get) => ({
       try {
         newMetas.push({ file: f, meta: await readClipMetadata(blobSource(f), f.name, f.lastModified) });
       } catch (e) {
-        errors.push(`${f.name}: ${e instanceof Error ? e.message : String(e)}`);
+        errors.push(`${f.name}: ${errorText(e, currentLang())}`);
       }
     }
     const before = new Set(st.sync.clips.map((c) => c.id));
-    const sync = addClips(st.sync, newMetas.map((m) => m.meta), st.ride?.startTime);
+    const sync = addClips(st.sync, newMetas.map((m) => m.meta), st.ride?.startTime, undefined, currentLang());
     const selected = { ...st.selected };
     const added = sync.clips.filter((c) => !before.has(c.id));
     added.forEach((c, i) => {
@@ -267,9 +282,9 @@ export const useApp = create<State & Actions>((set, get) => ({
       const profile = target.slice(4) as CameraProfileId;
       let n = 1;
       while (cameras.some((c) => c.id === (n === 1 ? profile : `${profile}-${n}`))) n++;
-      const cam = defaultCamera(profile);
+      const cam = defaultCamera(profile, undefined, currentLang());
       cam.id = n === 1 ? profile : `${profile}-${n}`;
-      cam.label = n === 1 ? CAMERA_PROFILES[profile].label : `${CAMERA_PROFILES[profile].label} ${n}`;
+      if (n > 1) cam.label = `${cam.label} ${n}`;
       cameras.push(cam);
       camId = cam.id;
     }
@@ -304,6 +319,12 @@ export const useApp = create<State & Actions>((set, get) => ({
     }
   },
 
+  setOverlayLang(overlayLang) {
+    set({ overlayLang });
+    store(OVERLAY_LANG_KEY, overlayLang);
+    get().setStyle({ language: overlayLanguage(overlayLang) });
+  },
+
   setFormat(format) {
     set({ format });
     store(FORMAT_KEY, format);
@@ -316,9 +337,9 @@ export const useApp = create<State & Actions>((set, get) => ({
   async saveOutputDir() {
     try {
       const s = await api.saveSettings(get().outputDir);
-      set({ outputDir: s.outputDir, notice: 'Pasta de saída guardada.' });
+      set({ outputDir: s.outputDir, notice: t('notice.outputSaved') });
     } catch (e) {
-      set({ notice: (e as Error).message });
+      set({ notice: errorText(e, currentLang()) });
     }
   },
   setRideName: (rideName) => set({ rideName }),
@@ -340,7 +361,7 @@ export const useApp = create<State & Actions>((set, get) => ({
         frameCount: c.meta.frameCount,
         width: c.meta.width,
         height: c.meta.height,
-        sync: clipSyncInfo(c, cams.get(c.cameraId)!, st.ride, overlaps.get(c.id)),
+        sync: clipSyncInfo(c, cams.get(c.cameraId)!, st.ride, overlaps.get(c.id), currentLang()),
       }))
       .filter((c) => c.startUtcMs !== undefined && c.fps);
     set({ renderError: undefined });
@@ -358,11 +379,12 @@ export const useApp = create<State & Actions>((set, get) => ({
         composite: st.exportComposite,
         layout: st.layout,
         compositeShortSide: st.compositeShortSide,
+        language: currentLang(),
       });
       set({ job });
       api.watchJob(job.id, (s) => set({ job: s }));
     } catch (e) {
-      set({ renderError: (e as Error).message });
+      set({ renderError: errorText(e, currentLang()) });
     }
   },
 
@@ -418,7 +440,7 @@ export const useApp = create<State & Actions>((set, get) => ({
         selected,
         files: {},
         overlays: p.overlays,
-        style: p.style,
+        style: { ...DEFAULT_STYLE, ...p.style, units: { ...DEFAULT_STYLE.units, ...p.style.units }, language: get().overlayLang === 'auto' ? currentLang() : get().style.language },
         format: p.output.format,
         maxFps: p.output.maxFps === 30 ? 30 : 0,
         exportSeparate: p.output.separate ?? true,
@@ -428,10 +450,10 @@ export const useApp = create<State & Actions>((set, get) => ({
         rideName: p.name,
         activeClipId: clips[0]?.id,
         step: get().ride ? 'sync' : 'telemetry',
-        notice: `Projeto aberto. ${p.telemetry ? `Carregue a telemetria (${p.telemetry.fileName})` : 'Carregue a telemetria'} e volte a arrastar os vídeos para os pré-visualizar.`,
+        notice: t('notice.projectOpened', { file: p.telemetry ? ` (${p.telemetry.fileName})` : '' }),
       });
     } catch (e) {
-      set({ notice: (e as Error).message });
+      set({ notice: errorText(e, currentLang()) });
     }
   },
 
@@ -449,3 +471,8 @@ export const useApp = create<State & Actions>((set, get) => ({
   setExportOptions: (o) => set(o),
   dismissNotice: () => set({ notice: undefined }),
 }));
+
+// Overlays that follow the app language change with it.
+useLang.subscribe((s) => {
+  if (useApp.getState().overlayLang === 'auto') useApp.getState().setStyle({ language: s.lang });
+});

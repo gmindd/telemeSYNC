@@ -1,4 +1,5 @@
 import type { ClipMetadata, Fps } from './types.ts';
+import { LocalizedError } from '../i18n/index.ts';
 
 /** Random-access byte source: a browser File (via slice) or a Node file handle. */
 export interface ByteSource {
@@ -277,13 +278,13 @@ export async function readClipMetadata(src: ByteSource, fileName: string, lastMo
     if (size < 8) break;
     if (type === 'ftyp') majorBrand = fourcc(await src.read(offset + 8, 4), 0).trim();
     if (type === 'moov') {
-      if (size > MAX_MOOV) throw new Error('moov demasiado grande');
+      if (size > MAX_MOOV) throw new Error('moov too large');
       moov = await src.read(offset, size);
       break;
     }
     offset += size;
   }
-  if (!moov) throw new Error(`Não foi possível ler os metadados (moov) de ${fileName}. O ficheiro está completo?`);
+  if (!moov) throw new LocalizedError('err.moov', { file: fileName });
 
   const r = new Reader(moov);
   const moovBox = r.children(0, moov.length)[0];

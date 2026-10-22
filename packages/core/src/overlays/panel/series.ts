@@ -2,6 +2,7 @@ import type { RideData, RideSample } from '../../telemetry/ride.ts';
 import { lowerIndex } from '../../util/search.ts';
 import type { OverlayStyle, PanelMetric, PanelOptions } from '../types.ts';
 import { convert } from '../units.ts';
+import { formatNumber, tr, type Lang } from '../../i18n/index.ts';
 
 export type StatKind = 'max' | 'min' | 'avg' | 'delta' | 'accel' | 'zone' | 'gain';
 export type IconId =
@@ -10,11 +11,6 @@ export type IconId =
 
 export interface PanelMetricInfo {
   id: PanelMetric;
-  /** Portuguese name (UI, header). */
-  label: string;
-  /** Name used in "gráfico de …" (lower case). */
-  chartName: string;
-  subtitle: string;
   icon: IconId;
   decimals: number;
   chart: 'line' | 'bars';
@@ -40,9 +36,6 @@ const id = (v: number) => v;
 export const PANEL_METRIC_INFO: Record<PanelMetric, PanelMetricInfo> = {
   speed: {
     id: 'speed',
-    label: 'Velocidade',
-    chartName: 'velocidade',
-    subtitle: 'Atual, máxima, média e aceleração',
     icon: 'gauge',
     decimals: 1,
     chart: 'line',
@@ -58,9 +51,6 @@ export const PANEL_METRIC_INFO: Record<PanelMetric, PanelMetricInfo> = {
   },
   power: {
     id: 'power',
-    label: 'Potência',
-    chartName: 'potência',
-    subtitle: 'Esforço atual, pico, média e zona',
     icon: 'bolt',
     decimals: 0,
     chart: 'bars',
@@ -75,9 +65,6 @@ export const PANEL_METRIC_INFO: Record<PanelMetric, PanelMetricInfo> = {
   },
   heartRate: {
     id: 'heartRate',
-    label: 'Freq. cardíaca',
-    chartName: 'freq. cardíaca',
-    subtitle: 'Atual, máxima, média e zona',
     icon: 'heart',
     decimals: 0,
     chart: 'line',
@@ -92,9 +79,6 @@ export const PANEL_METRIC_INFO: Record<PanelMetric, PanelMetricInfo> = {
   },
   cadence: {
     id: 'cadence',
-    label: 'Cadência',
-    chartName: 'cadência',
-    subtitle: 'Atual, máxima, média e variação',
     icon: 'cadence',
     decimals: 0,
     chart: 'line',
@@ -110,9 +94,6 @@ export const PANEL_METRIC_INFO: Record<PanelMetric, PanelMetricInfo> = {
   },
   temperature: {
     id: 'temperature',
-    label: 'Temperatura',
-    chartName: 'temperatura',
-    subtitle: 'Atual, mínima, máxima e variação',
     icon: 'thermo',
     decimals: 0,
     chart: 'line',
@@ -127,9 +108,6 @@ export const PANEL_METRIC_INFO: Record<PanelMetric, PanelMetricInfo> = {
   },
   altitude: {
     id: 'altitude',
-    label: 'Altitude',
-    chartName: 'altimetria',
-    subtitle: 'Atual, máxima, mínima e D+',
     icon: 'mountain',
     decimals: 0,
     chart: 'line',
@@ -144,9 +122,6 @@ export const PANEL_METRIC_INFO: Record<PanelMetric, PanelMetricInfo> = {
   },
   grade: {
     id: 'grade',
-    label: 'Inclinação',
-    chartName: 'inclinação',
-    subtitle: 'Atual, máxima, mínima e D+',
     icon: 'grade',
     decimals: 0,
     chart: 'line',
@@ -178,13 +153,25 @@ export function windowLength(opts: PanelOptions, style: OverlayStyle): number {
   return Math.max(0.1, style.chartMinutes) * 60_000;
 }
 
-function trimNumber(v: number): string {
-  return String(Math.round(v * 10) / 10).replace('.', ',');
+function trimNumber(v: number, lang: Lang): string {
+  const r = Math.round(v * 10) / 10;
+  return formatNumber(r, Number.isInteger(r) ? 0 : 1, lang);
 }
 
+/** Chart window length, e.g. "10 MIN" or "5 KM". */
+export function windowSpan(opts: PanelOptions, style: OverlayStyle): string {
+  if (opts.window === 'distance') return `${trimNumber(style.chartDistance, style.language)} ${style.units.system === 'metric' ? 'KM' : 'MI'}`;
+  return `${trimNumber(style.chartMinutes, style.language)} MIN`;
+}
+
+/** Chart title, e.g. "LAST 10 MIN". */
 export function windowLabel(opts: PanelOptions, style: OverlayStyle): string {
-  if (opts.window === 'distance') return `ÚLTIMOS ${trimNumber(style.chartDistance)} ${style.units.system === 'metric' ? 'KM' : 'MI'}`;
-  return `ÚLTIMOS ${trimNumber(style.chartMinutes)} MIN`;
+  return tr(style.language, 'panel.last', { span: windowSpan(opts, style) });
+}
+
+/** Metric name in `lang` (panels, dials, chart choices). */
+export function panelMetricName(m: PanelMetric, lang: Lang | undefined): string {
+  return tr(lang, `metric.${m}`);
 }
 
 /** Linear interpolation of `arr` against a monotonic `axis` (time or distance). */

@@ -108,7 +108,7 @@ const PAD = 24;
 
 export const mapOverlay: OverlayDefinition = {
   id: 'map',
-  label: 'Mapa',
+  label: 'Map',
   requires: 'map',
   textOnly: false,
   size: () => ({ width: BASE, height: BASE }),

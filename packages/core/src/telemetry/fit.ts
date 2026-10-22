@@ -1,5 +1,6 @@
 import { decodeFit } from './fitDecoder.ts';
 import type { RawSample, RawTelemetry } from './types.ts';
+import { LocalizedError } from '../i18n/index.ts';
 
 const SEMICIRCLE_TO_DEG = 180 / 2 ** 31;
 /** FIT timestamps are seconds since 1989-12-31T00:00:00Z. */
@@ -47,7 +48,7 @@ export function parseFit(data: ArrayBuffer | Uint8Array, name?: string): RawTele
   const bytes = data instanceof Uint8Array ? data : new Uint8Array(data);
   const messages = decodeFit(bytes, new Set([MSG.fileId, MSG.record, MSG.activity]));
   const records = messages.filter((m) => m.num === MSG.record);
-  if (records.length === 0) throw new Error('O ficheiro FIT não tem registos de atividade.');
+  if (records.length === 0) throw new LocalizedError('err.fitNoRecords');
 
   const samples: RawSample[] = [];
   const recordFields = new Set<string>();
@@ -78,7 +79,7 @@ export function parseFit(data: ArrayBuffer | Uint8Array, name?: string): RawTele
     s.temperature = num(f.get(REC.temperature));
     samples.push(s);
   }
-  if (samples.length === 0) throw new Error('O ficheiro FIT não tem registos com hora.');
+  if (samples.length === 0) throw new LocalizedError('err.fitNoTime');
 
   // Local time offset: activity.local_timestamp (field 5) − activity.timestamp (field 253).
   let localOffsetMs: number | undefined;
@@ -93,7 +94,7 @@ export function parseFit(data: ArrayBuffer | Uint8Array, name?: string): RawTele
   const fileId = messages.find((m) => m.num === MSG.fileId);
   const manu = num(fileId?.fields.get(1));
   const product = num(fileId?.fields.get(2));
-  const device = manu !== undefined ? [MANUFACTURERS[manu] ?? `fabricante ${manu}`, product].filter((x) => x !== undefined).join(' ') : undefined;
+  const device = manu !== undefined ? [MANUFACTURERS[manu] ?? `manufacturer ${manu}`, product].filter((x) => x !== undefined).join(' ') : undefined;
 
   return { source: 'fit', name, device, localOffsetMs, samples, recordFields: [...recordFields].sort() };
 }

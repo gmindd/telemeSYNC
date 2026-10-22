@@ -1,8 +1,9 @@
 import type { RideData, RideSample } from '../../telemetry/ride.ts';
-import { drawText, font, measureTabular } from '../draw.ts';
+import { drawText, font, labelSize, measureTabular } from '../draw.ts';
 import { hrZone } from '../text/metrics.ts';
 import type { Ctx2D, FrameState, OverlayContext, OverlayDefinition, OverlayId, OverlayStyle, PanelMetric, PanelOptions } from '../types.ts';
 import { convert, fmt } from '../units.ts';
+import { tr, type Lang } from '../../i18n/index.ts';
 import { drawIcon, mixColor, polygon, withAlpha } from './paint.ts';
 import {
   accelerationAt,
@@ -15,6 +16,7 @@ import {
   valueWindowAgo,
   windowLabel,
   windowSeries,
+  windowSpan,
   type IconId,
   type PanelMetricInfo,
   type StatKind,
@@ -114,8 +116,8 @@ function signed(v: number, decimals: number): string {
 
 // ---------------------------------------------------------------------------
 
-function drawHeader(ctx: Ctx2D, info: PanelMetricInfo, subtitle: string, p: Paint) {
-  const title = info.label.toUpperCase();
+function drawHeader(ctx: Ctx2D, info: PanelMetricInfo, subtitle: string, p: Paint, lang: Lang) {
+  const title = tr(lang, `metric.${info.id}`).toLocaleUpperCase(lang);
   ctx.font = font(p.ts, 22, 800);
   const tw = ctx.measureText(title).width;
   ctx.font = font(p.ts, 14, 400);
@@ -304,25 +306,25 @@ function statRows(ctx: Ctx2D, ride: RideData, info: PanelMetricInfo, opts: Panel
   return info.stats.map((kind: StatKind): StatRow => {
     switch (kind) {
       case 'max':
-        return { label: info.id === 'power' ? 'PICO' : 'MÁX', icon: info.id === 'power' ? 'bolt' : 'up', value: val(st.max), unit };
+        return { label: tr(style.language, info.id === 'power' ? 'stat.peak' : 'stat.max'), icon: info.id === 'power' ? 'bolt' : 'up', value: val(st.max), unit };
       case 'min':
-        return { label: 'MÍN', icon: 'down', value: val(st.min), unit };
+        return { label: tr(style.language, 'stat.min'), icon: 'down', value: val(st.min), unit };
       case 'avg':
-        return { label: 'MÉDIA', icon: 'gauge', value: val(st.avg), unit };
+        return { label: tr(style.language, 'stat.avg'), icon: 'gauge', value: val(st.avg), unit };
       case 'gain': {
         const g = before ? NaN : convert.elevation(s.elevationGain, style.units);
-        return { label: 'D+ ACUMULADO', icon: 'mountain', value: fmt(g, 0), unit: convert.elevationUnit(style.units) };
+        return { label: tr(style.language, 'stat.gain'), icon: 'mountain', value: fmt(g, 0), unit: convert.elevationUnit(style.units) };
       }
       case 'delta': {
         const now = info.value(s);
         const ago = valueWindowAgo(ride, info, opts, style, s);
         const d = before ? NaN : info.toDisplay(now, style) - info.toDisplay(ago, style);
-        return { label: `VARIAÇÃO (${windowLabel(opts, style).replace('ÚLTIMOS ', '').toLowerCase()})`, icon: 'trend', value: signed(d, info.decimals), unit };
+        return { label: tr(style.language, 'stat.delta', { span: windowSpan(opts, style).toLowerCase() }), icon: 'trend', value: signed(d, info.decimals), unit };
       }
       case 'accel': {
         const a = before ? NaN : accelerationAt(ride, s);
         return {
-          label: 'ACELERAÇÃO',
+          label: tr(style.language, 'stat.accel'),
           icon: 'accel',
           side: { text: Number.isFinite(a) ? `${signed(a, 1)} m/s²` : '—' },
           bar: (x, y, w, h) => accelBar(ctx, x, y, w, h, a, p),
@@ -335,7 +337,7 @@ function statRows(ctx: Ctx2D, ride: RideData, info: PanelMetricInfo, opts: Panel
         const colors = isPower ? POWER_ZONE_COLORS : style.hrZoneColors;
         const z = before || !Number.isFinite(v) ? -1 : Math.min(colors.length - 1, hrZone(v, bounds));
         return {
-          label: 'ZONA',
+          label: tr(style.language, 'stat.zone'),
           icon: 'zone',
           side: { text: z >= 0 ? `Z${z + 1}` : '—', color: z >= 0 ? colors[z] : undefined },
           bar: (x, y, w, h) => zoneBar(ctx, x, y, w, h, colors, z),
@@ -374,8 +376,9 @@ function drawStats(ctx: Ctx2D, rows: StatRow[], p: Paint) {
       ctx.stroke();
     }
     drawIcon(ctx, r.icon, STATS_CX + 12, ry + rowH / 2, 22, iconPaint);
-    drawText(ctx, r.label, tx, ry + 24, p.ts, { size: 12, weight: 700, tabular: false, color: p.label });
-    if (r.side) drawText(ctx, r.side.text, right, ry + 24, p.ts, { size: 13, weight: 800, align: 'right', color: r.side.color });
+    let sideW = 0;
+    if (r.side) sideW = drawText(ctx, r.side.text, right, ry + 24, p.ts, { size: 13, weight: 800, align: 'right', color: r.side.color }) + 10;
+    drawText(ctx, r.label, tx, ry + 24, p.ts, { size: labelSize(ctx, p.ts, r.label, 12, 700, right - tx - sideW), weight: 700, tabular: false, color: p.label });
     if (r.value !== undefined) {
       const w = drawText(ctx, r.value, tx, ry + rowH - 14, p.ts, { size: 24, weight: 800 });
       if (r.unit) drawText(ctx, r.unit, tx + w + 7, ry + rowH - 14, p.ts, { size: 14, weight: 600, tabular: false, color: p.label });
@@ -388,7 +391,7 @@ function drawStats(ctx: Ctx2D, rows: StatRow[], p: Paint) {
 
 function drawChart(ctx: Ctx2D, ride: RideData, metric: PanelMetricInfo, chartInfo: PanelMetricInfo, opts: PanelOptions, frame: FrameState, style: OverlayStyle, p: Paint) {
   let title = windowLabel(opts, style);
-  if (chartInfo.id !== metric.id) title += ` · ${chartInfo.chartName.toUpperCase()}`;
+  if (chartInfo.id !== metric.id) title += ` · ${tr(style.language, `chart.${chartInfo.id}`).toLocaleUpperCase(style.language)}`;
   ctx.font = font(p.ts, 14, 800);
   const tw = ctx.measureText(title).width;
   const tabW = tw + 44;
@@ -553,7 +556,7 @@ function makePanel(metric: PanelMetric): OverlayDefinition {
   const info = PANEL_METRIC_INFO[metric];
   return {
     id: PANEL_IDS[metric],
-    label: `Painel · ${info.label}`,
+    label: tr('en', 'overlay.panel', { name: tr('en', `metric.${metric}`) }),
     requires: metric,
     textOnly: false,
     textRateOnly: (style) => style.panelRate === 'text',
@@ -567,8 +570,10 @@ function makePanel(metric: PanelMetric): OverlayDefinition {
       const chartInfo = PANEL_METRIC_INFO[opts.chart];
       ctx.lineJoin = 'round';
       if (style.showLabel) {
-        const sub = chartInfo.id === metric ? info.subtitle : `${info.subtitle} · gráfico de ${chartInfo.chartName}`;
-        drawHeader(ctx, info, sub, p);
+        const lang = style.language;
+        const subtitle = tr(lang, `panel.sub.${metric}`);
+        const sub = chartInfo.id === metric ? subtitle : `${subtitle} · ${tr(lang, 'panel.chartOf', { name: tr(lang, `chart.${chartInfo.id}`) })}`;
+        drawHeader(ctx, info, sub, p, lang);
       }
       drawChart(ctx, ride, info, chartInfo, opts, frame, style, p);
       drawStats(ctx, statRows(ctx, ride, info, opts, frame.textSample, style, p), p);

@@ -24,8 +24,9 @@ export interface CameraProfile {
 export interface TimestampCandidate {
   resolver: ResolverId;
   startUtcMs: number;
-  /** Short Portuguese description for the UI. */
-  description: string;
+  /** creationTime only: how the camera writes it (for the description). */
+  clock?: 'utc' | 'local';
+  marks?: 'start' | 'end';
 }
 
 export type SyncWarningCode =

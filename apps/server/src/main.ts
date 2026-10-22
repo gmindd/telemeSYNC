@@ -9,9 +9,9 @@ const app = await buildApp({ logger: false });
 try {
   await app.listen({ port, host });
 } catch (e) {
-  console.error(`Não foi possível arrancar o servidor na porta ${port}: ${(e as Error).message}`);
+  console.error(`Could not start the server on port ${port}: ${(e as Error).message}`);
   process.exit(1);
 }
 const url = `http://localhost:${port}`;
-console.log(`telemeSYNC a correr em ${url}  (Ctrl+C para terminar)`);
+console.log(`telemeSYNC running at ${url}  (Ctrl+C to stop)`);
 if (!noOpen) openPath(url);

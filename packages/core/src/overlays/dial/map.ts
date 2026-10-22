@@ -87,7 +87,7 @@ function headingAt(ride: RideData, l: Local, s: RideSample, pos: { e: number; n:
 
 export const dialMapOverlay: OverlayDefinition = {
   id: 'dialMap',
-  label: 'Mapa circular (rotativo)',
+  label: 'Round map (rotating)',
   requires: 'map',
   textOnly: false,
   size: () => ({ width: DIAL, height: DIAL }),

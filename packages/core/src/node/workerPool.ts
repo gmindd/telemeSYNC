@@ -47,10 +47,10 @@ export function renderInWorker(job: WorkerJob, opts: { signal?: AbortSignal; onP
     worker.on('message', (m: { type: string; value?: number; message?: string }) => {
       if (m.type === 'progress') opts.onProgress?.(m.value!);
       else if (m.type === 'done') finish();
-      else if (m.type === 'aborted') finish(new DOMException('Cancelado', 'AbortError'));
+      else if (m.type === 'aborted') finish(new DOMException('Cancelled', 'AbortError'));
       else if (m.type === 'error') finish(new Error(m.message));
     });
     worker.on('error', (e) => finish(e));
-    worker.on('exit', (code) => finish(code === 0 ? undefined : new Error(`O processo de renderização terminou (código ${code}).`)));
+    worker.on('exit', (code) => finish(code === 0 ? undefined : new Error(`The render process stopped (code ${code}).`)));
   });
 }

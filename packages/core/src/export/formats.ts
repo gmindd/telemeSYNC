@@ -1,3 +1,4 @@
+import { tr, type Lang } from '../i18n/index.ts';
 import type { Fps } from '../media/types.ts';
 
 /** Video codecs with alpha that the exporter can write. */
@@ -6,7 +7,7 @@ export type OutputFormat = VideoFormat | 'png';
 
 export interface OutputFormatInfo {
   id: OutputFormat;
-  /** Portuguese label for the UI. */
+  /** English label (the app shows formatLabel()). */
   label: string;
   /** File extension ('' = folder of PNG images). */
   ext: string;
@@ -23,35 +24,48 @@ export interface OutputFormatInfo {
 export const OUTPUT_FORMATS: OutputFormatInfo[] = [
   {
     id: 'animation',
-    label: 'QuickTime Animation (.mov): o mais leve sem perdas',
+    label: '',
     ext: '.mov',
-    hint: 'Cerca de 10× mais pequeno do que ProRes. Transparência no Premiere Pro e no Final Cut Pro.',
+    hint: '',
   },
   {
     id: 'prores',
-    label: 'ProRes 4444 (.mov): o mais compatível',
+    label: '',
     ext: '.mov',
-    hint: 'Transparência no DaVinci Resolve, Premiere Pro, Final Cut Pro e CapCut (PC). Ficheiros muito grandes.',
+    hint: '',
   },
   {
     id: 'ffv1',
-    label: 'FFV1 (.mkv): para DaVinci Resolve',
+    label: '',
     ext: '.mkv',
-    hint: 'Sem perdas, cerca de 3× mais pequeno do que ProRes. Transparência no DaVinci Resolve; não abre no Premiere Pro.',
+    hint: '',
   },
   {
     id: 'webm',
-    label: 'WebM VP9 (.webm): muito leve, experimental',
+    label: '',
     ext: '.webm',
-    hint: 'Centenas de vezes mais pequeno, com ligeira perda. Para editores web e CapCut; sem transparência no Premiere Pro e no DaVinci Resolve.',
+    hint: '',
   },
   {
     id: 'png',
-    label: 'Sequência PNG',
+    label: '',
     ext: '',
-    hint: 'Uma pasta de imagens por gadget. Funciona em quase todos os editores, mas ocupa muito espaço.',
+    hint: '',
   },
 ];
+
+for (const f of OUTPUT_FORMATS) {
+  f.label = tr('en', `format.${f.id}`);
+  f.hint = tr('en', `format.${f.id}.hint`);
+}
+
+export function formatLabel(id: OutputFormat, lang: Lang | undefined): string {
+  return tr(lang, `format.${id}`);
+}
+
+export function formatHint(id: OutputFormat, lang: Lang | undefined): string {
+  return tr(lang, `format.${id}.hint`);
+}
 
 export const DEFAULT_OUTPUT_FORMAT: OutputFormat = 'animation';
 

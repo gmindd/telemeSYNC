@@ -10,7 +10,9 @@ import {
   resolveLayout,
   type GadgetLayout,
   getOverlay,
-  OVERLAY_FILE_SLUG,
+  overlayFileSlug,
+  tr,
+  type Lang,
   type Fps,
   type OverlayId,
   type OverlayStyle,
@@ -49,12 +51,12 @@ export interface RenderRequest {
   compositeShortSide: number;
   /** Cap on the overlay frame rate (0 = same as the clip). */
   maxFps: number;
+  /** App language: file names and the sync report. */
+  language: Lang;
 }
 
 export type TaskStatus = 'queued' | 'running' | 'done' | 'error' | 'cancelled';
 
-export const COMPOSITE_SLUG = 'composicao';
-export const SYNC_REPORT_NAME = 'sincronizacao.txt';
 
 const APP_VERSION: string | undefined = (() => {
   try {
@@ -85,16 +87,16 @@ export interface JobSnapshot {
 }
 
 /** Windows-safe file/folder name. */
-export function safeName(s: string): string {
+export function safeName(s: string, lang?: Lang): string {
   const cleaned = s
     .replace(/[<>:"/\\|?*\x00-\x1f]/g, '_')
     .replace(/[. ]+$/g, '')
     .trim();
-  return cleaned.slice(0, 120) || 'sem-nome';
+  return cleaned.slice(0, 120) || tr(lang, 'file.unnamed');
 }
 
-export function clipBaseName(fileName: string): string {
-  return safeName(fileName.replace(/\.[^.]+$/, ''));
+export function clipBaseName(fileName: string, lang?: Lang): string {
+  return safeName(fileName.replace(/\.[^.]+$/, ''), lang);
 }
 
 export class Job extends EventEmitter {
@@ -109,13 +111,13 @@ export class Job extends EventEmitter {
   constructor(id: string, private ride: RideData, private req: RenderRequest, private concurrency: number) {
     super();
     this.id = id;
-    this.rideDir = join(req.outputDir, safeName(req.rideName));
+    this.rideDir = join(req.outputDir, safeName(req.rideName, req.language));
     this.tasks = [];
     for (const clip of req.clips) {
-      const base = clipBaseName(clip.fileName);
+      const base = clipBaseName(clip.fileName, req.language);
       const outputs: (OverlayId | 'composite')[] = [...(req.composite ? ['composite' as const] : []), ...(req.separate ? req.overlays : [])];
       for (const overlay of outputs) {
-        const name = `${base}_${overlay === 'composite' ? COMPOSITE_SLUG : OVERLAY_FILE_SLUG[overlay]}`;
+        const name = `${base}_${overlay === 'composite' ? tr(req.language, 'file.composite') : overlayFileSlug(overlay, req.language)}`;
         this.tasks.push({
           clipId: clip.id,
           overlay,
@@ -145,7 +147,7 @@ export class Job extends EventEmitter {
     this.abort.abort();
   }
 
-  /** sincronizacao.txt: start used for every clip, where it came from and the offsets applied. */
+  /** Sync report (sync-report.txt in English): start used for every clip, where it came from and the offsets applied. */
   private async writeSyncReport() {
     try {
       const text = syncReport({
@@ -154,6 +156,7 @@ export class Job extends EventEmitter {
         timeZone: this.req.style.timeZone,
         exportedAt: Date.now(),
         version: APP_VERSION,
+        lang: this.req.language,
         clips: this.req.clips.map(
           (c): ClipSyncInfo =>
             c.sync ?? {
@@ -171,7 +174,7 @@ export class Job extends EventEmitter {
         ),
       });
       await mkdir(this.rideDir, { recursive: true });
-      await writeFile(join(this.rideDir, SYNC_REPORT_NAME), text.replace(/\n/g, '\r\n'), 'utf8');
+      await writeFile(join(this.rideDir, tr(this.req.language, 'file.report')), text.replace(/\n/g, '\r\n'), 'utf8');
     } catch {
       /* the report is a help, never a reason to fail the export */
     }

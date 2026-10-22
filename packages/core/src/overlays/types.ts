@@ -1,4 +1,5 @@
 import type { MetricKey, RideData, RideSample } from '../telemetry/ride.ts';
+import type { Lang } from '../i18n/index.ts';
 import type { Units } from './units.ts';
 
 /**
@@ -132,6 +133,8 @@ export interface OverlayStyle {
   ftp: number;
   /** Panels redraw every frame (smooth) or only at the text rate (much smaller files). */
   panelRate: 'smooth' | 'text';
+  /** Language of the texts drawn in the overlays (labels, decimal separator). */
+  language: Lang;
 }
 
 export const DEFAULT_STYLE: OverlayStyle = {
@@ -161,6 +164,7 @@ export const DEFAULT_STYLE: OverlayStyle = {
   panels: {},
   ftp: 250,
   panelRate: 'smooth',
+  language: 'en',
 };
 
 /** Context shared by all frames of one overlay render. */
@@ -182,7 +186,7 @@ export interface FrameState {
 
 export interface OverlayDefinition {
   id: OverlayId;
-  /** Portuguese label for the UI. */
+  /** English name (the app shows overlayLabel(), in its language). */
   label: string;
   /** Metric that must be available in the ride. */
   requires: MetricKey;

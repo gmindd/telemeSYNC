@@ -4,6 +4,7 @@ import { cumulativeGain, filterAltitude } from '../metrics/elevation.ts';
 import { gradeOverDistance } from '../metrics/grade.ts';
 import { movingAverageByTime } from '../metrics/smoothing.ts';
 import type { ChannelKey, RawSample, RawTelemetry } from './types.ts';
+import { LocalizedError } from '../i18n/index.ts';
 
 export type MetricKey =
   | 'speed'
@@ -122,7 +123,7 @@ export function buildRide(raw: RawTelemetry, opts: RideOptions = {}): RideData {
       }
     } else dedup.push({ ...s });
   }
-  if (dedup.length < 2) throw new Error('A telemetria tem pontos insuficientes.');
+  if (dedup.length < 2) throw new LocalizedError('err.fewPoints');
   const r: RawTelemetry = { ...raw, samples: dedup };
   const n = dedup.length;
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isNewer, parseRelease } from '../src/lib/updates.ts';
+import { isNewer, parseRelease, releaseSummary, withLang } from '../src/lib/updates.ts';
 
 describe('isNewer', () => {
   it('compares versions number by number', () => {
@@ -32,5 +32,20 @@ describe('parseRelease', () => {
     // No Mac package yet, or a bad link: the Mac version sends people to the site, never to the Windows ZIP.
     expect(parseRelease(ok, 'mac')?.downloadUrl).toBe('https://x/#novidades');
     expect(parseRelease({ ...ok, downloads: { mac: 'http://x/m.zip' } }, 'mac')?.downloadUrl).toBe('https://x/#novidades');
+  });
+});
+
+describe('release summary and links in the app language', () => {
+  const ok = { version: '1.0.2', downloadUrl: 'https://x/a.zip', changelogUrl: 'https://telemesync.pereiragabriel.com/#novidades' };
+  it('picks the summary of the language, then English, then the old one', () => {
+    const r = parseRelease({ ...ok, summary: 'Antigo', summaries: { en: 'New', fr: 'Nouveau', xx: 'no' } })!;
+    expect(releaseSummary(r, 'fr')).toBe('Nouveau');
+    expect(releaseSummary(r, 'de')).toBe('New');
+    expect(releaseSummary(r, 'pt')).toBe('Antigo');
+    expect(r.summaries).not.toHaveProperty('xx');
+  });
+  it('adds the language to links to the site only', () => {
+    expect(withLang(ok.changelogUrl, 'de')).toBe('https://telemesync.pereiragabriel.com/?lang=de#novidades');
+    expect(withLang('https://github.com/a.zip', 'de')).toBe('https://github.com/a.zip');
   });
 });

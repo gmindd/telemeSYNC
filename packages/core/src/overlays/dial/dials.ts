@@ -8,6 +8,7 @@ import { chartRange, gaugeRange, PANEL_METRIC_INFO, statsUpTo, windowSeries, typ
 import { hrZone } from '../text/metrics.ts';
 import type { Ctx2D, FrameState, OverlayContext, OverlayDefinition, OverlayId, OverlayStyle, PanelMetric } from '../types.ts';
 import { convert, fmt } from '../units.ts';
+import { tr, type CoreKey } from '../../i18n/index.ts';
 import {
   BELOW_H,
   CX,
@@ -42,7 +43,7 @@ type Inner = 'hrZone' | 'powerZone' | 'terrain' | 'terrainTinted';
 
 interface DialSpec {
   id: OverlayId;
-  label: string;
+  name: CoreKey;
   requires: MetricKey;
   colors: DialColors;
   icon: IconId;
@@ -78,8 +79,8 @@ function avgMax(m: PanelMetric, decimals: number) {
   return (s: RideSample, style: OverlayStyle, ride: RideData): BelowItem[] => {
     const st = beforeStart(ride, s) ? { avg: NaN, max: NaN } : statsUpTo(ride, info, s.index);
     return [
-      { label: 'MÉD', value: fmt(info.toDisplay(st.avg, style), decimals) },
-      { label: 'MÁX', value: fmt(info.toDisplay(st.max, style), decimals) },
+      { label: tr(style.language, 'dial.avg'), value: fmt(info.toDisplay(st.avg, style), decimals) },
+      { label: tr(style.language, 'dial.max'), value: fmt(info.toDisplay(st.max, style), decimals) },
     ];
   };
 }
@@ -87,7 +88,7 @@ function avgMax(m: PanelMetric, decimals: number) {
 const SPECS: DialSpec[] = [
   {
     id: 'dialHeartRate',
-    label: 'Freq. cardíaca',
+    name: 'metric.heartRate',
     requires: 'heartRate',
     colors: { from: '#c4122f', to: '#ff3b4f' },
     icon: 'heart',
@@ -100,7 +101,7 @@ const SPECS: DialSpec[] = [
   },
   {
     id: 'dialCadence',
-    label: 'Cadência',
+    name: 'metric.cadence',
     requires: 'cadence',
     colors: { from: '#6d28d9', to: '#c084fc' },
     icon: 'cadence',
@@ -111,7 +112,7 @@ const SPECS: DialSpec[] = [
   },
   {
     id: 'dialSpeed',
-    label: 'Velocidade',
+    name: 'metric.speed',
     requires: 'speed',
     colors: { from: '#1d4ed8', to: '#22d3ee' },
     icon: 'gauge',
@@ -123,7 +124,7 @@ const SPECS: DialSpec[] = [
   },
   {
     id: 'dialGrade',
-    label: 'Inclinação',
+    name: 'metric.grade',
     requires: 'grade',
     colors: { from: '#ff5a00', to: '#ffb020' },
     icon: 'mountain',
@@ -136,7 +137,7 @@ const SPECS: DialSpec[] = [
   },
   {
     id: 'dialAltitude',
-    label: 'Altitude',
+    name: 'metric.altitude',
     requires: 'altitude',
     colors: { from: '#ff7a00', to: '#ffd166' },
     icon: 'mountain',
@@ -159,7 +160,7 @@ const SPECS: DialSpec[] = [
   },
   {
     id: 'dialPower',
-    label: 'Potência',
+    name: 'metric.power',
     requires: 'power',
     colors: { from: '#16a34a', to: '#facc15' },
     icon: 'bolt',
@@ -172,7 +173,7 @@ const SPECS: DialSpec[] = [
   },
   {
     id: 'dialDistance',
-    label: 'Distância',
+    name: 'metric.distance',
     requires: 'distance',
     colors: { from: '#0891b2', to: '#38bdf8' },
     icon: 'link',
@@ -180,11 +181,11 @@ const SPECS: DialSpec[] = [
     value: (s, st) => fmt(convert.distance(s.distance, st.units), 1),
     unit: (st) => convert.distanceUnit(st.units),
     arc: (s, _st, ride) => ({ f: s.distance / Math.max(1, ride.totals.distanceM), origin: 0 }),
-    below: (_s, st, ride) => [{ label: 'TOTAL', value: `${fmt(convert.distance(ride.totals.distanceM, st.units), 1)} ${convert.distanceUnit(st.units)}` }],
+    below: (_s, st, ride) => [{ label: tr(st.language, 'dial.total'), value: `${fmt(convert.distance(ride.totals.distanceM, st.units), 1)} ${convert.distanceUnit(st.units)}` }],
   },
   {
     id: 'dialTime',
-    label: 'Tempo',
+    name: 'metric.elapsedTime',
     requires: 'elapsedTime',
     colors: { from: '#64748b', to: '#e2e8f0' },
     icon: 'clock',
@@ -192,11 +193,11 @@ const SPECS: DialSpec[] = [
     value: (s, _st, ride) => (beforeStart(ride, s) ? formatDuration(0) : formatDuration(s.elapsedMs)),
     unit: () => 'h:m:s',
     arc: (s, _st, ride) => ({ f: s.elapsedMs / Math.max(1, ride.totals.durationMs), origin: 0 }),
-    below: (_s, _st, ride) => [{ label: 'TOTAL', value: formatDuration(ride.totals.durationMs) }],
+    below: (_s, st, ride) => [{ label: tr(st.language, 'dial.total'), value: formatDuration(ride.totals.durationMs) }],
   },
   {
     id: 'dialTemperature',
-    label: 'Temperatura',
+    name: 'metric.temperature',
     requires: 'temperature',
     colors: { from: '#ff8a00', to: '#ffd23f' },
     icon: 'sun',
@@ -279,7 +280,7 @@ function makeDial(spec: DialSpec): OverlayDefinition {
   const height = spec.below ? DIAL + BELOW_H : DIAL;
   return {
     id: spec.id,
-    label: `Mostrador · ${spec.label}`,
+    label: tr('en', 'overlay.dial', { name: tr('en', spec.name) }),
     requires: spec.requires,
     textOnly: false,
     textRateOnly: (style) => style.panelRate === 'text',
@@ -308,12 +309,12 @@ function makeDial(spec: DialSpec): OverlayDefinition {
       if (spec.inner === 'hrZone') {
         const z = beforeStart(ride, ts) || !Number.isFinite(ts.heartRate) ? -1 : Math.min(style.hrZoneColors.length - 1, hrZone(ts.heartRate, style.hrZones));
         drawZoneBar(ctx, CY + 58, 112, style.hrZoneColors, z);
-        if (z >= 0) drawText(ctx, `Zona ${z + 1}`, CX, CY + 88, p.ts, { size: 16, weight: 700, align: 'center', tabular: false, color: style.hrZoneColors[z] });
+        if (z >= 0) drawText(ctx, tr(style.language, 'dial.zone', { n: z + 1 }), CX, CY + 88, p.ts, { size: 16, weight: 700, align: 'center', tabular: false, color: style.hrZoneColors[z] });
       } else if (spec.inner === 'powerZone') {
         const bounds = POWER_ZONES.map((k) => k * style.ftp);
         const z = beforeStart(ride, ts) || !Number.isFinite(ts.power) ? -1 : Math.min(POWER_ZONE_COLORS.length - 1, hrZone(ts.power, bounds));
         drawZoneBar(ctx, CY + 58, 126, POWER_ZONE_COLORS, z);
-        if (z >= 0) drawText(ctx, `Zona ${z + 1}`, CX, CY + 88, p.ts, { size: 16, weight: 700, align: 'center', tabular: false, color: POWER_ZONE_COLORS[z] });
+        if (z >= 0) drawText(ctx, tr(style.language, 'dial.zone', { n: z + 1 }), CX, CY + 88, p.ts, { size: 16, weight: 700, align: 'center', tabular: false, color: POWER_ZONE_COLORS[z] });
       }
       if (spec.below) drawBelowRow(ctx, spec.below(ts, style, ride), p);
     },

@@ -1,5 +1,7 @@
 import type { ClipMetadata } from '../media/types.ts';
+import { tr, type Lang } from '../i18n/index.ts';
 import { formatDateTime } from '../util/timezone.ts';
+import { candidateLabel } from './resolve.ts';
 import type { CameraProfile, ResolvedStart, SyncWarning } from './types.ts';
 
 export interface SanityInput {
@@ -11,6 +13,8 @@ export interface SanityInput {
   rideStartUtcMs: number;
   rideEndUtcMs: number;
   timeZone: string;
+  /** Language of the warning texts. */
+  lang?: Lang;
 }
 
 const HOUR = 3600_000;
@@ -21,29 +25,30 @@ function overlap(a0: number, a1: number, b0: number, b1: number): number {
 
 export function sanityChecks(i: SanityInput): SyncWarning[] {
   const w: SyncWarning[] = [];
+  const lang = i.lang;
   if (i.startUtcMs === undefined) {
-    w.push({ code: 'noTimestamp', message: 'Não foi possível determinar a hora de início. Indique-a manualmente.' });
+    w.push({ code: 'noTimestamp', message: tr(lang, 'warn.noTimestamp') });
     return w;
   }
   const s = i.startUtcMs;
   const e = s + i.meta.durationMs;
   const ov = overlap(s, e, i.rideStartUtcMs, i.rideEndUtcMs);
   if (ov === 0) {
-    w.push({ code: 'outsideRide', message: `O clip (${formatDateTime(s, i.timeZone)}) está fora da janela da volta.` });
+    w.push({ code: 'outsideRide', message: tr(lang, 'warn.outsideRide', { date: formatDateTime(s, i.timeZone) }) });
     // Exact 1 h / 2 h shift that puts the clip inside the ride → probably a time zone mistake.
     for (const k of [-1, 1, -2, 2]) {
       const shift = k * HOUR;
       if (overlap(s + shift, e + shift, i.rideStartUtcMs, i.rideEndUtcMs) > 0) {
         w.push({
           code: 'timezoneSuspect',
-          message: `Desvio de ${Math.abs(k)} h exata(s): provável problema de fuso horário. Corrigir ${k > 0 ? '+' : '−'}${Math.abs(k)} h?`,
+          message: tr(lang, 'warn.timezoneSuspect', { h: Math.abs(k), sign: k > 0 ? '+' : '−' }),
           suggestedOffsetMs: shift,
         });
         break;
       }
     }
   } else if (ov < i.meta.durationMs - 1000) {
-    w.push({ code: 'partiallyOutside', message: 'Parte do clip fica fora da janela da volta (sem dados nesse troço).' });
+    w.push({ code: 'partiallyOutside', message: tr(lang, 'warn.partiallyOutside') });
   }
 
   // Insta360 Studio export: creation_time is the export date, well after the ride.
@@ -51,8 +56,7 @@ export function sanityChecks(i: SanityInput): SyncWarning[] {
   if (ct && ct.startUtcMs > i.rideEndUtcMs + 2 * HOUR && (i.profile.id === 'insta360' || /\.mp4$/i.test(i.meta.fileName))) {
     w.push({
       code: 'exportedSuspect',
-      message:
-        'O creation_time é posterior ao fim da volta: parece um MP4 exportado (ex.: Insta360 Studio). Associe o .insv original, use o nome do ficheiro ou ajuste manualmente.',
+      message: tr(lang, 'warn.exportedSuspect'),
     });
   }
 
@@ -60,7 +64,7 @@ export function sanityChecks(i: SanityInput): SyncWarning[] {
   if (c.length >= 2) {
     const spread = Math.max(...c.map((x) => x.startUtcMs)) - Math.min(...c.map((x) => x.startUtcMs));
     if (spread > 5000 && !w.some((x) => x.code === 'exportedSuspect')) {
-      w.push({ code: 'resolversDisagree', message: `As fontes de hora divergem ${Math.round(spread / 1000)} s; foi usada: ${c[0].description}.` });
+      w.push({ code: 'resolversDisagree', message: tr(lang, 'warn.resolversDisagree', { s: Math.round(spread / 1000), source: candidateLabel(c[0], lang) }) });
     }
   }
   return w;

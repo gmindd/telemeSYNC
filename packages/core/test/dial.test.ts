@@ -3,7 +3,8 @@ import { describe, expect, it } from 'vitest';
 import { buildRide, parseFit } from '../src/index.ts';
 import { cumulativeGain, cumulativeLoss } from '../src/metrics/elevation.ts';
 import { dialFamily, isDialOverlay } from '../src/overlays/dial/index.ts';
-import { availableOverlays, OVERLAY_FILE_SLUG, overlayPixelSize, renderOverlayFrame } from '../src/overlays/registry.ts';
+import { availableOverlays, OVERLAYS, overlayFileSlug, overlayLabel, overlayPixelSize, renderOverlayFrame } from '../src/overlays/registry.ts';
+import { LANGS } from '../src/i18n/index.ts';
 import { DEFAULT_STYLE, type Ctx2D } from '../src/overlays/types.ts';
 import { registerEmbeddedFonts } from '../src/node/index.ts';
 import { encodeFit, syntheticRide } from './helpers/synthetic.ts';
@@ -28,10 +29,19 @@ describe('mostradores (dial gadgets)', () => {
   it('every dial has its own file name and is grouped apart from the other gadgets', () => {
     for (const d of dialFamily) {
       expect(isDialOverlay(d.id)).toBe(true);
-      expect(OVERLAY_FILE_SLUG[d.id]).toMatch(/^[a-z-]+$/);
     }
     expect(isDialOverlay('speed')).toBe(false);
-    expect(new Set(dialFamily.map((d) => OVERLAY_FILE_SLUG[d.id])).size).toBe(dialFamily.length);
+    for (const lang of LANGS) {
+      for (const d of OVERLAYS) {
+        expect(overlayFileSlug(d.id, lang)).toMatch(/^[a-z-]+$/);
+        expect(overlayLabel(d.id, lang)).not.toMatch(/undefined|metric\./);
+      }
+      expect(new Set(OVERLAYS.map((d) => overlayFileSlug(d.id, lang))).size).toBe(OVERLAYS.length);
+    }
+    expect(overlayFileSlug('dialHeartRate', 'pt')).toBe('mostrador-fc');
+    expect(overlayFileSlug('panelGrade', 'pt')).toBe('painel-inclinacao');
+    expect(overlayFileSlug('dialTime', 'en')).toBe('dial-time');
+    expect(overlayLabel('panelHeartRate', 'en')).toBe('Panel · Heart rate');
   });
 
   it('only dials whose metric is in the file are offered, and the compact panel still draws', () => {

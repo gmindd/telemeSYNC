@@ -1,5 +1,6 @@
 import type { RideData } from '../telemetry/ride.ts';
 import { convert, fmt } from './units.ts';
+import { tr } from '../i18n/index.ts';
 import { dot, drawText } from './draw.ts';
 import type { OverlayDefinition } from './types.ts';
 
@@ -63,7 +64,7 @@ function profileOf(ride: RideData): Profile {
 
 export const elevationProfileOverlay: OverlayDefinition = {
   id: 'elevationProfile',
-  label: 'Perfil de altimetria',
+  label: 'Elevation profile',
   requires: 'elevationProfile',
   textOnly: false,
   size: () => ({ width: W, height: H }),
@@ -137,7 +138,7 @@ export const elevationProfileOverlay: OverlayDefinition = {
       const alt = frame.textSample.altitude;
       const unit = style.showUnit ? ` ${convert.elevationUnit(style.units)}` : '';
       drawText(ctx, `${fmt(convert.elevation(alt, style.units), 0)}${unit}`, W - PAD_X, 28, style, { size: 26, weight: 700, align: 'right' });
-      drawText(ctx, 'ALTIMETRIA', PAD_X, 26, style, { size: 18, weight: 600, tabular: false });
+      drawText(ctx, tr(style.language, 'card.elevation'), PAD_X, 26, style, { size: 18, weight: 600, tabular: false });
     }
   },
 };

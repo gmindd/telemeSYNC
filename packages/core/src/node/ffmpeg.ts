@@ -2,10 +2,11 @@ import { spawn, type ChildProcessWithoutNullStreams } from 'node:child_process';
 import ffmpegStatic from 'ffmpeg-static';
 import type { VideoFormat } from '../export/formats.ts';
 import type { Fps } from '../media/types.ts';
+import { LocalizedError } from '../i18n/index.ts';
 
 export function ffmpegPath(): string {
   const p = process.env.FFMPEG_PATH || (ffmpegStatic as unknown as string | null);
-  if (!p) throw new Error('FFmpeg não encontrado. Instale o pacote ffmpeg-static ou defina FFMPEG_PATH.');
+  if (!p) throw new LocalizedError('err.ffmpegMissing');
   return p;
 }
 
@@ -68,7 +69,7 @@ export class FfmpegSink {
       this.proc.on('error', reject);
       this.proc.on('close', (code, signal) => {
         if (code === 0) resolve();
-        else reject(new Error(`FFmpeg terminou com erro (${code ?? signal}): ${this.stderr.trim().slice(-800)}`));
+        else reject(new Error(`FFmpeg failed (${code ?? signal}): ${this.stderr.trim().slice(-800)}`));
       });
     });
     this.exited.catch(() => undefined);
@@ -84,7 +85,7 @@ export class FfmpegSink {
         };
         const onClose = () => {
           cleanup();
-          reject(new Error(`FFmpeg fechou inesperadamente: ${this.stderr.trim().slice(-800)}`));
+          reject(new Error(`FFmpeg closed unexpectedly: ${this.stderr.trim().slice(-800)}`));
         };
         const cleanup = () => {
           this.proc.stdin.off('drain', onDrain);

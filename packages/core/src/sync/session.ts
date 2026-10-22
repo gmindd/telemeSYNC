@@ -1,7 +1,8 @@
 import type { ClipMetadata } from '../media/types.ts';
 import { DEFAULT_TIME_ZONE } from '../util/timezone.ts';
 import { chainChapters } from './chapters.ts';
-import { CAMERA_PROFILES, detectProfile } from './profiles.ts';
+import type { Lang } from '../i18n/index.ts';
+import { CAMERA_PROFILES, detectProfile, profileLabel } from './profiles.ts';
 import { resolveStart } from './resolve.ts';
 import { sanityChecks } from './sanity.ts';
 import type { Camera, CameraProfileId, Clip, SyncWarning } from './types.ts';
@@ -12,9 +13,9 @@ export interface SyncState {
   clips: Clip[];
 }
 
-export function defaultCamera(profile: CameraProfileId, timeZone = DEFAULT_TIME_ZONE): Camera {
+export function defaultCamera(profile: CameraProfileId, timeZone = DEFAULT_TIME_ZONE, lang?: Lang): Camera {
   const p = CAMERA_PROFILES[profile];
-  return { id: profile, profile, label: p.label, color: p.color, offsetMs: 0, timeZone };
+  return { id: profile, profile, label: profileLabel(profile, lang), color: p.color, offsetMs: 0, timeZone };
 }
 
 let idCounter = 0;
@@ -52,14 +53,14 @@ export function resolveAll(state: SyncState, rideStartUtcMs?: number): SyncState
 }
 
 /** Adds clips, detecting the camera profile and creating cameras as needed. */
-export function addClips(state: SyncState, metas: ClipMetadata[], rideStartUtcMs?: number, timeZone = DEFAULT_TIME_ZONE): SyncState {
+export function addClips(state: SyncState, metas: ClipMetadata[], rideStartUtcMs?: number, timeZone = DEFAULT_TIME_ZONE, lang?: Lang): SyncState {
   const cameras = [...state.cameras];
   const clips = [...state.clips];
   for (const meta of metas) {
     const profile = detectProfile(meta);
     let cam = cameras.find((c) => c.profile === profile);
     if (!cam) {
-      cam = defaultCamera(profile, timeZone);
+      cam = defaultCamera(profile, timeZone, lang);
       cameras.push(cam);
     }
     clips.push({ id: clipIdFor(meta), meta, cameraId: cam.id, resolved: { candidates: [] }, clipOffsetMs: 0 });
@@ -79,7 +80,7 @@ export function effectiveStart(clip: Clip, camera: Camera): number | undefined {
   return b === undefined ? undefined : b + camera.offsetMs + clip.clipOffsetMs;
 }
 
-export function clipWarnings(clip: Clip, camera: Camera, rideStartUtcMs: number, rideEndUtcMs: number): SyncWarning[] {
+export function clipWarnings(clip: Clip, camera: Camera, rideStartUtcMs: number, rideEndUtcMs: number, lang?: Lang): SyncWarning[] {
   return sanityChecks({
     meta: clip.meta,
     profile: CAMERA_PROFILES[camera.profile],
@@ -88,5 +89,6 @@ export function clipWarnings(clip: Clip, camera: Camera, rideStartUtcMs: number,
     rideStartUtcMs,
     rideEndUtcMs,
     timeZone: camera.timeZone,
+    lang,
   });
 }

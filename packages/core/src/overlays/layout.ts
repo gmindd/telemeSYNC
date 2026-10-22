@@ -1,5 +1,6 @@
 import { changesAtTextRate, frameState, getOverlay, textInstant } from './registry.ts';
 import type { Ctx2D, OverlayContext, OverlayId, OverlayStyle } from './types.ts';
+import { setNumberLang } from './units.ts';
 
 /**
  * Position of a gadget inside the video frame, independent of resolution:
@@ -67,6 +68,7 @@ export function drawComposite(
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.clearRect(0, 0, width, height);
   const fs = frameState(t, style, octx);
+  setNumberLang(style.language);
   for (const id of ids) {
     const def = getOverlay(id);
     const p = placements[id];

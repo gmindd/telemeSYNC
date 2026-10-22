@@ -1,4 +1,5 @@
 import type { ClipMetadata } from '../media/types.ts';
+import { tr, type Lang } from '../i18n/index.ts';
 import type { CameraProfile, CameraProfileId } from './types.ts';
 
 /**
@@ -34,7 +35,7 @@ export const CAMERA_PROFILES: Record<CameraProfileId, CameraProfile> = {
   },
   generic: {
     id: 'generic',
-    label: 'Genérico',
+    label: 'Generic',
     resolvers: ['manual', 'creationTime', 'filename', 'timecode'],
     creationTime: { clock: 'utc', marks: 'start' },
     verified: false,
@@ -54,4 +55,9 @@ export function detectProfile(meta: ClipMetadata): CameraProfileId {
   if (GOPRO_NAME.test(name) || /gopro/i.test(tagText) || meta.hasGpmf) return 'gopro';
   if (DJI_NAME.test(name) || /\bdji\b/i.test(tagText)) return 'dji';
   return 'generic';
+}
+
+/** Profile name in `lang` (only "Generic" is translated; the others are brands). */
+export function profileLabel(id: CameraProfileId, lang: Lang | undefined): string {
+  return id === 'generic' ? tr(lang, 'profile.generic') : CAMERA_PROFILES[id].label;
 }

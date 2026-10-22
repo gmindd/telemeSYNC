@@ -4,6 +4,7 @@ import { withAlpha } from '../panel/paint.ts';
 import { niceStep } from '../panel/series.ts';
 import type { Ctx2D, OverlayDefinition, OverlayStyle } from '../types.ts';
 import { convert, fmt } from '../units.ts';
+import { tr } from '../../i18n/index.ts';
 import { dialPaint } from './common.ts';
 import { elevationLossAt } from './dials.ts';
 
@@ -102,7 +103,7 @@ function profileOf(ride: RideData, style: OverlayStyle): Profile {
 
 export const dialProfileOverlay: OverlayDefinition = {
   id: 'dialProfile',
-  label: 'Perfil de altimetria (cartão)',
+  label: 'Elevation profile (card)',
   requires: 'elevationProfile',
   textOnly: false,
   size: () => ({ width: W, height: H }),
@@ -121,11 +122,11 @@ export const dialProfileOverlay: OverlayDefinition = {
     drawCard(ctx, W, H, style);
 
     // Header: title, gain and loss so far.
-    drawText(ctx, 'ALTITUDE', 26, 40, pt.ts, { size: 20, weight: 800, tabular: false });
+    drawText(ctx, tr(style.language, 'card.altitude'), 26, 40, pt.ts, { size: 20, weight: 800, tabular: false });
     const u = convert.elevationUnit(style.units);
     const gain = before ? NaN : convert.elevation(ts.elevationGain, style.units);
     const loss = before ? NaN : convert.elevation(elevationLossAt(ride, ts), style.units);
-    const items: [string, string][] = [['GANHO', `${fmt(gain, 0)} ${u}`], ['PERDA', `${fmt(loss, 0)} ${u}`]];
+    const items: [string, string][] = [[tr(style.language, 'card.gain'), `${fmt(gain, 0)} ${u}`], [tr(style.language, 'card.loss'), `${fmt(loss, 0)} ${u}`]];
     let x = W - 26;
     for (const [label, value] of items.reverse()) {
       x -= drawText(ctx, value, x, 40, pt.ts, { size: 17, weight: 800, align: 'right' }) + 7;

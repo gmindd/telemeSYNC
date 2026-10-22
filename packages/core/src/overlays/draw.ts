@@ -4,6 +4,13 @@ export function font(style: OverlayStyle, sizePx: number, weight = 700): string 
   return `${weight} ${sizePx}px "${style.fontFamily}", "Inter", "Segoe UI", Arial, sans-serif`;
 }
 
+/** Font size (≤ `size`) at which a label fits in `maxW` (labels are longer in some languages). */
+export function labelSize(ctx: Ctx2D, style: OverlayStyle, text: string, size: number, weight: number, maxW: number): number {
+  ctx.font = font(style, size, weight);
+  const w = ctx.measureText(text).width;
+  return w <= maxW || w <= 0 ? size : Math.max(size * 0.6, Math.floor(((size * maxW) / w) * 10) / 10);
+}
+
 const digitWidthCache = new Map<string, number>();
 
 /** Call after web fonts finish loading (measurements made with a fallback font are cached). */

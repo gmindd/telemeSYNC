@@ -5,7 +5,7 @@ import { loadEmbeddedFonts } from './lib/fonts.ts';
 import './styles.css';
 
 loadEmbeddedFonts()
-  .catch((e) => console.warn('Falha ao carregar fontes', e))
+  .catch((e) => console.warn('Could not load fonts', e))
   .finally(() => {
     createRoot(document.getElementById('root')!).render(
       <StrictMode>

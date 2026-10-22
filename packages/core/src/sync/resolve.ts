@@ -1,4 +1,5 @@
 import type { ClipMetadata } from '../media/types.ts';
+import { tr, type Lang } from '../i18n/index.ts';
 import { wallToUtc, utcToWall, formatDateTime } from '../util/timezone.ts';
 import { parseFilenameTime } from './filename.ts';
 import type { CameraProfile, ResolvedStart, ResolverId, TimestampCandidate } from './types.ts';
@@ -18,13 +19,13 @@ type Resolver = (meta: ClipMetadata, ctx: ResolveContext) => TimestampCandidate 
 const RESOLVERS: Record<ResolverId, Resolver> = {
   manual: (_m, ctx) =>
     ctx.manualStartUtcMs !== undefined
-      ? { resolver: 'manual', startUtcMs: ctx.manualStartUtcMs, description: 'Hora indicada manualmente' }
+      ? { resolver: 'manual', startUtcMs: ctx.manualStartUtcMs }
       : undefined,
 
   // Phase 3: GPMF GPSU gives true UTC. The extractor is not implemented yet; the resolver slot is ready.
   gpmf: (m, ctx) =>
     m.hasGpmf && ctx.gpmfStartUtcMs !== undefined
-      ? { resolver: 'gpmf', startUtcMs: ctx.gpmfStartUtcMs, description: 'GPS da GoPro (GPMF)' }
+      ? { resolver: 'gpmf', startUtcMs: ctx.gpmfStartUtcMs }
       : undefined,
 
   creationTime: (m, ctx) => {
@@ -33,14 +34,13 @@ const RESOLVERS: Record<ResolverId, Resolver> = {
     const { clock, marks } = ctx.profile.creationTime;
     let t = clock === 'local' ? wallToUtc(raw, ctx.timeZone) : raw;
     if (marks === 'end') t -= m.durationMs;
-    const how = `${clock === 'local' ? 'hora local' : 'UTC'}${marks === 'end' ? ', fim da gravação' : ''}`;
-    return { resolver: 'creationTime', startUtcMs: t, description: `creation_time do ficheiro (${how})` };
+    return { resolver: 'creationTime', startUtcMs: t, clock, marks };
   },
 
   filename: (m, ctx) => {
     const f = parseFilenameTime(m.fileName);
     if (!f) return undefined;
-    return { resolver: 'filename', startUtcMs: wallToUtc(f.wallMs, ctx.timeZone), description: 'Data/hora no nome do ficheiro' };
+    return { resolver: 'filename', startUtcMs: wallToUtc(f.wallMs, ctx.timeZone) };
   },
 
   // Start timecode = local time of day. Date taken from creation_time, or from the ride.
@@ -53,7 +53,7 @@ const RESOLVERS: Record<ResolverId, Resolver> = {
     // Pick the day closest to the reference (recording that crosses midnight).
     if (wall - ref > 12 * 3600_000) wall -= 86_400_000;
     if (ref - wall > 12 * 3600_000) wall += 86_400_000;
-    return { resolver: 'timecode', startUtcMs: wallToUtc(wall, ctx.timeZone), description: 'Timecode da câmara (hora local)' };
+    return { resolver: 'timecode', startUtcMs: wallToUtc(wall, ctx.timeZone) };
   },
 };
 
@@ -68,6 +68,15 @@ export function resolveStart(meta: ClipMetadata, ctx: ResolveContext): ResolvedS
   return { startUtcMs: best?.startUtcMs, source: best?.resolver, candidates };
 }
 
-export function describeCandidate(c: TimestampCandidate, tz: string): string {
-  return `${c.description}: ${formatDateTime(c.startUtcMs, tz)}`;
+/** Where a candidate start comes from, in `lang`. */
+export function candidateLabel(c: TimestampCandidate, lang: Lang | undefined): string {
+  if (c.resolver === 'creationTime') {
+    const how = `${c.clock === 'local' ? tr(lang, 'cand.localTime') : 'UTC'}${c.marks === 'end' ? tr(lang, 'cand.endOfRecording') : ''}`;
+    return tr(lang, 'cand.creationTime', { how });
+  }
+  return tr(lang, `cand.${c.resolver}`);
+}
+
+export function describeCandidate(c: TimestampCandidate, tz: string, lang?: Lang): string {
+  return `${candidateLabel(c, lang)}: ${formatDateTime(c.startUtcMs, tz)}`;
 }

@@ -54,6 +54,9 @@ describe('server API', () => {
   it('rejects invalid telemetry', async () => {
     const r = await app.inject({ method: 'POST', url: '/api/telemetry?name=x.fit', headers: { 'content-type': 'application/octet-stream' }, payload: Buffer.from('nope') });
     expect(r.statusCode).toBe(400);
+    expect(r.json().error).toBe('The FIT file has no activity records.');
+    const fr = await app.inject({ method: 'POST', url: '/api/telemetry?name=x.fit', headers: { 'content-type': 'application/octet-stream', 'x-telemesync-lang': 'fr' }, payload: Buffer.from('nope') });
+    expect(fr.json().error).toBe('Le fichier FIT ne contient aucun enregistrement d’activité.');
   });
 
   it('renders clips × overlays into {out}/{ride}/{clip}/{clip}_{metric}.mov', async () => {
@@ -71,6 +74,7 @@ describe('server API', () => {
         ],
         overlays: ['speed', 'map'],
         format: 'prores',
+        language: 'pt',
       },
     });
     expect(res.statusCode).toBe(200);
@@ -135,7 +139,7 @@ describe('server API', () => {
     const snap = await waitJob(res.json().id);
     expect(snap.status).toBe('done');
     expect(snap.tasks.map((t: { overlay: string }) => t.overlay)).toEqual(['composite']);
-    expect(snap.tasks[0].outPath).toMatch(/DJI_square_composicao\.mov$/);
+    expect(snap.tasks[0].outPath).toMatch(/DJI_square_composite\.mov$/);
     const { execFileSync } = await import('node:child_process');
     const { FFMPEG } = await import('../../../packages/core/test/helpers/ffmpeg.ts');
     let info = '';

@@ -1,3 +1,5 @@
+import type { Lang } from '@telemesync/core';
+
 /** Systems with a download of their own in data/latest.json. */
 export type Platform = 'windows' | 'mac';
 
@@ -11,6 +13,8 @@ export interface Release {
   version: string;
   date?: string;
   summary?: string;
+  /** Summary per language (`summaries.en`…); `summary` is the Portuguese one read by versions up to 1.0.1. */
+  summaries?: Partial<Record<Lang, string>>;
   downloadUrl: string;
   changelogUrl: string;
 }
@@ -43,9 +47,36 @@ export function parseRelease(data: unknown, platform: Platform = 'windows'): Rel
     version: r.version.trim().replace(/^v/i, ''),
     date: typeof r.date === 'string' ? r.date : undefined,
     summary: typeof r.summary === 'string' ? r.summary.slice(0, 200) : undefined,
+    summaries: summariesOf(r.summaries),
     downloadUrl: download as string,
     changelogUrl: r.changelogUrl as string,
   };
+}
+
+function summariesOf(v: unknown): Partial<Record<Lang, string>> | undefined {
+  if (!v || typeof v !== 'object') return undefined;
+  const out: Partial<Record<Lang, string>> = {};
+  for (const [k, text] of Object.entries(v as Record<string, unknown>)) {
+    if (/^(en|pt|fr|es|de)$/.test(k) && typeof text === 'string') out[k as Lang] = text.slice(0, 200);
+  }
+  return out;
+}
+
+/** Summary in the app language; English, then the old Portuguese `summary`, when missing. */
+export function releaseSummary(r: Release, lang: Lang): string | undefined {
+  return r.summaries?.[lang] ?? (lang === 'pt' ? r.summary : undefined) ?? r.summaries?.en ?? r.summary;
+}
+
+/** Link to the site in the app language (the site reads ?lang=). */
+export function withLang(url: string, lang: Lang): string {
+  try {
+    const u = new URL(url);
+    if (!/telemesync/i.test(u.hostname)) return url;
+    u.searchParams.set('lang', lang);
+    return u.toString();
+  } catch {
+    return url;
+  }
 }
 
 /** Asks the site for the latest release; null when there is none newer or the site can't be reached (offline, timeout). */

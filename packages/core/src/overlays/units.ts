@@ -1,3 +1,5 @@
+import { DEFAULT_LANG, formatNumber, type Lang } from '../i18n/index.ts';
+
 export type UnitSystem = 'metric' | 'imperial';
 export type TemperatureUnit = 'C' | 'F';
 
@@ -19,10 +21,14 @@ export const convert = {
   temperatureUnit: (u: Units) => (u.temperature === 'C' ? '°C' : '°F'),
 };
 
-/** Portuguese number formatting (decimal comma), fixed decimals. NaN → "—". */
+let numberLang: Lang = DEFAULT_LANG;
+
+/** Language of the numbers drawn by the overlays (decimal point or comma). Set before drawing a frame. */
+export function setNumberLang(lang: Lang | undefined) {
+  numberLang = lang ?? DEFAULT_LANG;
+}
+
+/** Overlay number formatting: fixed decimals, separator of the overlay language. NaN → "—". */
 export function fmt(v: number, decimals = 0): string {
-  if (!Number.isFinite(v)) return '—';
-  const s = v.toFixed(decimals);
-  const clean = s === '-0' || /^-0[.,]0+$/.test(s) ? s.slice(1) : s;
-  return clean.replace('.', ',');
+  return formatNumber(v, decimals, numberLang);
 }

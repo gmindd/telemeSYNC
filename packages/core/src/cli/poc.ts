@@ -12,7 +12,7 @@ import { parseArgs } from 'node:util';
 import { buildRide } from '../telemetry/ride.ts';
 import { parseTelemetryFile } from '../telemetry/load.ts';
 import { DEFAULT_STYLE, type OverlayId } from '../overlays/types.ts';
-import { getOverlay, OVERLAY_FILE_SLUG } from '../overlays/registry.ts';
+import { getOverlay, overlayFileSlug } from '../overlays/registry.ts';
 import { formatDateTime, formatDuration } from '../util/timezone.ts';
 import { readClipMetadataFromPath } from '../node/fileSource.ts';
 import { renderOverlay } from '../node/render.ts';
@@ -72,7 +72,7 @@ async function main() {
   const def = getOverlay(values.metric as OverlayId);
   if (!ride.available.has(def.requires)) throw new Error(`A métrica ${def.id} não existe neste ficheiro.`);
   const format = isOutputFormat(values.format) ? values.format : 'prores';
-  const outPath = join(resolve(values.out), format === 'png' ? `${clipName}_${OVERLAY_FILE_SLUG[def.id]}` : `${OVERLAY_FILE_SLUG[def.id]}${outputExtension(format)}`);
+  const outPath = join(resolve(values.out), format === 'png' ? `${clipName}_${overlayFileSlug(def.id, 'en')}` : `${overlayFileSlug(def.id, 'en')}${outputExtension(format)}`);
   const style = { ...DEFAULT_STYLE, scale: Number(values.scale) };
   const t0 = Date.now();
   let lastPct = -1;

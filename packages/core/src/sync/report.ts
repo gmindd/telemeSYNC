@@ -1,6 +1,7 @@
 import type { Fps } from '../media/types.ts';
 import { formatDateTime, formatDuration } from '../util/timezone.ts';
-import { CAMERA_PROFILES } from './profiles.ts';
+import { decimalSeparator, formatNumber, tr, type CoreKey, type Lang } from '../i18n/index.ts';
+import { profileLabel } from './profiles.ts';
 import { baseStart, clipWarnings, effectiveStart, type SyncState } from './session.ts';
 import type { Camera, Clip, ResolverId } from './types.ts';
 
@@ -9,7 +10,7 @@ export interface ClipSyncInfo {
   fileName: string;
   camera: string;
   timeZone: string;
-  /** Where the start before offsets came from (Portuguese). */
+  /** Where the start before offsets came from (in the app language). */
   source: string;
   baseStartUtcMs?: number;
   cameraOffsetMs: number;
@@ -21,19 +22,19 @@ export interface ClipSyncInfo {
   warnings: string[];
 }
 
-const SOURCE_LABEL: Record<ResolverId, string> = {
-  filename: 'nome do ficheiro',
-  creationTime: 'data interna do ficheiro (creation_time)',
-  timecode: 'timecode do ficheiro',
-  gpmf: 'GPS da GoPro (GPMF)',
-  manual: 'hora indicada à mão',
+const SOURCE_LABEL: Record<ResolverId, CoreKey> = {
+  filename: 'source.filename',
+  creationTime: 'source.creationTime',
+  timecode: 'source.timecode',
+  gpmf: 'source.gpmf',
+  manual: 'source.manual',
 };
 
 /** Where the clip's start comes from, in words. */
-export function startSource(clip: Clip): string {
-  if (clip.manualStartUtcMs !== undefined) return SOURCE_LABEL.manual;
-  if (clip.chapterStartUtcMs !== undefined) return `capítulo ${clip.chapter?.index} da GoPro, seguido ao anterior`;
-  return clip.resolved.source ? SOURCE_LABEL[clip.resolved.source] : 'nenhuma (sem hora de início)';
+export function startSource(clip: Clip, lang?: Lang): string {
+  if (clip.manualStartUtcMs !== undefined) return tr(lang, SOURCE_LABEL.manual);
+  if (clip.chapterStartUtcMs !== undefined) return tr(lang, 'source.chapter', { n: clip.chapter?.index ?? '?' });
+  return tr(lang, clip.resolved.source ? SOURCE_LABEL[clip.resolved.source] : 'source.none');
 }
 
 /**
@@ -62,18 +63,19 @@ export function clipOverlaps(state: SyncState): Map<string, string[]> {
   return out;
 }
 
-export function overlapWarning(names: string[]): string {
-  return `Sobrepõe-se a ${names.join(', ')}: a mesma câmara não grava dois clips ao mesmo tempo, por isso uma das horas de início está errada.`;
+export function overlapWarning(names: string[], lang?: Lang): string {
+  return tr(lang, 'warn.overlap', { names: names.join(', ') });
 }
 
-export function clipSyncInfo(clip: Clip, camera: Camera, ride: { startTime: number; endTime: number } | undefined, overlaps?: string[]): ClipSyncInfo {
-  const warnings = ride ? clipWarnings(clip, camera, ride.startTime, ride.endTime).map((w) => w.message) : [];
-  if (overlaps?.length) warnings.push(overlapWarning(overlaps));
+export function clipSyncInfo(clip: Clip, camera: Camera, ride: { startTime: number; endTime: number } | undefined, overlaps?: string[], lang?: Lang): ClipSyncInfo {
+  const warnings = ride ? clipWarnings(clip, camera, ride.startTime, ride.endTime, lang).map((w) => w.message) : [];
+  if (overlaps?.length) warnings.push(overlapWarning(overlaps, lang));
+  const profile = profileLabel(camera.profile, lang);
   return {
     fileName: clip.meta.fileName,
-    camera: `${camera.label}${camera.label !== CAMERA_PROFILES[camera.profile].label ? ` (${CAMERA_PROFILES[camera.profile].label})` : ''}`,
+    camera: `${camera.label}${camera.label !== profile ? ` (${profile})` : ''}`,
     timeZone: camera.timeZone,
-    source: startSource(clip),
+    source: startSource(clip, lang),
     baseStartUtcMs: baseStart(clip),
     cameraOffsetMs: camera.offsetMs,
     clipOffsetMs: clip.clipOffsetMs,
@@ -84,20 +86,20 @@ export function clipSyncInfo(clip: Clip, camera: Camera, ride: { startTime: numb
   };
 }
 
-/** "+1,2 s", "−2 min 03,0 s", "+1 h 00 min 00,0 s". */
-export function formatOffset(ms: number): string {
+/** "+1.2 s", "−2 min 03.0 s", "+1 h 00 min 00.0 s" (decimal comma except in English). */
+export function formatOffset(ms: number, lang?: Lang): string {
   const sign = ms < 0 ? '−' : '+';
   const a = Math.abs(ms) / 1000;
   const h = Math.floor(a / 3600);
   const m = Math.floor((a % 3600) / 60);
-  const ss = (a % 60).toFixed(1).padStart(4, '0').replace('.', ',');
+  const ss = formatNumber(a % 60, 1, lang).padStart(4, '0');
   return h ? `${sign}${h} h ${String(m).padStart(2, '0')} min ${ss} s` : m ? `${sign}${m} min ${ss} s` : `${sign}${ss} s`;
 }
 
-/** Wall time with tenths of a second, e.g. "2026-10-11 09:48:17,2". */
-function preciseTime(utcMs: number, tz: string): string {
+/** Wall time with tenths of a second, e.g. "2026-10-11 09:48:17.2". */
+function preciseTime(utcMs: number, tz: string, lang?: Lang): string {
   const tenths = Math.floor((((utcMs % 1000) + 1000) % 1000) / 100);
-  return `${formatDateTime(Math.floor(utcMs / 1000) * 1000, tz)},${tenths}`;
+  return `${formatDateTime(Math.floor(utcMs / 1000) * 1000, tz)}${decimalSeparator(lang)}${tenths}`;
 }
 
 function rideClock(ms: number): string {
@@ -112,32 +114,40 @@ export function syncReport(opts: {
   timeZone: string;
   exportedAt: number;
   version?: string;
+  lang?: Lang;
 }): string {
-  const { ride, timeZone } = opts;
+  const { ride, timeZone, lang } = opts;
   const lines = [
-    `telemeSYNC${opts.version ? ` ${opts.version}` : ''} · relatório de sincronização`,
-    `Volta: ${opts.rideName}`,
-    `Telemetria: ${formatDateTime(ride.startTime, timeZone)} a ${formatDateTime(ride.endTime, timeZone)} (${timeZone}), ${formatDuration(ride.endTime - ride.startTime)}`,
-    `Exportado em: ${formatDateTime(opts.exportedAt, timeZone)}`,
+    `telemeSYNC${opts.version ? ` ${opts.version}` : ''} · ${tr(lang, 'report.title')}`,
+    tr(lang, 'report.ride', { name: opts.rideName }),
+    tr(lang, 'report.telemetry', {
+      from: formatDateTime(ride.startTime, timeZone),
+      to: formatDateTime(ride.endTime, timeZone),
+      tz: timeZone,
+      dur: formatDuration(ride.endTime - ride.startTime),
+    }),
+    tr(lang, 'report.exported', { date: formatDateTime(opts.exportedAt, timeZone) }),
     '',
-    'Cada clip tem os seus próprios ficheiros, com a duração do clip e a hora de início indicada abaixo.',
-    'Para cada clip, use os ficheiros da pasta com o mesmo nome do clip, alinhados ao início do clip.',
+    tr(lang, 'report.note1'),
+    tr(lang, 'report.note2'),
     '',
   ];
   opts.clips.forEach((c, i) => {
     lines.push(`${i + 1}. ${c.fileName}`);
-    lines.push(`   Câmara: ${c.camera} · fuso ${c.timeZone}`);
+    lines.push(`   ${tr(lang, 'report.camera', { camera: c.camera, tz: c.timeZone })}`);
     if (c.startUtcMs === undefined) {
-      lines.push('   Sem hora de início: não exportado.');
+      lines.push(`   ${tr(lang, 'report.noStart')}`);
     } else {
-      const fps = c.fps ? ` · ${Math.round((c.fps.num / c.fps.den) * 100) / 100} fps` : '';
-      lines.push(`   Início usado: ${preciseTime(c.startUtcMs, c.timeZone)} · fim ${preciseTime(c.startUtcMs + c.durationMs, c.timeZone)} · duração ${formatDuration(c.durationMs)}${fps}`);
-      lines.push(`   Na volta: de ${rideClock(c.startUtcMs - ride.startTime)} a ${rideClock(c.startUtcMs + c.durationMs - ride.startTime)} desde o início da telemetria`);
-      const base = c.baseStartUtcMs !== undefined ? ` (${preciseTime(c.baseStartUtcMs, c.timeZone)})` : '';
-      lines.push(`   Origem da hora: ${c.source}${base}`);
-      lines.push(`   Offset da câmara: ${formatOffset(c.cameraOffsetMs)} · ajuste só deste clip: ${formatOffset(c.clipOffsetMs)}`);
+      const fps = c.fps ? ` · ${String(Math.round((c.fps.num / c.fps.den) * 100) / 100).replace('.', decimalSeparator(lang))} fps` : '';
+      const start = preciseTime(c.startUtcMs, c.timeZone, lang);
+      const end = preciseTime(c.startUtcMs + c.durationMs, c.timeZone, lang);
+      lines.push(`   ${tr(lang, 'report.start', { start, end, dur: formatDuration(c.durationMs), fps })}`);
+      lines.push(`   ${tr(lang, 'report.onRide', { from: rideClock(c.startUtcMs - ride.startTime), to: rideClock(c.startUtcMs + c.durationMs - ride.startTime) })}`);
+      const base = c.baseStartUtcMs !== undefined ? ` (${preciseTime(c.baseStartUtcMs, c.timeZone, lang)})` : '';
+      lines.push(`   ${tr(lang, 'report.source', { source: `${c.source}${base}` })}`);
+      lines.push(`   ${tr(lang, 'report.offsets', { camera: formatOffset(c.cameraOffsetMs, lang), clip: formatOffset(c.clipOffsetMs, lang) })}`);
     }
-    lines.push(`   Avisos:${c.warnings.length ? '' : ' nenhum'}`);
+    lines.push(`   ${tr(lang, 'report.warnings')}${c.warnings.length ? '' : ` ${tr(lang, 'report.none')}`}`);
     for (const w of c.warnings) lines.push(`   - ${w}`);
     lines.push('');
   });

@@ -1,46 +1,43 @@
 import { APP_INFO } from '../config.ts';
 import { DonateButton, WebsiteLink } from '../components/ExternalLinks.tsx';
+import { formatNumber, tr } from '@telemesync/core';
+import { useLang, useT } from '../i18n/index.tsx';
 import { useApp } from '../lib/store.ts';
 
-const STEPS = [
-  { n: 1, t: 'Telemetria', d: 'Carregue o FIT ou GPX do ciclocomputador (Bryton, Garmin, iGPSPORT…).' },
-  { n: 2, t: 'Clips', d: 'Arraste os vídeos da volta (DJI, GoPro, Insta360). Só os metadados são lidos.' },
-  { n: 3, t: 'Sincronizar', d: 'Confirme o alinhamento com o vídeo e posicione os gráficos.' },
-  { n: 4, t: 'Exportar', d: 'Vídeos transparentes prontos para o DaVinci, Premiere ou Final Cut.' },
-];
+const STEPS = [1, 2, 3, 4] as const;
 
 export function StepWelcome({ onAbout }: { onAbout: () => void }) {
   const setStep = useApp((s) => s.setStep);
+  const t = useT();
+  const lang = useLang((s) => s.lang);
+  const name = APP_INFO.name;
   return (
     <section className="welcome">
       <div className="hero">
         <div className="hero-text">
           <h1>
-            Bem-vindo ao <span className="brand">tele<em>me</em>SYNC</span>
+            {t('welcome.title')} <span className="brand">tele<em>me</em>SYNC</span>
           </h1>
-          <p className="hero-lead">
-            A telemetria das suas voltas de bicicleta — velocidade, inclinação, mapa, altimetria, frequência cardíaca — sincronizada e desenhada por cima dos seus
-            vídeos.
-          </p>
+          <p className="hero-lead">{t('welcome.lead')}</p>
           <div className="hero-actions">
             <button className="primary big" onClick={() => setStep('telemetry')}>
-              Começar →
+              {t('welcome.start')}
             </button>
           </div>
           <ul className="badges">
-            <li>✔ Gratuito</li>
-            <li>✔ Os vídeos nunca saem do seu computador</li>
-            <li>✔ Gráficos transparentes, um por métrica ou tudo num só vídeo</li>
+            <li>{t('welcome.badge1')}</li>
+            <li>{t('welcome.badge2')}</li>
+            <li>{t('welcome.badge3')}</li>
           </ul>
         </div>
         <div className="hero-art" aria-hidden>
           <div className="mock-speed">
-            <small>VELOCIDADE</small>
-            <b>24,6</b>
+            <small>{tr(lang, 'metric.speed').toLocaleUpperCase(lang)}</small>
+            <b>{formatNumber(24.6, 1, lang)}</b>
             <i>km/h</i>
           </div>
           <div className="mock-grade">
-            <small>INCLINAÇÃO</small>
+            <small>{tr(lang, 'metric.grade').toLocaleUpperCase(lang)}</small>
             <b>8</b>
             <i>%</i>
           </div>
@@ -52,55 +49,46 @@ export function StepWelcome({ onAbout }: { onAbout: () => void }) {
         </div>
       </div>
 
-      <h2>Como funciona</h2>
+      <h2>{t('welcome.how')}</h2>
       <div className="how">
-        {STEPS.map((s) => (
-          <div key={s.n} className="how-card">
-            <span className="how-n">{s.n}</span>
-            <b>{s.t}</b>
-            <p>{s.d}</p>
+        {STEPS.map((n) => (
+          <div key={n} className="how-card">
+            <span className="how-n">{n}</span>
+            <b>{t(`welcome.step${n}.t`)}</b>
+            <p>{t(`welcome.step${n}.d`)}</p>
           </div>
         ))}
       </div>
 
       <div className="promo-grid">
         <div className="card promo">
-          <h3>Feito por {APP_INFO.author}</h3>
-          <p className="promo-role">{APP_INFO.role}</p>
-          <p>
-            O {APP_INFO.name} nasceu da vontade de juntar duas paixões: o BTT e o digital bem feito. É o mesmo cuidado que ponho nos projetos para empresas e
-            profissionais — pensado, discutido e bem construído.
-          </p>
+          <h3>{t('welcome.madeBy', { author: APP_INFO.author })}</h3>
+          <p className="promo-role">{t('welcome.role')}</p>
+          <p>{t('welcome.story', { name })}</p>
           <ul className="services">
-            <li>Websites &amp; landing pages</li>
-            <li>Product design &amp; desenvolvimento</li>
-            <li>Automações &amp; workflows</li>
-            <li>Estratégia digital &amp; SEO</li>
+            <li>{t('welcome.svc1')}</li>
+            <li>{t('welcome.svc2')}</li>
+            <li>{t('welcome.svc3')}</li>
+            <li>{t('welcome.svc4')}</li>
           </ul>
-          <p className="muted">
-            Mais de 20 projetos entregues, em Portugal e no estrangeiro — entre eles o site, a loja online e o aluguer de bicicletas da ViaBike, no Caminho de
-            Santiago.
-          </p>
+          <p className="muted">{t('welcome.projects')}</p>
           <div className="promo-actions">
             <WebsiteLink>
-              <span className="link-btn">Conhecer os serviços ↗</span>
+              <span className="link-btn">{t('welcome.services')}</span>
             </WebsiteLink>
             <a href={`mailto:${APP_INFO.email}`}>{APP_INFO.email}</a>
           </div>
         </div>
         <div className="card promo support">
-          <h3>Apoie o projeto</h3>
-          <p>
-            O {APP_INFO.name} é e vai continuar gratuito para todos. Se lhe for útil, um café ajuda a manter o desenvolvimento e a suportar mais câmaras e
-            ciclocomputadores.
-          </p>
-          {APP_INFO.donateUrl ? <DonateButton big /> : <p className="muted">(Link de apoio por configurar.)</p>}
-          <p className="fine">Contribuição voluntária, sem contrapartida. Não é um donativo fiscalmente dedutível.</p>
+          <h3>{t('welcome.support')}</h3>
+          <p>{t('welcome.supportText', { name })}</p>
+          {APP_INFO.donateUrl ? <DonateButton big /> : <p className="muted">{t('welcome.noDonate')}</p>}
+          <p className="fine">{t('welcome.supportFine')}</p>
         </div>
       </div>
 
       <p className="muted small-center">
-        Ao usar o {APP_INFO.name} aceita os termos de utilização. <button className="linklike" onClick={onAbout}>Sobre e avisos legais</button>
+        {t('welcome.terms', { name })} <button className="linklike" onClick={onAbout}>{t('footer.about')}</button>
       </p>
     </section>
   );

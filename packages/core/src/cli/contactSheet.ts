@@ -1,6 +1,6 @@
 /**
  * Renders every available overlay at one instant into a single PNG over a checkerboard,
- * for quick visual review:  npx tsx packages/core/src/cli/contactSheet.ts <fit|gpx> <isoTime> <out.png>
+ * for quick visual review:  npx tsx packages/core/src/cli/contactSheet.ts <fit|gpx> <isoTime> <out.png> [en|pt|fr|es|de]
  */
 import { createCanvas } from '@napi-rs/canvas';
 import { readFile, writeFile } from 'node:fs/promises';
@@ -9,12 +9,13 @@ import { parseTelemetryFile } from '../telemetry/load.ts';
 import { availableOverlays, overlayPixelSize, renderOverlayFrame } from '../overlays/registry.ts';
 import { DEFAULT_STYLE, type Ctx2D } from '../overlays/types.ts';
 import { registerEmbeddedFonts } from '../node/fonts.ts';
+import { isLang } from '../i18n/index.ts';
 
-const [file, iso, out = 'contact-sheet.png'] = process.argv.slice(2);
+const [file, iso, out = 'contact-sheet.png', lang] = process.argv.slice(2);
 registerEmbeddedFonts();
 const ride = buildRide(parseTelemetryFile(file, await readFile(file)));
 const t = iso ? Date.parse(iso) : (ride.startTime + ride.endTime) / 2;
-const style = { ...DEFAULT_STYLE, scale: 1 };
+const style = { ...DEFAULT_STYLE, scale: 1, language: isLang(lang) ? lang : DEFAULT_STYLE.language };
 const defs = availableOverlays(ride);
 const W = 1400;
 let x = 10;
