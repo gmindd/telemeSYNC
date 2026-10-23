@@ -292,20 +292,37 @@
       <div class="container container--narrow">
         <h2 id="demo-titulo" data-i18n="demo.title">Demonstração</h2>
         <p class="section__lead" data-i18n="demo.lead">Do ficheiro do ciclocomputador ao vídeo final em poucos minutos.</p>
-        <!-- O ID do vídeo do YouTube é definido em script.js (SITE_CONFIG.youtubeId) -->
-        <div class="video js-video">
-          <img class="video__poster js-video-poster" alt="" hidden>
-          <button class="video__play" type="button" aria-label="Reproduzir a demonstração no YouTube" data-i18n-aria-label="demo.play">
-            <span class="video__icon" aria-hidden="true"></span>
-            <span class="video__label js-video-label">Vídeo de demonstração em breve</span>
-          </button>
-        </div>
-        <p class="video-credit" data-i18n="demo.credit">
-          Vídeo cedido por cortesia de <strong>Alves na Roda</strong> ·
-          <a href="https://www.youtube.com/channel/UCBBXkj3p9e81YS1_LJHircw" target="_blank" rel="noopener">YouTube</a> ·
-          <a href="https://www.instagram.com/alvesnaroda/" target="_blank" rel="noopener">Instagram</a>
-        </p>
-        <p class="fine" data-i18n="demo.fine">A imagem de pré-visualização vem do YouTube; o vídeo em si (modo de privacidade reforçada) só é carregado quando carrega em reproduzir.</p>
+        <!-- Os IDs dos vídeos do YouTube estão em script.js (SITE_CONFIG.videos) -->
+        <article class="demo-video">
+          <h3 class="demo-video__title" data-i18n="demo.tutorialTitle">Como funciona, passo a passo</h3>
+          <div class="video js-video" data-video="tutorial">
+            <img class="video__poster js-video-poster" alt="" hidden>
+            <button class="video__play" type="button" aria-label="Reproduzir o tutorial no YouTube" data-i18n-aria-label="demo.playTutorial">
+              <span class="video__icon" aria-hidden="true"></span>
+              <span class="video__label js-video-label">Ver o tutorial</span>
+            </button>
+          </div>
+          <p class="video-note" role="note">
+            <span class="video-note__icon" aria-hidden="true">CC</span>
+            <span data-i18n="demo.subtitles">Vídeo narrado em português, com legendas. Para as ver noutra língua, ligue as legendas (CC) e, no leitor, escolha <b>⚙ Definições → Legendas → Traduzir automaticamente</b> e a língua que quiser.</span>
+          </p>
+        </article>
+        <article class="demo-video">
+          <h3 class="demo-video__title" data-i18n="demo.resultTitle">O resultado num vídeo real</h3>
+          <div class="video js-video" data-video="demo">
+            <img class="video__poster js-video-poster" alt="" hidden>
+            <button class="video__play" type="button" aria-label="Reproduzir a demonstração no YouTube" data-i18n-aria-label="demo.play">
+              <span class="video__icon" aria-hidden="true"></span>
+              <span class="video__label js-video-label">Ver a demonstração</span>
+            </button>
+          </div>
+          <p class="video-credit" data-i18n="demo.credit">
+            Vídeo cedido por cortesia de <strong>Alves na Roda</strong> ·
+            <a href="https://www.youtube.com/channel/UCBBXkj3p9e81YS1_LJHircw" target="_blank" rel="noopener">YouTube</a> ·
+            <a href="https://www.instagram.com/alvesnaroda/" target="_blank" rel="noopener">Instagram</a>
+          </p>
+        </article>
+        <p class="fine" data-i18n="demo.fine">As imagens de pré-visualização vêm do YouTube; os vídeos em si (modo de privacidade reforçada) só são carregados quando carrega em reproduzir.</p>
       </div>
     </section>
 
