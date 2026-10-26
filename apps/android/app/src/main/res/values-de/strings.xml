@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="exit_question">telemeSYNC verlassen? Was nicht als Projekt gespeichert ist, geht verloren.</string>
+    <string name="exit_yes">Verlassen</string>
+    <string name="exit_no">Bleiben</string>
+</resources>

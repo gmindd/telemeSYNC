@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="exit_question">Quitter telemeSYNC ? Ce qui n’est pas enregistré comme projet sera perdu.</string>
+    <string name="exit_yes">Quitter</string>
+    <string name="exit_no">Rester</string>
+</resources>

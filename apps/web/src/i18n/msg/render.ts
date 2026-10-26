@@ -59,6 +59,36 @@ export const RENDER = {
     'No se pudo contactar con el servidor local. ¿Arrancaste la app con «Iniciar telemeSYNC» (o «npm start»)?',
     'Der lokale Server ist nicht erreichbar. Hast du die App mit „Iniciar telemeSYNC“ (oder „npm start“) gestartet?',
   ],
+  'notice.projectSaved': ['Project saved in {path}.', 'Projeto guardado em {path}.', 'Projet enregistré dans {path}.', 'Proyecto guardado en {path}.', 'Projekt gespeichert in {path}.'],
+  // Android app (renders on the phone, files in shared storage)
+  'android.outputRoots': [
+    'On Android the output folder must be inside {roots} (e.g. Documents/telemeSYNC).',
+    'No Android a pasta de saída tem de ficar dentro de {roots} (ex.: Documents/telemeSYNC).',
+    'Sur Android, le dossier de sortie doit se trouver dans {roots} (ex. : Documents/telemeSYNC).',
+    'En Android la carpeta de salida debe estar dentro de {roots} (p. ej., Documents/telemeSYNC).',
+    'Unter Android muss der Ausgabeordner in {roots} liegen (z. B. Documents/telemeSYNC).',
+  ],
+  'android.formatUnavailable': [
+    'This format can only be exported by the computer version.',
+    'Este formato só pode ser exportado pela versão para computador.',
+    'Ce format ne peut être exporté que par la version pour ordinateur.',
+    'Este formato solo se puede exportar con la versión para ordenador.',
+    'Dieses Format kann nur die Computerversion exportieren.',
+  ],
+  'android.openFolderFailed': [
+    'Could not open the folder. The files are in {path} (Files app).',
+    'Não foi possível abrir a pasta. Os ficheiros estão em {path} (app Ficheiros).',
+    'Impossible d’ouvrir le dossier. Les fichiers sont dans {path} (app Fichiers).',
+    'No se pudo abrir la carpeta. Los archivos están en {path} (app Archivos).',
+    'Der Ordner ließ sich nicht öffnen. Die Dateien liegen in {path} (App Dateien).',
+  ],
+  'android.formatNote': [
+    'Rendered on this phone. ProRes 4444 and FFV1 are only in the computer version. QuickTime Animation keeps transparency in Premiere Pro and Final Cut Pro; for DaVinci Resolve use the PNG sequence (or WebM VP9, when this phone offers it).',
+    'Renderizado neste telemóvel. O ProRes 4444 e o FFV1 só existem na versão para computador. O QuickTime Animation mantém a transparência no Premiere Pro e no Final Cut Pro; para o DaVinci Resolve use a sequência PNG (ou o WebM VP9, se este telemóvel o oferecer).',
+    'Rendu sur ce téléphone. ProRes 4444 et FFV1 n’existent que dans la version pour ordinateur. QuickTime Animation garde la transparence dans Premiere Pro et Final Cut Pro ; pour DaVinci Resolve, utilisez la séquence PNG (ou WebM VP9, si ce téléphone le propose).',
+    'Renderizado en este móvil. ProRes 4444 y FFV1 solo existen en la versión para ordenador. QuickTime Animation conserva la transparencia en Premiere Pro y Final Cut Pro; para DaVinci Resolve usa la secuencia PNG (o WebM VP9, si este móvil lo ofrece).',
+    'Auf diesem Handy gerendert. ProRes 4444 und FFV1 gibt es nur in der Computerversion. QuickTime Animation behält die Transparenz in Premiere Pro und Final Cut Pro; für DaVinci Resolve die PNG-Sequenz verwenden (oder WebM VP9, falls dieses Handy es anbietet).',
+  ],
   'notice.outputSaved': ['Output folder saved.', 'Pasta de saída guardada.', 'Dossier de sortie enregistré.', 'Carpeta de salida guardada.', 'Ausgabeordner gespeichert.'],
   'notice.projectOpened': [
     'Project opened. Load the telemetry{file} and drag the videos in again to preview them.',

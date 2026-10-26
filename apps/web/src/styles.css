@@ -224,3 +224,9 @@ table.licenses td { padding: 3px 6px; border-bottom: 1px solid var(--border); }
 .services { list-style: none; padding: 0; margin: 8px 0; display: flex; flex-wrap: wrap; gap: 6px; }
 .services li { background: var(--panel2); border: 1px solid var(--border); border-radius: 14px; padding: 3px 10px; font-size: 12px; }
 .promo-actions { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; margin-top: 10px; }
+
+/* Phones (the Android app): wide tables scroll sideways on their own, gadget cards take the full width. */
+@media (max-width: 600px) {
+  table.grid, .clip-list table { display: block; overflow-x: auto; }
+  .overlay-grid, .overlay-grid.panels { grid-template-columns: minmax(0, 1fr); }
+}

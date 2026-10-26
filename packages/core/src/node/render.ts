@@ -2,15 +2,15 @@ import { createCanvas } from '@napi-rs/canvas';
 import { mkdir, rm, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import type { OutputFormat } from '../export/formats.ts';
+import { compositeFrameSource, frameCountFor, overlayFrameSource, type FrameSource } from '../export/frames.ts';
 import type { Fps } from '../media/types.ts';
-import { changesAtTextRate, frameState, overlayPixelSize, textInstant } from '../overlays/registry.ts';
-import { compositeFrameKey, drawComposite, type GadgetPlacement } from '../overlays/layout.ts';
+import type { GadgetPlacement } from '../overlays/layout.ts';
 import type { Ctx2D, OverlayContext, OverlayDefinition, OverlayId, OverlayStyle } from '../overlays/types.ts';
-import { setNumberLang } from '../overlays/units.ts';
 import { FfmpegSink } from './ffmpeg.ts';
 import { registerEmbeddedFonts } from './fonts.ts';
 
 export type { OutputFormat } from '../export/formats.ts';
+export { frameCountFor } from '../export/frames.ts';
 
 export interface RenderOverlayOptions {
   def: OverlayDefinition;
@@ -28,19 +28,7 @@ export interface RenderOverlayOptions {
   onProgress?: (fraction: number, frame: number, totalFrames: number) => void;
 }
 
-export function frameCountFor(durationMs: number, fps: Fps): number {
-  return Math.max(1, Math.round((durationMs / 1000) * (fps.num / fps.den)));
-}
-
 const yieldToLoop = () => new Promise<void>((r) => setImmediate(r));
-
-interface FrameSource {
-  width: number;
-  height: number;
-  /** Frames with the same key are identical (allows reuse). */
-  key(t: number): number;
-  draw(ctx: Ctx2D, t: number): void;
-}
 
 type SinkOptions = Omit<RenderOverlayOptions, 'def' | 'style'>;
 
@@ -95,25 +83,7 @@ async function renderFrames(src: FrameSource, o: SinkOptions): Promise<{ frames:
 
 /** Renders one overlay for one clip: same duration and fps as the clip, transparent background. */
 export function renderOverlay(o: RenderOverlayOptions): Promise<{ frames: number; width: number; height: number }> {
-  const { width, height } = overlayPixelSize(o.def, o.style);
-  return renderFrames(
-    {
-      width,
-      height,
-      // Overlays that change only at the text rate reuse the previous frame.
-      key: (t) => (changesAtTextRate(o.def, o.style) ? textInstant(t, o.octx.clipStart, o.style.textRateHz) : t),
-      draw: (ctx, t) => {
-        ctx.setTransform(1, 0, 0, 1, 0, 0);
-        ctx.clearRect(0, 0, width, height);
-        ctx.save();
-        ctx.setTransform(o.style.scale, 0, 0, o.style.scale, 0, 0);
-        setNumberLang(o.style.language);
-        o.def.draw(ctx, frameState(t, o.style, o.octx), o.style, o.octx);
-        ctx.restore();
-      },
-    },
-    o,
-  );
+  return renderFrames(overlayFrameSource(o.def, o.style, o.octx), o);
 }
 
 export interface RenderCompositeOptions extends SinkOptions {
@@ -126,13 +96,5 @@ export interface RenderCompositeOptions extends SinkOptions {
 
 /** Renders all gadgets in their positions into one transparent video the size of the frame. */
 export function renderComposite(o: RenderCompositeOptions): Promise<{ frames: number; width: number; height: number }> {
-  return renderFrames(
-    {
-      width: o.width,
-      height: o.height,
-      key: (t) => compositeFrameKey(o.overlays, t, o.octx.clipStart, o.style),
-      draw: (ctx, t) => drawComposite(ctx, o.overlays, o.placements, t, o.style, o.octx, o.width, o.height),
-    },
-    o,
-  );
+  return renderFrames(compositeFrameSource(o), o);
 }

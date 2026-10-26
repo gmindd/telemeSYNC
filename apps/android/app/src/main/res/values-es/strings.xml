@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="exit_question">¿Salir de telemeSYNC? Lo que no esté guardado como proyecto se pierde.</string>
+    <string name="exit_yes">Salir</string>
+    <string name="exit_no">Quedarse</string>
+</resources>

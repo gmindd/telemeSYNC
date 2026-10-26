@@ -6,6 +6,7 @@ import {
   DEFAULT_OUTPUT_FORMAT,
   DEFAULT_STYLE,
   defaultCamera,
+  OUTPUT_FORMATS,
   errorText,
   clipOverlaps,
   clipSyncInfo,
@@ -59,6 +60,8 @@ interface State {
   /** Language of the texts drawn in the overlays: the app language ('auto') or a fixed one. */
   overlayLang: Lang | 'auto';
   format: OutputFormat;
+  /** Formats this app can export (all with the server; fewer when rendering on Android). */
+  formats: OutputFormat[];
   /** Cap on the overlay frame rate (0 = same as the clip). */
   maxFps: number;
   outputDir: string;
@@ -98,11 +101,12 @@ interface Actions {
   toggleSelected(clipId: string, on: boolean): void;
   startRender(): Promise<void>;
   cancelRender(): Promise<void>;
-  saveProject(): void;
+  saveProject(): Promise<void>;
   openProject(file: File): Promise<void>;
   setPlacement(id: OverlayId, p: GadgetPlacement): void;
   resetLayout(): void;
   setExportOptions(o: Partial<Pick<State, 'exportSeparate' | 'exportComposite' | 'compositeShortSide'>>): void;
+  showNotice(text: string): void;
   dismissNotice(): void;
   init(): Promise<void>;
 }
@@ -165,6 +169,7 @@ export const useApp = create<State & Actions>((set, get) => ({
   style: loadStoredStyle(initialOverlayLang),
   overlayLang: initialOverlayLang,
   format: loadStored<OutputFormat>(FORMAT_KEY, DEFAULT_OUTPUT_FORMAT),
+  formats: OUTPUT_FORMATS.map((f) => f.id),
   maxFps: loadStored<number>(MAX_FPS_KEY, 0),
   outputDir: '',
   rideName: t('store.defaultRide'),
@@ -182,6 +187,8 @@ export const useApp = create<State & Actions>((set, get) => ({
     } catch {
       set({ notice: t('notice.noServer') });
     }
+    const formats = await api.formats();
+    set({ formats, format: formats.includes(get().format) ? get().format : formats[0] });
   },
 
   async loadTelemetry(file) {
@@ -189,7 +196,7 @@ export const useApp = create<State & Actions>((set, get) => ({
     try {
       const buf = new Uint8Array(await file.arrayBuffer());
       const ride = buildRide(parseTelemetryFile(file.name, buf));
-      const { id } = await api.uploadTelemetry(file);
+      const { id } = await api.uploadTelemetry(file, ride);
       const sync = resolveAll(get().sync, ride.startTime);
       // Keep only overlays that this ride supports.
       const overlays = get().overlays.filter((o) => ride.available.has(getOverlay(o).requires));
@@ -393,7 +400,7 @@ export const useApp = create<State & Actions>((set, get) => ({
     if (job) await api.cancel(job.id);
   },
 
-  saveProject() {
+  async saveProject() {
     const st = get();
     const p: ProjectFile = {
       version: PROJECT_VERSION,
@@ -413,12 +420,12 @@ export const useApp = create<State & Actions>((set, get) => ({
       output: { format: st.format, separate: st.exportSeparate, composite: st.exportComposite, compositeShortSide: st.compositeShortSide, maxFps: st.maxFps },
       layout: st.layout,
     };
-    const blob = new Blob([serializeProject(p)], { type: 'application/json' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = `${st.rideName.replace(/[<>:"/\\|?*]/g, '_')}.telemesync.json`;
-    a.click();
-    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    try {
+      const where = await api.saveProject(`${st.rideName.replace(/[<>:"/\\|?*]/g, '_')}.telemesync.json`, serializeProject(p));
+      if (where) set({ notice: t('notice.projectSaved', { path: where }) });
+    } catch (e) {
+      set({ notice: errorText(e, currentLang()) });
+    }
   },
 
   async openProject(file) {
@@ -441,7 +448,7 @@ export const useApp = create<State & Actions>((set, get) => ({
         files: {},
         overlays: p.overlays,
         style: { ...DEFAULT_STYLE, ...p.style, units: { ...DEFAULT_STYLE.units, ...p.style.units }, language: get().overlayLang === 'auto' ? currentLang() : get().style.language },
-        format: p.output.format,
+        format: get().formats.includes(p.output.format) ? p.output.format : get().formats[0],
         maxFps: p.output.maxFps === 30 ? 30 : 0,
         exportSeparate: p.output.separate ?? true,
         exportComposite: p.output.composite ?? false,
@@ -469,6 +476,7 @@ export const useApp = create<State & Actions>((set, get) => ({
     store(LAYOUT_KEY, {});
   },
   setExportOptions: (o) => set(o),
+  showNotice: (notice) => set({ notice }),
   dismissNotice: () => set({ notice: undefined }),
 }));
 

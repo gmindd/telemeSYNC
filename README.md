@@ -39,6 +39,18 @@ O lançador retira a quarentena ao resto da pasta, por isso o Node.js e o FFmpeg
 
 **A partir do código:** instale o Node.js (<https://nodejs.org/pt> ou `brew install node`), depois no Terminal, dentro da pasta do projeto: `npm install` e `npm start`.
 
+## Android (versão de teste)
+
+Instale o APK (`telemeSYNC-…-android.apk`; Android 11 ou mais recente). Como não vem da Play Store, o Android pede para autorizar a instalação a partir do browser ou da app Ficheiros.
+
+A app é o mesmo painel, mas **renderiza no próprio telemóvel**, sem servidor nem FFmpeg:
+
+- Toque nas zonas de ficheiros para escolher o `.fit`/`.gpx` e os clips (na app Ficheiros, ou em *Vídeos*).
+- Os ficheiros ficam em **`Documents/telemeSYNC/{volta}/{clip}/`** (mude a pasta no passo 5; tem de ficar dentro de `Documents` ou `Download`). Para os passar para o computador, use o cabo USB ou partilhe-os da app Ficheiros.
+- **Formatos**: QuickTime Animation (`.mov`, transparência no Premiere Pro e no Final Cut Pro), sequência PNG (DaVinci Resolve) e, se o telemóvel conseguir codificar VP9, WebM VP9 com alfa. O ProRes 4444 e o FFV1 só existem na versão para computador.
+- Mantenha a app aberta enquanto renderiza: o ecrã fica ligado sozinho e, se mudar de app, o Android pode parar a renderização.
+- A tecla *Voltar* pergunta antes de sair (o que não estiver guardado como projeto perde-se). *Guardar projeto* grava o `.telemesync.json` na pasta de saída.
+
 ## Como usar
 
 1. **Telemetria** — arraste o `.fit` (preferido) ou `.gpx`. Aparece o resumo da volta e as métricas disponíveis.
@@ -99,6 +111,7 @@ npm test           # testes unitários e de integração (Vitest)
 npm run typecheck
 scripts/package-windows.sh   # pacote Windows autónomo (Node portátil + dependências) em dist-release/
 scripts/package-mac.sh       # pacote macOS autónomo, universal (Apple Silicon + Intel), em dist-release/
+scripts/package-android.sh   # APK Android (apps/android) em dist-release/; precisa do JDK 17 e do Android SDK
 ```
 
 O pacote macOS pode ser gerado em qualquer sistema (também no Git Bash do Windows; o ZIP leva as permissões Unix através de `scripts/zip-unix.py`), mas só é testado num Mac a sério pelo workflow **macOS** do GitHub Actions (`.github/workflows/mac.yml`): corre os testes num Mac, gera o pacote, verifica as assinaturas dos binários e arranca-o em quarentena, como um download, num Mac Apple Silicon e num Intel, renderizando um clip. O ZIP testado fica nos *Artifacts* da execução.
@@ -106,6 +119,15 @@ O pacote macOS pode ser gerado em qualquer sistema (também no Git Bash do Windo
 - `packages/core` — parsing FIT/GPX, métricas, sincronização, leitor de metadados MP4/MOV e **renderers** dos overlays (partilhados entre preview e exportação).
 - `apps/server` — Fastify: jobs de renderização (worker threads + FFmpeg), progresso por SSE, definições, abrir pasta.
 - `apps/web` — Vite + React: painel, timeline e preview.
+- `apps/android` — app Android: o painel numa WebView servida a partir do APK. A renderização corre no próprio painel (`apps/web/src/lib/local`): um worker por ficheiro desenha os frames num `OffscreenCanvas` com os mesmos renderers e codifica-os em JavaScript (`packages/core/src/export`: QuickTime Animation + MOV, WebM VP9 com alfa via WebCodecs, PNG). O `WebAppBridge.kt` grava os ficheiros no armazenamento partilhado (MediaStore).
+
+### Android
+
+1. Instale o JDK 17 e o Android SDK (o Android Studio traz os dois) e aponte `JAVA_HOME` para o JDK. O SDK vem de `ANDROID_HOME` ou de `apps/android/local.properties` (`sdk.dir=…`).
+2. `scripts/package-android.sh` compila o painel web e o APK. Sem `apps/android/keystore.properties` sai um APK de debug (`…-android-debug.apk`), que chega para testar. Para uma versão assinada, crie uma keystore e o `keystore.properties` (`storeFile`, `storePassword`, `keyAlias`, `keyPassword`), que não vão para o git.
+3. Também se abre a pasta `apps/android` no Android Studio (corre `npm run build -w @telemesync/web` antes: o Gradle copia `apps/web/dist` para os assets).
+
+Para desenvolver a renderização do Android sem telemóvel: `node scripts/android-bridge-mock.mjs` e abra <http://localhost:5173/?androidMock=http://127.0.0.1:5175> com `npm run dev -w @telemesync/web`. O painel renderiza no browser como na app e os ficheiros ficam em `android-mock-output/`.
 
 Ver também [`docs/architecture.md`](docs/architecture.md) e [`docs/camera-timestamps.md`](docs/camera-timestamps.md).
 

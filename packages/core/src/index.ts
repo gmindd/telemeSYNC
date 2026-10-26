@@ -29,3 +29,8 @@ export * from './sync/report.ts';
 export * from './project/project.ts';
 export * from './overlays/layout.ts';
 export * from './export/formats.ts';
+export * from './export/frames.ts';
+export * from './export/qtrle.ts';
+export * from './export/mov.ts';
+export * from './export/webm.ts';
+export * from './export/outputs.ts';

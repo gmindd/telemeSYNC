@@ -1,4 +1,4 @@
-import { effectiveStart, formatHint, formatLabel, formatNumber, OUTPUT_FORMATS, outputExtension, overlayFileSlug, overlayLabel, tr, type OutputFormat } from '@telemesync/core';
+import { effectiveStart, errorText, formatHint, formatLabel, formatNumber, OUTPUT_FORMATS, outputExtension, overlayFileSlug, overlayLabel, tr, type OutputFormat } from '@telemesync/core';
 import { useLang, useT } from '../i18n/index.tsx';
 import { useApp } from '../lib/store.ts';
 import { api } from '../lib/api.ts';
@@ -6,7 +6,7 @@ import { fmtFps } from '../lib/format.ts';
 
 export function StepRender() {
   const st = useApp();
-  const { ride, sync, selected, overlays, job, format, maxFps, outputDir, rideName, renderError, rideId, exportSeparate, exportComposite, compositeShortSide } = st;
+  const { ride, sync, selected, overlays, job, format, formats, maxFps, outputDir, rideName, renderError, rideId, exportSeparate, exportComposite, compositeShortSide } = st;
   const t = useT();
   const lang = useLang((s) => s.lang);
   if (!ride) return <section><p>{t('sync.needRide')}</p></section>;
@@ -45,14 +45,18 @@ export function StepRender() {
           <label className="field grow">
             {t('render.format')}
             <select value={format} onChange={(e) => st.setFormat(e.target.value as OutputFormat)} disabled={running}>
-              {OUTPUT_FORMATS.map((f) => <option key={f.id} value={f.id}>{formatLabel(f.id, lang)}</option>)}
+              {formats.map((id) => <option key={id} value={id}>{formatLabel(id, lang)}</option>)}
             </select>
             <span className="format-hint">{formatHint(formatInfo.id, lang)}</span>
           </label>
         </div>
-        <p className="format-note">
-          <b>{t('render.blackBg')}</b> {t('render.blackBgFix')}
-        </p>
+        {api.local ? (
+          <p className="format-note">{t('android.formatNote')}</p>
+        ) : (
+          <p className="format-note">
+            <b>{t('render.blackBg')}</b> {t('render.blackBgFix')}
+          </p>
+        )}
         <div className="export-modes">
           <label className={`mode${exportSeparate ? ' on' : ''}`}>
             <input type="checkbox" checked={exportSeparate} disabled={running} onChange={(e) => st.setExportOptions({ exportSeparate: e.target.checked })} />
@@ -136,7 +140,7 @@ export function StepRender() {
                 {t('render.files', { done: job.tasks.filter((k) => k.status === 'done').length, total: job.tasks.length })}
                 {job.finishedAt ? ` ${t('render.in', { s: Math.round((job.finishedAt - job.startedAt) / 1000) })}` : ''}.
               </p>
-              <button className="primary" onClick={() => api.openFolder(job.rideDir)}>{t('render.openFolder')}</button>
+              <button className="primary" onClick={() => api.openFolder(job.rideDir).catch((e) => st.showNotice(errorText(e, lang)))}>{t('render.openFolder')}</button>
             </div>
           ) : null}
         </div>

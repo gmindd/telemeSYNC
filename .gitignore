@@ -11,3 +11,4 @@ fixtures/private/
 *.insv
 !fixtures/**/*.json
 dist-release/
+android-mock-output/

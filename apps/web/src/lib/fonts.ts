@@ -4,8 +4,8 @@ import w600 from '@telemesync/core/assets/fonts/inter/Inter-600.woff2?url';
 import w700 from '@telemesync/core/assets/fonts/inter/Inter-700.woff2?url';
 import w800 from '@telemesync/core/assets/fonts/inter/Inter-800.woff2?url';
 
-/** Loads the same embedded font files the exporter uses, so preview and export match. */
-export async function loadEmbeddedFonts(): Promise<void> {
+/** Loads the same embedded font files the exporter uses, so preview and export match (also in a worker). */
+export async function loadEmbeddedFonts(fonts: FontFaceSet = (self as unknown as { fonts: FontFaceSet }).fonts): Promise<void> {
   const faces = [
     [w400, '400'],
     [w600, '600'],
@@ -15,7 +15,7 @@ export async function loadEmbeddedFonts(): Promise<void> {
   await Promise.all(
     faces.map(async (f) => {
       await f.load();
-      document.fonts.add(f);
+      fonts.add(f);
     }),
   );
   clearTextMetricsCache();

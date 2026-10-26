@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">telemeSYNC</string>
+    <string name="exit_question">Leave telemeSYNC? Work not saved as a project is lost.</string>
+    <string name="exit_yes">Leave</string>
+    <string name="exit_no">Stay</string>
+</resources>

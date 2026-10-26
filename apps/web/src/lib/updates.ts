@@ -1,10 +1,12 @@
 import type { Lang } from '@telemesync/core';
+import { android } from './local/android.ts';
 
 /** Systems with a download of their own in data/latest.json. */
-export type Platform = 'windows' | 'mac';
+export type Platform = 'windows' | 'mac' | 'android';
 
-/** The system the panel is open on (the server runs on the same computer). */
+/** The system the panel is open on (the server runs on the same computer; the Android app has no server). */
 export function currentPlatform(): Platform {
+  if (android) return 'android';
   return /Mac/i.test(navigator.userAgent) ? 'mac' : 'windows';
 }
 

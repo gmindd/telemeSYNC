@@ -5,12 +5,13 @@ import { availableParallelism } from 'node:os';
 import { join } from 'node:path';
 import {
   cappedFps,
+  clipBaseName,
   compositeSize,
-  outputExtension,
+  outputFileName,
   resolveLayout,
   type GadgetLayout,
   getOverlay,
-  overlayFileSlug,
+  safeName,
   tr,
   type Lang,
   type Fps,
@@ -86,18 +87,7 @@ export interface JobSnapshot {
   finishedAt?: number;
 }
 
-/** Windows-safe file/folder name. */
-export function safeName(s: string, lang?: Lang): string {
-  const cleaned = s
-    .replace(/[<>:"/\\|?*\x00-\x1f]/g, '_')
-    .replace(/[. ]+$/g, '')
-    .trim();
-  return cleaned.slice(0, 120) || tr(lang, 'file.unnamed');
-}
-
-export function clipBaseName(fileName: string, lang?: Lang): string {
-  return safeName(fileName.replace(/\.[^.]+$/, ''), lang);
-}
+export { clipBaseName, safeName } from '@telemesync/core';
 
 export class Job extends EventEmitter {
   readonly id: string;
@@ -117,11 +107,10 @@ export class Job extends EventEmitter {
       const base = clipBaseName(clip.fileName, req.language);
       const outputs: (OverlayId | 'composite')[] = [...(req.composite ? ['composite' as const] : []), ...(req.separate ? req.overlays : [])];
       for (const overlay of outputs) {
-        const name = `${base}_${overlay === 'composite' ? tr(req.language, 'file.composite') : overlayFileSlug(overlay, req.language)}`;
         this.tasks.push({
           clipId: clip.id,
           overlay,
-          outPath: join(this.rideDir, base, `${name}${outputExtension(req.format)}`),
+          outPath: join(this.rideDir, base, outputFileName(base, overlay, req.format, req.language)),
           status: 'queued',
           progress: 0,
         });
