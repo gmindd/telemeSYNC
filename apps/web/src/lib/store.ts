@@ -87,6 +87,7 @@ interface Actions {
   assignCamera(clipId: string, target: string): void;
   setCameraTimeZone(cameraId: string, tz: string): void;
   setCameraLabel(cameraId: string, label: string): void;
+  setCameraRotation(cameraId: string, rotation: 0 | 180): void;
   toggleOverlay(id: OverlayId, on: boolean): void;
   setStyle(p: Partial<OverlayStyle>): void;
   setOverlayLang(v: Lang | 'auto'): void;
@@ -302,6 +303,11 @@ export const useApp = create<State & Actions>((set, get) => ({
   setCameraLabel(cameraId, label) {
     const sync = get().sync;
     set({ sync: { ...sync, cameras: sync.cameras.map((c) => (c.id === cameraId ? { ...c, label } : c)) } });
+  },
+
+  setCameraRotation(cameraId, videoRotation) {
+    const sync = get().sync;
+    set({ sync: { ...sync, cameras: sync.cameras.map((c) => (c.id === cameraId ? { ...c, videoRotation } : c)) } });
   },
 
   toggleOverlay(id, on) {

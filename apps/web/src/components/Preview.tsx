@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   effectiveStart,
+  formatDuration,
   resolveLayout,
   type GadgetLayout,
   type GadgetPlacement,
@@ -95,7 +96,13 @@ export function Preview(props: {
   const box = useRef<HTMLDivElement>(null);
   const canvases = useRef(new Map<OverlayId, HTMLCanvasElement>());
   const [localMs, setLocalMs] = useState(0);
+  const [playing, setPlaying] = useState(false);
   const localRef = useRef(0);
+  // Upside-down camera: only the video turns; the native controls would turn with it, so own controls are shown.
+  const rotated = camera.videoRotation === 180;
+  useEffect(() => {
+    if (rotated && video.current) setLocalMs(video.current.currentTime * 1000);
+  }, [rotated]);
   const lastStoreUpdate = useRef(0);
 
   const isInsv = /\.insv$/i.test(clip.meta.fileName);
@@ -199,9 +206,13 @@ export function Preview(props: {
           <video
             ref={video}
             src={url}
-            controls
+            controls={!rotated}
             muted
             playsInline
+            className={rotated ? 'rotated' : undefined}
+            onPlay={() => setPlaying(true)}
+            onPause={() => setPlaying(false)}
+            onTimeUpdate={(e) => rotated && setLocalMs(e.currentTarget.currentTime * 1000)}
             onLoadedData={() => setState('ok')}
             onError={() => setState('error')}
           />
@@ -214,6 +225,28 @@ export function Preview(props: {
           ))}
         </div>
       </div>
+      {rotated && state === 'ok' ? (
+        <div className="video-controls">
+          <button className="small" onClick={() => (video.current?.paused ? void video.current.play() : video.current?.pause())}>
+            {playing ? `❚❚ ${t('preview.pause')}` : `▶ ${t('preview.play')}`}
+          </button>
+          <input
+            type="range"
+            className="scrub"
+            min={0}
+            max={clip.meta.durationMs}
+            step={40}
+            value={localMs}
+            onChange={(e) => {
+              if (video.current) video.current.currentTime = Number(e.target.value) / 1000;
+              setLocalMs(Number(e.target.value));
+            }}
+          />
+          <span className="muted">
+            {formatDuration(localMs)} / {formatDuration(clip.meta.durationMs)}
+          </span>
+        </div>
+      ) : null}
       {state === 'error' || state === 'nofile' || state === 'unsupported' ? (
         <>
           <p className="notice">{reasonText(state, clip, t)}</p>

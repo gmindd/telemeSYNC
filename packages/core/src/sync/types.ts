@@ -60,6 +60,8 @@ export interface Camera {
   offsetMs: number;
   /** Time zone used to interpret local wall-clock timestamps. */
   timeZone: string;
+  /** Preview only: 180 = the camera films upside down (e.g. chest mount). Overlays and exports are not rotated. */
+  videoRotation?: 0 | 180;
 }
 
 export interface Clip {

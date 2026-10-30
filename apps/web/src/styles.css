@@ -143,6 +143,11 @@ progress { accent-color: var(--accent); height: 10px; }
 }
 .gadget:hover .gadget-resize { opacity: 1; }
 .scrub { width: 100%; }
+.preview-box video.rotated { transform: rotate(180deg); }
+.video-controls { display: flex; align-items: center; gap: 10px; margin-top: 6px; }
+.video-controls .scrub { flex: 1; }
+.video-controls button { white-space: nowrap; }
+button.toggle-on { border-color: var(--accent); color: var(--accent); }
 .clip-detail h3 { word-break: break-all; }
 .warning { color: var(--warn); margin: 4px 0; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 .values table { width: 100%; }

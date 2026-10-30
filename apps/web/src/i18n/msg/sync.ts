@@ -92,6 +92,16 @@ export const SYNC = {
     'El navegador no puede reproducir este archivo. Solo se muestran los datos — usa el control deslizante para recorrer el clip.',
     'Der Browser kann diese Datei nicht abspielen. Es werden nur die Daten angezeigt — mit dem Schieberegler durch den Clip gehen.',
   ],
+  'preview.rotate': ['Rotate video 180°', 'Rodar vídeo 180°', 'Pivoter la vidéo de 180°', 'Girar vídeo 180°', 'Video um 180° drehen'],
+  'preview.rotateTitle': [
+    'For a camera that films upside down (e.g. chest mount). Only the preview turns: the overlays and the exported files stay as they are. Applies to every clip of this camera.',
+    'Para câmaras que filmam de pernas para o ar (ex.: suporte de peito). Só roda a pré-visualização: os overlays e os ficheiros exportados não mudam. Aplica-se a todos os clips desta câmara.',
+    'Pour une caméra qui filme à l’envers (ex. fixation pectorale). Seul l’aperçu pivote : les overlays et les fichiers exportés ne changent pas. S’applique à tous les clips de cette caméra.',
+    'Para cámaras que graban al revés (p. ej., arnés de pecho). Solo gira la vista previa: los overlays y los archivos exportados no cambian. Se aplica a todos los clips de esta cámara.',
+    'Für eine Kamera, die kopfüber filmt (z. B. Brusthalterung). Nur die Vorschau dreht sich: Overlays und exportierte Dateien bleiben unverändert. Gilt für alle Clips dieser Kamera.',
+  ],
+  'preview.play': ['Play', 'Reproduzir', 'Lire', 'Reproducir', 'Abspielen'],
+  'preview.pause': ['Pause', 'Pausa', 'Pause', 'Pausa', 'Pause'],
   'preview.gadget': [
     '{name}: drag to move, bottom-right corner to resize',
     '{name}: arraste para mover, canto inferior direito para redimensionar',

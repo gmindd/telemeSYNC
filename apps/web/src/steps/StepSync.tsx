@@ -167,6 +167,14 @@ export function StepSync() {
             <div className="row muted">
               {t('sync.dragHint')}
               <button className="small" onClick={st.resetLayout}>{t('sync.resetLayout')}</button>
+              <button
+                className={`small${cam.videoRotation === 180 ? ' toggle-on' : ''}`}
+                aria-pressed={cam.videoRotation === 180}
+                title={t('preview.rotateTitle')}
+                onClick={() => st.setCameraRotation(cam.id, cam.videoRotation === 180 ? 0 : 180)}
+              >
+                ⟲ {t('preview.rotate')}
+              </button>
             </div>
           </div>
           <div className="sync-side">
