@@ -1,22 +1,39 @@
+import { useState } from 'react';
 import {
   availableOverlays,
   DEFAULT_STYLE,
   effectiveStart,
   isDialOverlay,
   LANGS,
+  OVERLAY_THEMES,
   overlayLabel,
+  overlayTheme,
   PANEL_METRICS,
   panelMetricName,
   panelMetricOf,
   panelOptions,
   type Lang,
   type OverlayStyle,
+  type OverlayTheme,
   type PanelMetric,
   type PanelOptions,
 } from '@telemesync/core';
 import { OverlayCanvas } from '../components/OverlayCanvas.tsx';
 import { langName, useLang, useT } from '../i18n/index.tsx';
 import { useApp } from '../lib/store.ts';
+
+const THEME_KEY = 'telemesync.overlayTheme';
+
+/** Tab of overlay designs last opened (Default or Christmas). */
+function storedTheme(): OverlayTheme {
+  try {
+    const v = localStorage.getItem(THEME_KEY);
+    if (v && (OVERLAY_THEMES as string[]).includes(v)) return v as OverlayTheme;
+  } catch {
+    /* ignore */
+  }
+  return 'default';
+}
 
 function Color({ label, k }: { label: string; k: 'textColor' | 'accentColor' | 'outlineColor' | 'gradientFrom' | 'gradientTo' }) {
   const { style, setStyle } = useApp();
@@ -33,11 +50,22 @@ export function StepOverlays() {
   const { ride, overlays, toggleOverlay, style, setStyle, sync, activeClipId, playhead, setStep, overlayLang, setOverlayLang } = useApp();
   const tr = useT();
   const lang = useLang((s) => s.lang);
+  const [theme, setTheme] = useState<OverlayTheme>(storedTheme);
+  const chooseTheme = (th: OverlayTheme) => {
+    setTheme(th);
+    try {
+      localStorage.setItem(THEME_KEY, th);
+    } catch {
+      /* ignore */
+    }
+  };
   if (!ride) return <section><p>{tr('sync.needRide')}</p></section>;
   const all = availableOverlays(ride);
-  const defs = all.filter((d) => !panelMetricOf(d.id) && !isDialOverlay(d.id));
-  const dials = all.filter((d) => isDialOverlay(d.id));
-  const panels = all.filter((d) => panelMetricOf(d.id));
+  const natal = all.filter((d) => d.theme === 'natal');
+  const classic = all.filter((d) => (d.theme ?? 'default') === 'default');
+  const defs = classic.filter((d) => !panelMetricOf(d.id) && !isDialOverlay(d.id));
+  const dials = classic.filter((d) => isDialOverlay(d.id));
+  const panels = classic.filter((d) => panelMetricOf(d.id));
   const chartMetrics = PANEL_METRICS.filter((m) => ride.available.has(m));
   const distUnit = style.units.system === 'metric' ? 'km' : 'mi';
   const setPanel = (m: PanelMetric, patch: Partial<PanelOptions>) =>
@@ -53,67 +81,98 @@ export function StepOverlays() {
     <section>
       <h2>{tr('ov.title')}</h2>
       <p className="lead">{tr('ov.lead')}</p>
-      <div className="overlay-grid">
-        {defs.map((d) => (
-          <label key={d.id} className={`overlay-card${overlays.includes(d.id) ? ' on' : ''}`}>
-            <input type="checkbox" checked={overlays.includes(d.id)} onChange={(e) => toggleOverlay(d.id, e.target.checked)} />
-            <span>{overlayLabel(d.id, lang)}</span>
-            <div className="checker">
-              <OverlayCanvas id={d.id} ride={ride} style={style} t={t} clipStart={clipStart} clipEnd={clipEnd} cssScale={0.45} fitHeight={190} />
-            </div>
-          </label>
-        ))}
-      </div>
-
-      <h3>{tr('ov.dials')}</h3>
-      <p className="lead">{tr('ov.dialsLead')}</p>
-      <div className="overlay-grid">
-        {dials.map((d) => (
-          <label key={d.id} className={`overlay-card${overlays.includes(d.id) ? ' on' : ''}`}>
-            <input type="checkbox" checked={overlays.includes(d.id)} onChange={(e) => toggleOverlay(d.id, e.target.checked)} />
-            <span>{overlayLabel(d.id, lang)}</span>
-            <div className="checker">
-              <OverlayCanvas id={d.id} ride={ride} style={style} t={t} clipStart={clipStart} clipEnd={clipEnd} cssScale={0.45} fitHeight={190} />
-            </div>
-          </label>
-        ))}
-      </div>
-
-      <h3>{tr('ov.panels')}</h3>
-      <p className="lead">{tr('ov.panelsLead')}</p>
-      <div className="overlay-grid panels">
-        {panels.map((d) => {
-          const m = panelMetricOf(d.id)!;
-          const o = panelOptions(m, style, ride);
-          const on = overlays.includes(d.id);
+      <div className="theme-tabs" role="tablist">
+        {OVERLAY_THEMES.map((th) => {
+          const n = overlays.filter((o) => overlayTheme(o) === th).length;
           return (
-            <div key={d.id} className={`overlay-card${on ? ' on' : ''}`}>
-              <label className="overlay-card-head">
-                <input type="checkbox" checked={on} onChange={(e) => toggleOverlay(d.id, e.target.checked)} />
-                <span>{overlayLabel(d.id, lang)}</span>
-              </label>
-              <div className="panel-opts">
-                <label className="field">
-                  {tr('ov.chart')}
-                  <select value={o.chart} onChange={(e) => setPanel(m, { chart: e.target.value as PanelMetric })}>
-                    {chartMetrics.map((c) => <option key={c} value={c}>{panelMetricName(c, lang)}</option>)}
-                  </select>
-                </label>
-                <label className="field">
-                  {tr('ov.window')}
-                  <select value={o.window} onChange={(e) => setPanel(m, { window: e.target.value as PanelOptions['window'] })}>
-                    <option value="time">{tr('ov.lastMin', { n: style.chartMinutes })}</option>
-                    <option value="distance">{tr('ov.lastDist', { n: style.chartDistance, unit: distUnit })}</option>
-                  </select>
-                </label>
-              </div>
-              <div className="checker" onClick={() => toggleOverlay(d.id, !on)}>
-                <OverlayCanvas id={d.id} ride={ride} style={style} t={t} clipStart={clipStart} clipEnd={clipEnd} cssScale={0.45} fitHeight={220} />
-              </div>
-            </div>
+            <button key={th} role="tab" aria-selected={theme === th} className={theme === th ? 'active' : ''} onClick={() => chooseTheme(th)}>
+              {tr(`ov.theme.${th}`)}
+              {n ? <span className="theme-count">{n}</span> : null}
+            </button>
           );
         })}
       </div>
+
+      {theme === 'default' ? (
+        <>
+        <div className="overlay-grid">
+          {defs.map((d) => (
+            <label key={d.id} className={`overlay-card${overlays.includes(d.id) ? ' on' : ''}`}>
+              <input type="checkbox" checked={overlays.includes(d.id)} onChange={(e) => toggleOverlay(d.id, e.target.checked)} />
+              <span>{overlayLabel(d.id, lang)}</span>
+              <div className="checker">
+                <OverlayCanvas id={d.id} ride={ride} style={style} t={t} clipStart={clipStart} clipEnd={clipEnd} cssScale={0.45} fitHeight={190} />
+              </div>
+            </label>
+          ))}
+        </div>
+
+        <h3>{tr('ov.dials')}</h3>
+        <p className="lead">{tr('ov.dialsLead')}</p>
+        <div className="overlay-grid">
+          {dials.map((d) => (
+            <label key={d.id} className={`overlay-card${overlays.includes(d.id) ? ' on' : ''}`}>
+              <input type="checkbox" checked={overlays.includes(d.id)} onChange={(e) => toggleOverlay(d.id, e.target.checked)} />
+              <span>{overlayLabel(d.id, lang)}</span>
+              <div className="checker">
+                <OverlayCanvas id={d.id} ride={ride} style={style} t={t} clipStart={clipStart} clipEnd={clipEnd} cssScale={0.45} fitHeight={190} />
+              </div>
+            </label>
+          ))}
+        </div>
+
+        <h3>{tr('ov.panels')}</h3>
+        <p className="lead">{tr('ov.panelsLead')}</p>
+        <div className="overlay-grid panels">
+          {panels.map((d) => {
+            const m = panelMetricOf(d.id)!;
+            const o = panelOptions(m, style, ride);
+            const on = overlays.includes(d.id);
+            return (
+              <div key={d.id} className={`overlay-card${on ? ' on' : ''}`}>
+                <label className="overlay-card-head">
+                  <input type="checkbox" checked={on} onChange={(e) => toggleOverlay(d.id, e.target.checked)} />
+                  <span>{overlayLabel(d.id, lang)}</span>
+                </label>
+                <div className="panel-opts">
+                  <label className="field">
+                    {tr('ov.chart')}
+                    <select value={o.chart} onChange={(e) => setPanel(m, { chart: e.target.value as PanelMetric })}>
+                      {chartMetrics.map((c) => <option key={c} value={c}>{panelMetricName(c, lang)}</option>)}
+                    </select>
+                  </label>
+                  <label className="field">
+                    {tr('ov.window')}
+                    <select value={o.window} onChange={(e) => setPanel(m, { window: e.target.value as PanelOptions['window'] })}>
+                      <option value="time">{tr('ov.lastMin', { n: style.chartMinutes })}</option>
+                      <option value="distance">{tr('ov.lastDist', { n: style.chartDistance, unit: distUnit })}</option>
+                    </select>
+                  </label>
+                </div>
+                <div className="checker" onClick={() => toggleOverlay(d.id, !on)}>
+                  <OverlayCanvas id={d.id} ride={ride} style={style} t={t} clipStart={clipStart} clipEnd={clipEnd} cssScale={0.45} fitHeight={220} />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        </>
+      ) : (
+        <>
+          <p className="lead">{tr('ov.natalLead')}</p>
+          <div className="overlay-grid">
+            {natal.map((d) => (
+              <label key={d.id} className={`overlay-card${overlays.includes(d.id) ? ' on' : ''}`}>
+                <input type="checkbox" checked={overlays.includes(d.id)} onChange={(e) => toggleOverlay(d.id, e.target.checked)} />
+                <span>{overlayLabel(d.id, lang)}</span>
+                <div className="checker">
+                  <OverlayCanvas id={d.id} ride={ride} style={style} t={t} clipStart={clipStart} clipEnd={clipEnd} cssScale={0.45} fitHeight={190} />
+                </div>
+              </label>
+            ))}
+          </div>
+        </>
+      )}
 
       <h3>{tr('ov.style')}</h3>
       <div className="style-form">

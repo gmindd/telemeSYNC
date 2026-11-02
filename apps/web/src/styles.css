@@ -155,6 +155,10 @@ button.toggle-on { border-color: var(--accent); color: var(--accent); }
 .values td { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
 .values { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px; }
 
+.theme-tabs { display: flex; gap: 6px; margin: 4px 0 14px; border-bottom: 1px solid var(--border); }
+.theme-tabs button { border: 1px solid transparent; border-bottom: none; border-radius: 8px 8px 0 0; background: transparent; padding: 8px 16px; font-weight: 700; margin-bottom: -1px; }
+.theme-tabs button.active { background: var(--panel); border-color: var(--border); color: var(--accent); }
+.theme-count { display: inline-block; min-width: 20px; margin-left: 8px; padding: 0 6px; border-radius: 10px; background: var(--accent); color: #1a0d00; font-size: 12px; line-height: 18px; }
 .overlay-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; }
 .overlay-card { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 8px; cursor: pointer; display: flex; flex-direction: column; gap: 6px; }
 .overlay-card.on { border-color: var(--accent); }

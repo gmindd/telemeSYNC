@@ -10,8 +10,10 @@ import { elevationLossAt } from './dials.ts';
 
 // Whole-ride elevation profile in a dark card: axes in the ride's units, gain/loss so far,
 // travelled part bright, the rest dimmed.
-const W = 600;
-const H = 240;
+export const PROFILE_W = 600;
+export const PROFILE_H = 240;
+const W = PROFILE_W;
+const H = PROFILE_H;
 const R = 16;
 /** Transparent margin around the cards (keeps the anti-aliased border inside the frame). */
 const M = 6;
@@ -99,6 +101,14 @@ function profileOf(ride: RideData, style: OverlayStyle): Profile {
   const p = { xs: Float64Array.from(xs), alt: Float64Array.from(alt), idx: Int32Array.from(idx), lo, hi, step, total };
   byRide.set(key, p);
   return p;
+}
+
+/** Highest point of the profile in card coordinates (for a marker on the summit). */
+export function profilePeak(ride: RideData, style: OverlayStyle): { x: number; y: number } {
+  const pr = profileOf(ride, style);
+  let k = 0;
+  for (let i = 1; i < pr.alt.length; i++) if (pr.alt[i] > pr.alt[k]) k = i;
+  return { x: pr.xs[k], y: PY1 - ((pr.alt[k] - pr.lo) / (pr.hi - pr.lo)) * (PY1 - PY0) };
 }
 
 export const dialProfileOverlay: OverlayDefinition = {

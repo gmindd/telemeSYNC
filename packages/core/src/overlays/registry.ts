@@ -4,12 +4,19 @@ import { sampleAt } from '../telemetry/ride.ts';
 import { dialFamily } from './dial/index.ts';
 import { elevationProfileOverlay } from './elevationProfile.ts';
 import { mapOverlay } from './map.ts';
+import { natalFamily } from './natal/index.ts';
 import { panelOverlays } from './panel/panel.ts';
 import { textOverlays } from './text/metrics.ts';
+import { METRIC_SLUGS } from './slugs.ts';
 import { setNumberLang } from './units.ts';
-import type { Ctx2D, FrameState, OverlayContext, OverlayDefinition, OverlayId, OverlayStyle } from './types.ts';
+import type { Ctx2D, FrameState, OverlayContext, OverlayDefinition, OverlayId, OverlayStyle, OverlayTheme } from './types.ts';
 
-export const OVERLAYS: OverlayDefinition[] = [...textOverlays, mapOverlay, elevationProfileOverlay, ...panelOverlays, ...dialFamily];
+export const OVERLAYS: OverlayDefinition[] = [...textOverlays, mapOverlay, elevationProfileOverlay, ...panelOverlays, ...dialFamily, ...natalFamily];
+
+/** Theme of an overlay in the app (tabs in step 4). */
+export function overlayTheme(id: OverlayId): OverlayTheme {
+  return OVERLAYS.find((o) => o.id === id)?.theme ?? 'default';
+}
 
 export function getOverlay(id: OverlayId): OverlayDefinition {
   const o = OVERLAYS.find((x) => x.id === id);
@@ -63,24 +70,6 @@ export function renderOverlayFrame(ctx: Ctx2D, def: OverlayDefinition, t: number
   ctx.restore();
 }
 
-const METRIC_SLUGS: Record<string, Translations> = {
-  speed: ['speed', 'velocidade', 'vitesse', 'velocidad', 'geschwindigkeit'],
-  altitude: ['altitude', 'altitude', 'altitude', 'altitud', 'hoehe'],
-  grade: ['gradient', 'inclinacao', 'pente', 'pendiente', 'steigung'],
-  heartRate: ['hr', 'fc', 'fc', 'fc', 'hf'],
-  cadence: ['cadence', 'cadencia', 'cadence', 'cadencia', 'trittfrequenz'],
-  power: ['power', 'potencia', 'puissance', 'potencia', 'leistung'],
-  temperature: ['temperature', 'temperatura', 'temperature', 'temperatura', 'temperatur'],
-  distance: ['distance', 'distancia', 'distance', 'distancia', 'distanz'],
-  elevationGain: ['elevation-gain', 'desnivel', 'denivele', 'desnivel', 'hoehenmeter'],
-  elapsedTime: ['time', 'tempo', 'temps', 'tiempo', 'zeit'],
-  localTime: ['clock', 'hora', 'heure', 'hora', 'uhrzeit'],
-  map: ['map', 'mapa', 'carte', 'mapa', 'karte'],
-  elevationProfile: ['profile', 'perfil', 'profil', 'perfil', 'profil'],
-  dialMap: ['round-map', 'mapa-circular', 'carte-ronde', 'mapa-circular', 'runde-karte'],
-  dialProfile: ['profile-card', 'perfil-cartao', 'profil-carte', 'perfil-tarjeta', 'profil-karte'],
-  dialSummary: ['compact-panel', 'painel-compacto', 'panneau-compact', 'panel-compacto', 'kompakt-panel'],
-};
 const PANEL_PREFIX: Translations = ['panel', 'painel', 'panneau', 'panel', 'panel'];
 const DIAL_PREFIX: Translations = ['dial', 'mostrador', 'cadran', 'esfera', 'rundinstrument'];
 const DIAL_METRIC: Partial<Record<OverlayId, string>> = { dialTime: 'elapsedTime' };
@@ -92,6 +81,8 @@ function innerMetric(id: OverlayId, prefix: 'panel' | 'dial'): string {
 
 /** Slug used in output file names (`{clip}_{slug}.mov`), in the app language. */
 export function overlayFileSlug(id: OverlayId, lang: Lang | undefined): string {
+  const def = OVERLAYS.find((o) => o.id === id);
+  if (def?.slugFor) return def.slugFor(lang);
   if (METRIC_SLUGS[id]) return pick(METRIC_SLUGS[id], lang);
   if (id.startsWith('panel')) return `${pick(PANEL_PREFIX, lang)}-${pick(METRIC_SLUGS[innerMetric(id, 'panel')], lang)}`;
   return `${pick(DIAL_PREFIX, lang)}-${pick(METRIC_SLUGS[innerMetric(id, 'dial')], lang)}`;
@@ -99,6 +90,8 @@ export function overlayFileSlug(id: OverlayId, lang: Lang | undefined): string {
 
 /** Name of an overlay in the app, in `lang`. */
 export function overlayLabel(id: OverlayId, lang: Lang | undefined): string {
+  const def = OVERLAYS.find((o) => o.id === id);
+  if (def?.labelFor) return def.labelFor(lang);
   if (id === 'map') return tr(lang, 'overlay.map');
   if (id === 'elevationProfile') return tr(lang, 'overlay.elevationProfile');
   if (id === 'dialMap' || id === 'dialProfile' || id === 'dialSummary') return tr(lang, `overlay.${id}`);

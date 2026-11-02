@@ -8,6 +8,15 @@ export const OVERLAYS_MSG = {
     'Cada overlay elegido genera un vídeo transparente por clip. Solo aparecen las métricas que existen en el archivo.',
     'Jedes gewählte Overlay erzeugt ein transparentes Video pro Clip. Es erscheinen nur Messwerte, die in der Datei vorhanden sind.',
   ],
+  'ov.theme.default': ['Default', 'Predefinido', 'Par défaut', 'Predeterminado', 'Standard'],
+  'ov.theme.natal': ['Christmas 🎄', 'Natal 🎄', 'Noël 🎄', 'Navidad 🎄', 'Weihnachten 🎄'],
+  'ov.natalLead': [
+    'Festive versions of the gadgets: snow, lights, holly, candy canes, Santa hats, wreaths, a snow globe and a mug of hot chocolate. They can be combined with the default designs.',
+    'Versões festivas dos gadgets: neve, luzes, azevinho, bengalas de Natal, gorros do Pai Natal, coroas, um globo de neve e uma caneca de chocolate quente. Podem ser combinadas com os designs predefinidos.',
+    'Des versions festives des gadgets : neige, guirlandes lumineuses, houx, sucres d’orge, bonnets du Père Noël, couronnes, une boule à neige et une tasse de chocolat chaud. Elles se combinent avec les designs par défaut.',
+    'Versiones festivas de los gadgets: nieve, luces, acebo, bastones de caramelo, gorros de Papá Noel, coronas, una bola de nieve y una taza de chocolate caliente. Se pueden combinar con los diseños predeterminados.',
+    'Festliche Versionen der Gadgets: Schnee, Lichterketten, Stechpalme, Zuckerstangen, Weihnachtsmützen, Kränze, eine Schneekugel und eine Tasse heiße Schokolade. Sie lassen sich mit den Standard-Designs kombinieren.',
+  ],
   'ov.dials': ['Dials', 'Mostradores', 'Cadrans', 'Esferas', 'Rundinstrumente'],
   'ov.dialsLead': [
     'Round gadgets with a chainring rim, a round map that turns with your direction, an elevation profile and a compact panel with the averages. They use the panel background and the accent colour.',

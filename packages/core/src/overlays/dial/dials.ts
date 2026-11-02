@@ -35,7 +35,7 @@ export function elevationLossAt(ride: RideData, s: RideSample): number {
   return loss[Math.max(0, Math.min(loss.length - 1, s.index))];
 }
 
-function beforeStart(ride: RideData, s: RideSample): boolean {
+export function beforeStart(ride: RideData, s: RideSample): boolean {
   return s.outside && s.t < ride.startTime;
 }
 
@@ -64,7 +64,7 @@ interface DialSpec {
 }
 
 /** Arc position of a panel metric inside its ride range (display units). */
-function metricArc(m: PanelMetric) {
+export function metricArc(m: PanelMetric) {
   const info = PANEL_METRIC_INFO[m];
   return (s: RideSample, style: OverlayStyle, ride: RideData) => {
     const r = gaugeRange(ride, info, style);

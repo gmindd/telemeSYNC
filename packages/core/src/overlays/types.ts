@@ -11,6 +11,9 @@ export interface Ctx2D {
   save(): void;
   restore(): void;
   setTransform(a: number, b: number, c: number, d: number, e: number, f: number): void;
+  translate(x: number, y: number): void;
+  rotate(angle: number): void;
+  scale(x: number, y: number): void;
   clearRect(x: number, y: number, w: number, h: number): void;
   fillRect(x: number, y: number, w: number, h: number): void;
   beginPath(): void;
@@ -18,6 +21,7 @@ export interface Ctx2D {
   moveTo(x: number, y: number): void;
   lineTo(x: number, y: number): void;
   arc(x: number, y: number, r: number, a0: number, a1: number, ccw?: boolean): void;
+  ellipse(x: number, y: number, rx: number, ry: number, rotation: number, a0: number, a1: number, ccw?: boolean): void;
   rect(x: number, y: number, w: number, h: number): void;
   clip(): void;
   quadraticCurveTo(cpx: number, cpy: number, x: number, y: number): void;
@@ -80,7 +84,26 @@ export type OverlayId =
   | 'dialTemperature'
   | 'dialMap'
   | 'dialProfile'
-  | 'dialSummary';
+  | 'dialSummary'
+  | 'natalHeartRate'
+  | 'natalHeartRateReindeer'
+  | 'natalCadence'
+  | 'natalSpeed'
+  | 'natalSpeedLog'
+  | 'natalGrade'
+  | 'natalGradeWarning'
+  | 'natalAltitude'
+  | 'natalAltitudeCabin'
+  | 'natalPower'
+  | 'natalPowerWreath'
+  | 'natalDistance'
+  | 'natalDistanceGlobe'
+  | 'natalTime'
+  | 'natalTimeMug'
+  | 'natalTemperature'
+  | 'natalMap'
+  | 'natalProfile'
+  | 'natalSummary';
 
 /** Metrics that have a dashboard panel (gauge + stats + chart), and that a panel chart can show. */
 export type PanelMetric = 'speed' | 'altitude' | 'grade' | 'heartRate' | 'cadence' | 'power' | 'temperature';
@@ -184,6 +207,9 @@ export interface FrameState {
   textSample: RideSample;
 }
 
+export type OverlayTheme = 'default' | 'natal';
+export const OVERLAY_THEMES: OverlayTheme[] = ['default', 'natal'];
+
 export interface OverlayDefinition {
   id: OverlayId;
   /** English name (the app shows overlayLabel(), in its language). */
@@ -194,6 +220,12 @@ export interface OverlayDefinition {
   size(style: OverlayStyle): { width: number; height: number };
   /** Text-only overlays are constant between text updates (render can reuse frames). */
   textOnly: boolean;
+  /** Theme the overlay belongs to in the app (default = the classic designs). */
+  theme?: OverlayTheme;
+  /** Name in the app, for overlays whose name is not built from the metric (see overlayLabel). */
+  labelFor?: (lang: Lang | undefined) => string;
+  /** Slug for output file names, in the app language (see overlayFileSlug). */
+  slugFor?: (lang: Lang | undefined) => string;
   /** Overlay that, with this style, also changes only at the text rate (e.g. panels in "text" mode). */
   textRateOnly?: (style: OverlayStyle) => boolean;
   draw(ctx: Ctx2D, frame: FrameState, style: OverlayStyle, octx: OverlayContext): void;

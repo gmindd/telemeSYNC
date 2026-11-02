@@ -26,6 +26,17 @@ export const CORE_MESSAGES = {
   'overlay.dialProfile': ['Elevation profile (card)', 'Perfil de altimetria (cartão)', 'Profil altimétrique (carte)', 'Perfil de altitud (tarjeta)', 'Höhenprofil (Karte)'],
   'overlay.dialSummary': ['Compact panel (averages)', 'Painel compacto (médias)', 'Panneau compact (moyennes)', 'Panel compacto (medias)', 'Kompaktes Panel (Schnitte)'],
 
+  // Christmas theme.
+  'overlay.natal': ['Christmas · {name}', 'Natal · {name}', 'Noël · {name}', 'Navidad · {name}', 'Weihnachten · {name}'],
+  'natal.v.reindeer': ['reindeer', 'renas', 'rennes', 'renos', 'Rentier'],
+  'natal.v.log': ['log', 'tronco', 'bûche', 'tronco', 'Baumstamm'],
+  'natal.v.warning': ['warning sign', 'sinal de perigo', 'panneau danger', 'señal de peligro', 'Warnschild'],
+  'natal.v.cabin': ['cabin', 'cabana', 'chalet', 'cabaña', 'Hütte'],
+  'natal.v.wreath': ['wreath', 'coroa', 'couronne', 'corona', 'Kranz'],
+  'natal.v.globe': ['snow globe', 'globo de neve', 'boule à neige', 'bola de nieve', 'Schneekugel'],
+  'natal.v.mug': ['hot chocolate', 'chocolate quente', 'chocolat chaud', 'chocolate caliente', 'heiße Schokolade'],
+  'natal.extra': ['EXTRA DATA', 'DADOS EXTRA', 'DONNÉES EXTRA', 'DATOS EXTRA', 'EXTRA-DATEN'],
+
   // Panels: chart names, subtitles, stats.
   'chart.speed': ['speed', 'velocidade', 'vitesse', 'velocidad', 'Geschwindigkeit'],
   'chart.altitude': ['elevation', 'altimetria', 'altimétrie', 'altimetría', 'Höhenprofil'],

@@ -3,7 +3,7 @@ import { formatDuration } from '../../util/timezone.ts';
 import { drawText, labelSize } from '../draw.ts';
 import { drawIcon } from '../panel/paint.ts';
 import { PANEL_METRIC_INFO, statsUpTo, type IconId } from '../panel/series.ts';
-import type { Ctx2D, OverlayDefinition, OverlayStyle, PanelMetric } from '../types.ts';
+import type { Ctx2D, FrameState, OverlayContext, OverlayDefinition, OverlayStyle, PanelMetric } from '../types.ts';
 import { convert, fmt } from '../units.ts';
 import { tr, type CoreKey } from '../../i18n/index.ts';
 import { dialPaint } from './common.ts';
@@ -11,8 +11,10 @@ import { drawCard } from './profile.ts';
 
 // Compact card with four ride-so-far numbers. Rows whose metric is missing from the file are
 // replaced by the next one in the list, so a ride without a power meter still shows four rows.
-const W = 380;
-const H = 236;
+export const SUMMARY_W = 380;
+export const SUMMARY_H = 236;
+const W = SUMMARY_W;
+const H = SUMMARY_H;
 const ROWS = 4;
 const TOP = 16;
 const ROW_H = (H - TOP * 2) / ROWS;
@@ -60,28 +62,33 @@ export const dialSummaryOverlay: OverlayDefinition = {
   textOnly: true,
   size: () => ({ width: W, height: H }),
   draw: (ctx: Ctx2D, frame, style, octx) => {
-    const ride = octx.ride;
-    const p = dialPaint(style);
-    const s = frame.textSample;
     drawCard(ctx, W, H, style);
-    const rows = ROW_CHOICES.filter((r) => ride.available.has(r.requires)).slice(0, ROWS);
-    rows.forEach((r, i) => {
-      const y = TOP + i * ROW_H;
-      if (i > 0) {
-        ctx.beginPath();
-        ctx.moveTo(24, y);
-        ctx.lineTo(W - 24, y);
-        ctx.strokeStyle = 'rgba(255,255,255,0.09)';
-        ctx.lineWidth = 1;
-        ctx.stroke();
-      }
-      const mid = y + ROW_H / 2;
-      drawIcon(ctx, r.icon, 42, mid, 26, 'rgba(255,255,255,0.88)');
-      const label = tr(style.language, r.label);
-      drawText(ctx, label, 70, mid + 5, p.ts, { size: labelSize(ctx, p.ts, label, 14, 700, 118), weight: 700, tabular: false, color: p.label });
-      const v = r.value(s, style, ride);
-      const vw = drawText(ctx, v.text, 196, mid + 10, p.ts, { size: 28, weight: 800 });
-      if (v.unit) drawText(ctx, v.unit, 196 + vw + 7, mid + 10, p.ts, { size: 15, weight: 600, tabular: false, color: p.label });
-    });
+    drawSummaryRows(ctx, frame, style, octx);
   },
 };
+
+/** The four rows of the compact panel, in a W × H box at the origin (no background). */
+export function drawSummaryRows(ctx: Ctx2D, frame: FrameState, style: OverlayStyle, octx: OverlayContext, labelColor?: string) {
+  const ride = octx.ride;
+  const p = dialPaint(style);
+  const s = frame.textSample;
+  const rows = ROW_CHOICES.filter((r) => ride.available.has(r.requires)).slice(0, ROWS);
+  rows.forEach((r, i) => {
+    const y = TOP + i * ROW_H;
+    if (i > 0) {
+      ctx.beginPath();
+      ctx.moveTo(24, y);
+      ctx.lineTo(W - 24, y);
+      ctx.strokeStyle = 'rgba(255,255,255,0.09)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+    const mid = y + ROW_H / 2;
+    drawIcon(ctx, r.icon, 42, mid, 26, 'rgba(255,255,255,0.88)');
+    const label = tr(style.language, r.label);
+    drawText(ctx, label, 70, mid + 5, p.ts, { size: labelSize(ctx, p.ts, label, 14, 700, 118), weight: 700, tabular: false, color: labelColor ?? p.label });
+    const v = r.value(s, style, ride);
+    const vw = drawText(ctx, v.text, 196, mid + 10, p.ts, { size: 28, weight: 800 });
+    if (v.unit) drawText(ctx, v.unit, 196 + vw + 7, mid + 10, p.ts, { size: 15, weight: 600, tabular: false, color: labelColor ?? p.label });
+  });
+}
