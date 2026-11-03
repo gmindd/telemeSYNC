@@ -37,6 +37,13 @@ const SWEEP = Math.PI * 1.5;
 const STATS_X0 = GX + GR - 40;
 const STATS_X1 = 450;
 const STATS_CX = GX + GR + 12;
+const STATS_Y0 = BODY_Y + 10;
+const STATS_Y1 = BODY_B - 10;
+/** Stats box outline, clockwise; its left part sits under the gauge disc. */
+const STATS_POLY: [number, number][] = [
+  [STATS_X0, STATS_Y0], [STATS_X1 - 20, STATS_Y0], [STATS_X1, STATS_Y0 + 20],
+  [STATS_X1, STATS_Y1 - 20], [STATS_X1 - 20, STATS_Y1], [STATS_X0, STATS_Y1],
+];
 const CHART_X0 = 462;
 const CHART_X1 = W - 4;
 
@@ -153,16 +160,49 @@ function valueTemplate(range: { min: number; max: number }, decimals: number): s
   return `${range.min < 0 ? '-' : ''}${'8'.repeat(digits)}${decimals ? `,${'8'.repeat(decimals)}` : ''}`;
 }
 
-function drawGauge(ctx: Ctx2D, info: PanelMetricInfo, range: { min: number; max: number }, smooth: number, text: number, style: OverlayStyle, p: Paint) {
+function addPoly(ctx: Ctx2D, pts: [number, number][]) {
+  pts.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)));
+  ctx.closePath();
+}
+
+/**
+ * Gauge disc and stats box as one background: filled once, so the part where they overlap is not
+ * darker than the rest. Each outline is drawn only where it is outside the other shape.
+ */
+function drawBodyBackground(ctx: Ctx2D, p: Paint) {
+  if (!p.hasBg) return;
+  ctx.beginPath();
+  addPoly(ctx, STATS_POLY);
+  ctx.moveTo(GX + GR, GY);
+  ctx.arc(GX, GY, GR, 0, Math.PI * 2);
+  ctx.fillStyle = p.bg;
+  ctx.fill();
+  ctx.strokeStyle = p.border;
+  // Stats outline outside the disc (the clip is the panel minus the disc).
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(0, 0, W, H);
+  ctx.moveTo(GX + GR, GY);
+  ctx.arc(GX, GY, GR, 0, Math.PI * 2, true);
+  ctx.clip();
+  polygon(ctx, STATS_POLY);
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+  ctx.restore();
+  // Disc outline outside the stats box.
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(0, 0, W, H);
+  addPoly(ctx, [...STATS_POLY].reverse());
+  ctx.clip();
   ctx.beginPath();
   ctx.arc(GX, GY, GR, 0, Math.PI * 2);
-  if (p.hasBg) {
-    ctx.fillStyle = p.bg;
-    ctx.fill();
-    ctx.strokeStyle = p.border;
-    ctx.lineWidth = 2;
-    ctx.stroke();
-  }
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawGauge(ctx: Ctx2D, info: PanelMetricInfo, range: { min: number; max: number }, smooth: number, text: number, style: OverlayStyle, p: Paint) {
   // Thin decorative ring in the gradient.
   ctx.beginPath();
   ctx.arc(GX, GY, GR - 4, SWEEP0 - 0.08, SWEEP0 + SWEEP + 0.08);
@@ -348,10 +388,8 @@ function statRows(ctx: Ctx2D, ride: RideData, info: PanelMetricInfo, opts: Panel
 }
 
 function drawStats(ctx: Ctx2D, rows: StatRow[], p: Paint) {
-  const y0 = BODY_Y + 10;
-  const y1 = BODY_B - 10;
-  polygon(ctx, [[STATS_X0, y0], [STATS_X1 - 20, y0], [STATS_X1, y0 + 20], [STATS_X1, y1 - 20], [STATS_X1 - 20, y1], [STATS_X0, y1]]);
-  fillShape(ctx, p);
+  const y0 = STATS_Y0;
+  const y1 = STATS_Y1;
   // Gradient accent on the right edge.
   ctx.beginPath();
   ctx.moveTo(STATS_X1 - 20, y0);
@@ -576,6 +614,7 @@ function makePanel(metric: PanelMetric): OverlayDefinition {
         drawHeader(ctx, info, sub, p, lang);
       }
       drawChart(ctx, ride, info, chartInfo, opts, frame, style, p);
+      drawBodyBackground(ctx, p);
       drawStats(ctx, statRows(ctx, ride, info, opts, frame.textSample, style, p), p);
       const range = gaugeRange(ride, info, style);
       const smooth = info.value(frame.sample);

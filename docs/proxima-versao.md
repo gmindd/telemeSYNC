@@ -16,3 +16,6 @@ e apagar daqui.
   caneca de chocolate quente, temperatura numa coroa, inclinação numa placa de madeira ou num sinal de perigo, mapa
   circular numa coroa com luzes, perfil de altimetria com moldura de bengala e uma árvore no ponto mais alto, e o painel
   compacto numa tábua de madeira. Podem ser combinados com os predefinidos.
+- **Painéis sem fundo duplo:** onde o mostrador redondo se junta à caixa das estatísticas, os dois fundos
+  semitransparentes sobrepunham-se e formavam uma zona mais escura. Agora são um só fundo, com a mesma transparência em
+  todo o painel.
