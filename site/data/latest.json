@@ -1,18 +1,18 @@
 {
-  "version": "1.0.2",
-  "date": "2026-10-22",
-  "summary": "O programa em 5 línguas (português, inglês, francês, espanhol e alemão) e frequência cardíaca sem falhas entre leituras.",
+  "version": "1.1.0",
+  "date": "2026-11-04",
+  "summary": "Segmentos e voltas com tempos e médias, tema de Natal, rodar o vídeo 180° e painéis sem fundo duplo.",
   "summaries": {
-    "en": "The program in 5 languages (Portuguese, English, French, Spanish and German) and heart rate without gaps between readings.",
-    "pt": "O programa em 5 línguas (português, inglês, francês, espanhol e alemão) e frequência cardíaca sem falhas entre leituras.",
-    "fr": "Le programme en 5 langues (portugais, anglais, français, espagnol et allemand) et une fréquence cardiaque sans trous entre les mesures.",
-    "es": "El programa en 5 idiomas (portugués, inglés, francés, español y alemán) y frecuencia cardíaca sin huecos entre lecturas.",
-    "de": "Das Programm in 5 Sprachen (Portugiesisch, Englisch, Französisch, Spanisch und Deutsch) und Herzfrequenz ohne Lücken zwischen den Messungen."
+    "en": "Segments and laps with times and averages, a Christmas theme, rotate the video 180° and panels without a double background.",
+    "pt": "Segmentos e voltas com tempos e médias, tema de Natal, rodar o vídeo 180° e painéis sem fundo duplo.",
+    "fr": "Segments et tours avec temps et moyennes, thème de Noël, rotation de la vidéo à 180° et panneaux sans double fond.",
+    "es": "Segmentos y vueltas con tiempos y medias, tema de Navidad, girar el vídeo 180° y paneles sin fondo doble.",
+    "de": "Segmente und Runden mit Zeiten und Durchschnittswerten, Weihnachtsthema, Video um 180° drehen und Panels ohne doppelten Hintergrund."
   },
-  "downloadUrl": "https://github.com/gmindd/telemeSYNC/releases/download/v1.0.2/telemeSYNC-1.0.2-windows.zip",
+  "downloadUrl": "https://github.com/gmindd/telemeSYNC/releases/download/v1.1.0/telemeSYNC-1.1.0-windows.zip",
   "downloads": {
-    "windows": "https://github.com/gmindd/telemeSYNC/releases/download/v1.0.2/telemeSYNC-1.0.2-windows.zip",
-    "mac": "https://github.com/gmindd/telemeSYNC/releases/download/v1.0.2/telemeSYNC-1.0.2-macos.zip"
+    "windows": "https://github.com/gmindd/telemeSYNC/releases/download/v1.1.0/telemeSYNC-1.1.0-windows.zip",
+    "mac": "https://github.com/gmindd/telemeSYNC/releases/download/v1.1.0/telemeSYNC-1.1.0-macos.zip"
   },
   "changelogUrl": "https://telemesync.pereiragabriel.com/#novidades"
 }
