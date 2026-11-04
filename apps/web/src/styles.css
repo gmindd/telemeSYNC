@@ -153,6 +153,15 @@ button.toggle-on { border-color: var(--accent); color: var(--accent); }
 .values table { width: 100%; }
 .values th { text-align: left; color: var(--muted); font-weight: 400; }
 .values td { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+.segments .row { flex-wrap: wrap; gap: 6px; }
+.segments p.small, .small { font-size: 12px; }
+.segment-list { list-style: none; margin: 8px 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.segment-list li { border-left: 3px solid #a78bfa; padding: 6px 8px; background: var(--panel2); border-radius: 6px; }
+.segment-list li.seg-lap { border-left-color: var(--accent); }
+.seg-kind { font-size: 11px; text-transform: uppercase; color: var(--muted); min-width: 64px; }
+.seg-name { flex: 1; min-width: 100px; }
+.seg-time { font-variant-numeric: tabular-nums; }
+button.tiny { padding: 0 6px; font-size: 11px; }
 .values { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px; }
 
 .theme-tabs { display: flex; gap: 6px; margin: 4px 0 14px; border-bottom: 1px solid var(--border); }

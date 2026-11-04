@@ -17,5 +17,7 @@ export const METRIC_SLUGS: Record<string, Translations> = {
   elevationProfile: ['profile', 'perfil', 'profil', 'perfil', 'profil'],
   dialMap: ['round-map', 'mapa-circular', 'carte-ronde', 'mapa-circular', 'runde-karte'],
   dialProfile: ['profile-card', 'perfil-cartao', 'profil-carte', 'perfil-tarjeta', 'profil-karte'],
+  segmentLive: ['segment', 'segmento', 'segment', 'segmento', 'segment'],
+  segmentLaps: ['laps', 'voltas', 'tours', 'vueltas', 'runden'],
   dialSummary: ['compact-panel', 'painel-compacto', 'panneau-compact', 'panel-compacto', 'kompakt-panel'],
 };

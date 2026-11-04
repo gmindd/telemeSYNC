@@ -19,3 +19,9 @@ e apagar daqui.
 - **Painéis sem fundo duplo:** onde o mostrador redondo se junta à caixa das estatísticas, os dois fundos
   semitransparentes sobrepunham-se e formavam uma zona mais escura. Agora são um só fundo, com a mesma transparência em
   todo o painel.
+- **Segmentos e voltas:** no passo 3 marcam-se segmentos (início e fim, para tentativas de PR) ou voltas (um clique
+  a cada passagem pela meta) no ponto do vídeo; também se podem usar as voltas gravadas pelo ciclocomputador no
+  ficheiro FIT. Cada segmento aparece na linha do tempo e pode ser renomeado, acertado ao segundo ou apagado. Dois
+  gadgets novos no passo 4: **Segmento (em direto)**, com o tempo a correr com décimas, distância, D+, velocidade, FC,
+  potência e cadência médias, a comparação com a melhor volta e o resultado final durante uns segundos; e a **Tabela
+  de voltas**, que se vai preenchendo volta a volta, com a melhor em destaque. Os segmentos ficam guardados no projeto.

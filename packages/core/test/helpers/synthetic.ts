@@ -78,7 +78,7 @@ export function syntheticRide(start = Date.UTC(2024, 5, 15, 8, 0, 0)): Synthetic
 const DEG_TO_SC = 2 ** 31 / 180;
 
 /** Encodes samples as a FIT activity. `enhanced` = write enhanced fields (Garmin) or legacy ones (older devices). */
-export function encodeFit(samples: RawSample[], opts: { enhanced?: boolean; localOffsetMs?: number } = {}): Uint8Array {
+export function encodeFit(samples: RawSample[], opts: { enhanced?: boolean; localOffsetMs?: number; laps?: { startMs: number; endMs: number }[] } = {}): Uint8Array {
   const enc = new Encoder();
   const start = new Date(samples[0].t);
   enc.writeMesg({
@@ -109,6 +109,17 @@ export function encodeFit(samples: RawSample[], opts: { enhanced?: boolean; loca
       m.speed = s.speed;
     }
     enc.writeMesg(m as any);
+  }
+  for (const lap of opts.laps ?? []) {
+    enc.writeMesg({
+      mesgNum: Profile.MesgNum.LAP,
+      timestamp: new Date(lap.endMs),
+      startTime: new Date(lap.startMs),
+      totalElapsedTime: (lap.endMs - lap.startMs) / 1000,
+      totalTimerTime: (lap.endMs - lap.startMs) / 1000,
+      event: 'lap',
+      eventType: 'stop',
+    } as any);
   }
   const last = new Date(samples[samples.length - 1].t);
   const FIT_EPOCH_MS = Date.UTC(1989, 11, 31);

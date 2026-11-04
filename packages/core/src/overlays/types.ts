@@ -1,5 +1,6 @@
 import type { MetricKey, RideData, RideSample } from '../telemetry/ride.ts';
 import type { Lang } from '../i18n/index.ts';
+import type { Segment } from '../segments/segments.ts';
 import type { Units } from './units.ts';
 
 /**
@@ -85,6 +86,8 @@ export type OverlayId =
   | 'dialMap'
   | 'dialProfile'
   | 'dialSummary'
+  | 'segmentLive'
+  | 'segmentLaps'
   | 'natalHeartRate'
   | 'natalHeartRateReindeer'
   | 'natalCadence'
@@ -158,6 +161,8 @@ export interface OverlayStyle {
   panelRate: 'smooth' | 'text';
   /** Language of the texts drawn in the overlays (labels, decimal separator). */
   language: Lang;
+  /** Segments and laps marked on this ride (segment gadgets); saved with the project, not between rides. */
+  segments: Segment[];
 }
 
 export const DEFAULT_STYLE: OverlayStyle = {
@@ -188,6 +193,7 @@ export const DEFAULT_STYLE: OverlayStyle = {
   ftp: 250,
   panelRate: 'smooth',
   language: 'en',
+  segments: [],
 };
 
 /** Context shared by all frames of one overlay render. */

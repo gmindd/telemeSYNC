@@ -4,6 +4,7 @@ import { DEFAULT_STYLE, type OverlayId, type OverlayStyle } from '../overlays/ty
 import type { Camera } from '../sync/types.ts';
 import type { GadgetLayout } from '../overlays/layout.ts';
 import { LocalizedError } from '../i18n/index.ts';
+import type { Segment } from '../segments/segments.ts';
 
 export const PROJECT_VERSION = 1;
 
@@ -28,6 +29,20 @@ export interface ProjectFile {
   layout?: GadgetLayout;
 }
 
+/** Segments of a project file: only well-formed ones (older projects have none). */
+function validSegments(v: unknown): Segment[] {
+  if (!Array.isArray(v)) return [];
+  return v
+    .filter((g) => g && typeof g === 'object' && Number.isFinite(g.startMs) && Number.isFinite(g.endMs) && g.endMs > g.startMs)
+    .map((g, i) => ({
+      id: typeof g.id === 'string' ? g.id : `seg${i}`,
+      name: typeof g.name === 'string' ? g.name.slice(0, 60) : '',
+      kind: g.kind === 'lap' ? 'lap' : 'segment',
+      startMs: g.startMs,
+      endMs: g.endMs,
+    }));
+}
+
 export function serializeProject(p: ProjectFile): string {
   return JSON.stringify(p, null, 2);
 }
@@ -39,7 +54,7 @@ export function parseProject(json: string): ProjectFile {
   }
   return {
     ...p,
-    style: { ...DEFAULT_STYLE, ...p.style, units: { ...DEFAULT_STYLE.units, ...p.style?.units } },
+    style: { ...DEFAULT_STYLE, ...p.style, units: { ...DEFAULT_STYLE.units, ...p.style?.units }, segments: validSegments(p.style?.segments) },
     overlays: Array.isArray(p.overlays) ? p.overlays : [],
     output: {
       format: isOutputFormat(p.output?.format) ? p.output.format : 'prores',

@@ -5,13 +5,14 @@ import { dialFamily } from './dial/index.ts';
 import { elevationProfileOverlay } from './elevationProfile.ts';
 import { mapOverlay } from './map.ts';
 import { natalFamily } from './natal/index.ts';
+import { segmentOverlays } from './segment/segment.ts';
 import { panelOverlays } from './panel/panel.ts';
 import { textOverlays } from './text/metrics.ts';
 import { METRIC_SLUGS } from './slugs.ts';
 import { setNumberLang } from './units.ts';
 import type { Ctx2D, FrameState, OverlayContext, OverlayDefinition, OverlayId, OverlayStyle, OverlayTheme } from './types.ts';
 
-export const OVERLAYS: OverlayDefinition[] = [...textOverlays, mapOverlay, elevationProfileOverlay, ...panelOverlays, ...dialFamily, ...natalFamily];
+export const OVERLAYS: OverlayDefinition[] = [...textOverlays, mapOverlay, elevationProfileOverlay, ...panelOverlays, ...dialFamily, ...segmentOverlays, ...natalFamily];
 
 /** Theme of an overlay in the app (tabs in step 4). */
 export function overlayTheme(id: OverlayId): OverlayTheme {
@@ -94,7 +95,7 @@ export function overlayLabel(id: OverlayId, lang: Lang | undefined): string {
   if (def?.labelFor) return def.labelFor(lang);
   if (id === 'map') return tr(lang, 'overlay.map');
   if (id === 'elevationProfile') return tr(lang, 'overlay.elevationProfile');
-  if (id === 'dialMap' || id === 'dialProfile' || id === 'dialSummary') return tr(lang, `overlay.${id}`);
+  if (id === 'dialMap' || id === 'dialProfile' || id === 'dialSummary' || id === 'segmentLive' || id === 'segmentLaps') return tr(lang, `overlay.${id}`);
   if (id.startsWith('panel')) return tr(lang, 'overlay.panel', { name: tr(lang, `metric.${innerMetric(id, 'panel')}` as CoreKey) });
   if (id.startsWith('dial')) return tr(lang, 'overlay.dial', { name: tr(lang, `metric.${innerMetric(id, 'dial')}` as CoreKey) });
   return tr(lang, `metric.${id}` as CoreKey);

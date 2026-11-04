@@ -12,6 +12,7 @@ import {
   type Clip,
 } from '@telemesync/core';
 import { ClipList } from '../components/ClipList.tsx';
+import { SegmentsPanel } from '../components/SegmentsPanel.tsx';
 import { Preview } from '../components/Preview.tsx';
 import { Timeline } from '../components/Timeline.tsx';
 import { ValuesPanel } from '../components/ValuesPanel.tsx';
@@ -159,6 +160,8 @@ export function StepSync() {
         onPlayhead={(t) => st.setPlayhead({ t, source: 'user' })}
         onCameraOffset={st.setCameraOffset}
         onClipOffset={st.setClipOffset}
+        segments={style.segments}
+        segAnchor={st.segAnchor}
       />
       {clip && cam ? (
         <div className="sync-bottom">
@@ -180,6 +183,7 @@ export function StepSync() {
           <div className="sync-side">
             <ClipDetail clip={clip} cam={cam} />
             {playhead ? <ValuesPanel ride={ride} t={playhead.t} style={style} /> : null}
+            <SegmentsPanel ride={ride} timeZone={style.timeZone} />
           </div>
         </div>
       ) : (

@@ -62,6 +62,8 @@ export interface RideData {
   name?: string;
   device?: string;
   localOffsetMs?: number;
+  /** Laps recorded by the device, if any (UTC ms). */
+  laps?: { startMs: number; endMs: number }[];
   startTime: number;
   endTime: number;
   gapThresholdMs: number;
@@ -223,6 +225,7 @@ export function buildRide(raw: RawTelemetry, opts: RideOptions = {}): RideData {
     name: raw.name,
     device: raw.device,
     localOffsetMs: raw.localOffsetMs,
+    laps: raw.laps,
     startTime: t[0],
     endTime: t[n - 1],
     gapThresholdMs,

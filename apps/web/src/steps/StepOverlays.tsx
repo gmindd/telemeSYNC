@@ -4,6 +4,9 @@ import {
   DEFAULT_STYLE,
   effectiveStart,
   isDialOverlay,
+  isSegmentOverlay,
+  segmentAt,
+  sortedSegments,
   LANGS,
   OVERLAY_THEMES,
   overlayLabel,
@@ -63,7 +66,8 @@ export function StepOverlays() {
   const all = availableOverlays(ride);
   const natal = all.filter((d) => d.theme === 'natal');
   const classic = all.filter((d) => (d.theme ?? 'default') === 'default');
-  const defs = classic.filter((d) => !panelMetricOf(d.id) && !isDialOverlay(d.id));
+  const segs = classic.filter((d) => isSegmentOverlay(d.id));
+  const defs = classic.filter((d) => !panelMetricOf(d.id) && !isDialOverlay(d.id) && !isSegmentOverlay(d.id));
   const dials = classic.filter((d) => isDialOverlay(d.id));
   const panels = classic.filter((d) => panelMetricOf(d.id));
   const chartMetrics = PANEL_METRICS.filter((m) => ride.available.has(m));
@@ -76,6 +80,10 @@ export function StepOverlays() {
   const clipStart = cs ?? ride.startTime + (ride.endTime - ride.startTime) * 0.4;
   const clipEnd = clip ? clipStart + clip.meta.durationMs : clipStart + 60_000;
   const t = playhead?.t ?? clipStart + 1000;
+  // Segment gadgets are empty outside segments: preview them inside one (the second lap, if any).
+  const sortedSegs = sortedSegments(style.segments);
+  const sample = sortedSegs[Math.min(1, sortedSegs.length - 1)];
+  const segT = segmentAt(style.segments, t) || !sample ? t : sample.startMs + (sample.endMs - sample.startMs) * 0.6;
 
   return (
     <section>
@@ -156,6 +164,21 @@ export function StepOverlays() {
             );
           })}
         </div>
+
+          <h3>{tr('seg.section')}</h3>
+          <p className="lead">{tr('seg.sectionLead')}</p>
+          {style.segments.length === 0 ? <p className="notice">{tr('seg.noneHint')}</p> : null}
+          <div className="overlay-grid">
+            {segs.map((d) => (
+              <label key={d.id} className={`overlay-card${overlays.includes(d.id) ? ' on' : ''}`}>
+                <input type="checkbox" checked={overlays.includes(d.id)} onChange={(e) => toggleOverlay(d.id, e.target.checked)} />
+                <span>{overlayLabel(d.id, lang)}</span>
+                <div className="checker">
+                  <OverlayCanvas id={d.id} ride={ride} style={style} t={segT} clipStart={clipStart} clipEnd={clipEnd} cssScale={0.45} fitHeight={190} />
+                </div>
+              </label>
+            ))}
+          </div>
         </>
       ) : (
         <>

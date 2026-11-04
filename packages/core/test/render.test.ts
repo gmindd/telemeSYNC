@@ -17,7 +17,9 @@ describe('overlay renderers', () => {
   registerEmbeddedFonts();
   for (const def of availableOverlays(ride)) {
     it(`${def.id} draws something with a transparent background`, () => {
-      const style = { ...DEFAULT_STYLE, scale: 1 };
+      // Segment gadgets need a segment around the instant (they draw nothing outside segments).
+      const segments = [{ id: 's', name: 'Climb', kind: 'segment' as const, startMs: t - 30_000, endMs: t + 30_000 }];
+      const style = { ...DEFAULT_STYLE, scale: 1, segments };
       const { width, height } = overlayPixelSize(def, style);
       const c = createCanvas(width, height);
       const ctx = c.getContext('2d');

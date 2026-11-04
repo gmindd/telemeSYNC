@@ -39,4 +39,6 @@ export interface RawTelemetry {
   samples: RawSample[];
   /** Names of the fields found in FIT record messages (diagnostics). */
   recordFields?: string[];
+  /** Laps recorded by the device (lap button or auto-lap), UTC ms. */
+  laps?: { startMs: number; endMs: number }[];
 }

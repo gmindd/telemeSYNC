@@ -28,9 +28,11 @@ import {
   type OverlayStyle,
   type ProjectFile,
   type RideData,
+  type Segment,
+  newSegmentId,
   type SyncState,
 } from '@telemesync/core';
-import { currentLang, t, useLang } from '../i18n/index.tsx';
+import { currentLang, t, t as tr, useLang } from '../i18n/index.tsx';
 import { api, type JobSnapshot } from './api.ts';
 
 export type Step = 'welcome' | 'telemetry' | 'clips' | 'sync' | 'overlays' | 'render';
@@ -72,6 +74,8 @@ interface State {
   /** Short side of the composite (1080 = Full HD). */
   compositeShortSide: number;
   notice?: string;
+  /** Start marked for the next segment or lap (UTC ms), waiting for its end. */
+  segAnchor?: number;
 }
 
 interface Actions {
@@ -91,6 +95,14 @@ interface Actions {
   toggleOverlay(id: OverlayId, on: boolean): void;
   setStyle(p: Partial<OverlayStyle>): void;
   setOverlayLang(v: Lang | 'auto'): void;
+  markSegmentStart(t: number): void;
+  markSegmentEnd(t: number): void;
+  markLap(t: number): void;
+  cancelSegmentAnchor(): void;
+  updateSegment(id: string, patch: Partial<Segment>): void;
+  removeSegment(id: string): void;
+  clearSegments(): void;
+  importDeviceLaps(): void;
   setFormat(f: OutputFormat): void;
   setMaxFps(fps: number): void;
   setOutputDir(d: string): void;
@@ -140,7 +152,7 @@ function loadStoredStyle(overlayLang: Lang | 'auto'): OverlayStyle {
   const language = overlayLanguage(overlayLang);
   try {
     const s = JSON.parse(localStorage.getItem(STYLE_KEY) ?? 'null');
-    if (s) return { ...DEFAULT_STYLE, ...s, units: { ...DEFAULT_STYLE.units, ...s.units }, language };
+    if (s) return { ...DEFAULT_STYLE, ...s, units: { ...DEFAULT_STYLE.units, ...s.units }, language, segments: [] };
   } catch {
     /* ignore */
   }
@@ -194,7 +206,11 @@ export const useApp = create<State & Actions>((set, get) => ({
       const sync = resolveAll(get().sync, ride.startTime);
       // Keep only overlays that this ride supports.
       const overlays = get().overlays.filter((o) => ride.available.has(getOverlay(o).requires));
+      // Segments from an opened project stay when they fall within this ride.
+      const segments = get().style.segments.filter((g) => g.endMs > ride.startTime && g.startMs < ride.endTime);
       set({
+        style: { ...get().style, segments },
+        segAnchor: undefined,
         ride,
         rideId: id,
         rideFile: { name: file.name, size: file.size },
@@ -319,7 +335,8 @@ export const useApp = create<State & Actions>((set, get) => ({
     const style = { ...get().style, ...p };
     set({ style });
     try {
-      localStorage.setItem(STYLE_KEY, JSON.stringify(style));
+      // Segments belong to the ride (saved in the project), not to the style kept between rides.
+      localStorage.setItem(STYLE_KEY, JSON.stringify({ ...style, segments: undefined }));
     } catch {
       /* ignore */
     }
@@ -329,6 +346,50 @@ export const useApp = create<State & Actions>((set, get) => ({
     set({ overlayLang });
     store(OVERLAY_LANG_KEY, overlayLang);
     get().setStyle({ language: overlayLanguage(overlayLang) });
+  },
+
+  markSegmentStart(t) {
+    set({ segAnchor: t });
+  },
+  markSegmentEnd(t) {
+    const a = get().segAnchor;
+    if (a === undefined || !(t > a + 500)) return;
+    const segments = get().style.segments;
+    const n = segments.filter((g) => g.kind === 'segment').length + 1;
+    get().setStyle({ segments: [...segments, { id: newSegmentId(), name: tr('seg.defaultSegment', { n }), kind: 'segment', startMs: a, endMs: t }] });
+    set({ segAnchor: undefined });
+  },
+  markLap(t) {
+    const a = get().segAnchor;
+    if (a === undefined) return set({ segAnchor: t });
+    if (!(t > a + 500)) return;
+    const segments = get().style.segments;
+    const n = segments.filter((g) => g.kind === 'lap').length + 1;
+    get().setStyle({ segments: [...segments, { id: newSegmentId(), name: tr('seg.defaultLap', { n }), kind: 'lap', startMs: a, endMs: t }] });
+    set({ segAnchor: t });
+  },
+  cancelSegmentAnchor: () => set({ segAnchor: undefined }),
+  updateSegment(id, patch) {
+    const segments = get().style.segments.map((g) => {
+      if (g.id !== id) return g;
+      const next = { ...g, ...patch };
+      return next.endMs > next.startMs + 500 ? next : g;
+    });
+    get().setStyle({ segments });
+  },
+  removeSegment(id) {
+    get().setStyle({ segments: get().style.segments.filter((g) => g.id !== id) });
+  },
+  clearSegments() {
+    get().setStyle({ segments: [] });
+    set({ segAnchor: undefined });
+  },
+  importDeviceLaps() {
+    const laps = get().ride?.laps ?? [];
+    const kept = get().style.segments.filter((g) => g.kind !== 'lap');
+    get().setStyle({
+      segments: [...kept, ...laps.map((l, i) => ({ id: newSegmentId(), name: tr('seg.defaultLap', { n: i + 1 }), kind: 'lap' as const, startMs: l.startMs, endMs: l.endMs }))],
+    });
   },
 
   setFormat(format) {

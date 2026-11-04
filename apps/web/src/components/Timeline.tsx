@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { clipWarnings, effectiveStart, formatTime, lowerIndex, type RideData, type SyncState } from '@telemesync/core';
+import { clipWarnings, effectiveStart, formatTime, lowerIndex, type RideData, type Segment, type SyncState } from '@telemesync/core';
 import { useLang, useT } from '../i18n/index.tsx';
 import { dec } from '../lib/format.ts';
 import type { Playhead } from '../lib/store.ts';
@@ -18,6 +18,10 @@ interface Props {
   onPlayhead(t: number): void;
   onCameraOffset(cameraId: string, ms: number): void;
   onClipOffset(clipId: string, ms: number): void;
+  /** Marked segments and laps, drawn as bands over the graph. */
+  segments?: Segment[];
+  /** Start marked for the next segment, waiting for its end. */
+  segAnchor?: number;
 }
 
 function niceStep(msPerPx: number): number {
@@ -86,6 +90,25 @@ export function Timeline(p: Props) {
     ctx.fillStyle = 'rgba(255,255,255,0.04)';
     ctx.fillRect(x(r.startTime), 0, x(r.endTime) - x(r.startTime), GRAPH_H);
 
+    // segments and laps
+    ctx.font = '10px system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    for (const g of p.segments ?? []) {
+      const x0 = x(g.startMs);
+      const x1 = x(g.endMs);
+      if (x1 < 0 || x0 > width) continue;
+      const color = g.kind === 'lap' ? '255,122,26' : '167,139,250';
+      ctx.fillStyle = `rgba(${color},0.16)`;
+      ctx.fillRect(x0, 0, x1 - x0, GRAPH_H);
+      ctx.fillStyle = `rgba(${color},0.9)`;
+      ctx.fillRect(x0, 0, 2, GRAPH_H);
+      if (x1 - x0 > 30) ctx.fillText(g.name, x0 + 5, GRAPH_H - 6, x1 - x0 - 8);
+    }
+    if (p.segAnchor !== undefined) {
+      ctx.fillStyle = 'rgba(167,139,250,0.9)';
+      ctx.fillRect(x(p.segAnchor) - 1, 0, 2, GRAPH_H);
+    }
+
     // altitude
     let minA = Infinity;
     let maxA = -Infinity;
@@ -142,7 +165,7 @@ export function Timeline(p: Props) {
     ctx.fillText(t('timeline.speed'), 6, 12);
     ctx.fillStyle = '#90a4ae';
     ctx.fillText(t('timeline.altitude'), 6, GRAPH_H - 6);
-  }, [p.ride, view, width, msPerPx, x, p.timeZone, lang]);
+  }, [p.ride, view, width, msPerPx, x, p.timeZone, lang, p.segments, p.segAnchor]);
 
   // Interaction state
   const drag = useRef<

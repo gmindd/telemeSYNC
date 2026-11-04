@@ -6,7 +6,7 @@ const SEMICIRCLE_TO_DEG = 180 / 2 ** 31;
 /** FIT timestamps are seconds since 1989-12-31T00:00:00Z. */
 export const FIT_EPOCH_MS = Date.UTC(1989, 11, 31);
 
-const MSG = { fileId: 0, record: 20, activity: 34 } as const;
+const MSG = { fileId: 0, lap: 19, record: 20, activity: 34 } as const;
 
 /** record message field numbers and scales (FIT profile). */
 const REC = {
@@ -46,7 +46,7 @@ const num = (v: number | string | undefined) => (typeof v === 'number' && Number
  */
 export function parseFit(data: ArrayBuffer | Uint8Array, name?: string): RawTelemetry {
   const bytes = data instanceof Uint8Array ? data : new Uint8Array(data);
-  const messages = decodeFit(bytes, new Set([MSG.fileId, MSG.record, MSG.activity]));
+  const messages = decodeFit(bytes, new Set([MSG.fileId, MSG.lap, MSG.record, MSG.activity]));
   const records = messages.filter((m) => m.num === MSG.record);
   if (records.length === 0) throw new LocalizedError('err.fitNoRecords');
 
@@ -96,5 +96,19 @@ export function parseFit(data: ArrayBuffer | Uint8Array, name?: string): RawTele
   const product = num(fileId?.fields.get(2));
   const device = manu !== undefined ? [MANUFACTURERS[manu] ?? `manufacturer ${manu}`, product].filter((x) => x !== undefined).join(' ') : undefined;
 
-  return { source: 'fit', name, device, localOffsetMs, samples, recordFields: [...recordFields].sort() };
+  // Laps: start_time (field 2) and total_elapsed_time (field 7, ms × 1000), or the lap's timestamp as its end.
+  const laps: { startMs: number; endMs: number }[] = [];
+  for (const m of messages) {
+    if (m.num !== MSG.lap) continue;
+    const st = num(m.fields.get(2));
+    const elapsed = num(m.fields.get(7));
+    const ts = num(m.fields.get(253));
+    if (st === undefined) continue;
+    const startMs = FIT_EPOCH_MS + st * 1000;
+    const endMs = elapsed !== undefined ? startMs + elapsed : ts !== undefined ? FIT_EPOCH_MS + ts * 1000 : NaN;
+    if (endMs > startMs) laps.push({ startMs, endMs });
+  }
+  laps.sort((a, b) => a.startMs - b.startMs);
+
+  return { source: 'fit', name, device, localOffsetMs, samples, recordFields: [...recordFields].sort(), laps: laps.length ? laps : undefined };
 }
