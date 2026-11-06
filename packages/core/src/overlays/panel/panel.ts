@@ -2,7 +2,7 @@ import type { RideData, RideSample } from '../../telemetry/ride.ts';
 import { drawText, font, labelSize, measureTabular } from '../draw.ts';
 import { hrZone } from '../text/metrics.ts';
 import type { Ctx2D, FrameState, OverlayContext, OverlayDefinition, OverlayId, OverlayStyle, PanelMetric, PanelOptions } from '../types.ts';
-import { convert, fmt } from '../units.ts';
+import { convert, fmt, wkgText } from '../units.ts';
 import { tr, type Lang } from '../../i18n/index.ts';
 import { drawIcon, mixColor, polygon, withAlpha } from './paint.ts';
 import {
@@ -286,7 +286,8 @@ function drawGauge(ctx: Ctx2D, info: PanelMetricInfo, range: { min: number; max:
   ctx.font = font(p.ts, 50, 800);
   const size = Math.min(50, (50 * 124) / Math.max(1, measureTabular(ctx, tpl)));
   drawText(ctx, fmt(text, info.decimals), GX, GY + 12, p.ts, { size, weight: 800, align: 'center' });
-  drawText(ctx, info.unit(style), GX, GY + 42, p.ts, { size: 18, weight: 600, align: 'center', tabular: false, color: 'rgba(255,255,255,0.85)' });
+  const wkg = info.id === 'power' ? wkgText(text, style) : '';
+  drawText(ctx, wkg ? `${info.unit(style)} · ${wkg}` : info.unit(style), GX, GY + 42, p.ts, { size: wkg ? 15 : 18, weight: wkg ? 700 : 600, align: 'center', tabular: false, color: 'rgba(255,255,255,0.85)' });
 }
 
 // ---------------------------------------------------------------------------

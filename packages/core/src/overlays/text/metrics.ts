@@ -1,7 +1,7 @@
 import type { MetricKey, RideSample } from '../../telemetry/ride.ts';
 import { formatDuration, formatTime } from '../../util/timezone.ts';
 import { drawText, labelSize } from '../draw.ts';
-import type { Ctx2D, OverlayDefinition, OverlayId, OverlayStyle } from '../types.ts';
+import { showsWkg, type Ctx2D, type OverlayDefinition, type OverlayId, type OverlayStyle } from '../types.ts';
 import { convert, fmt } from '../units.ts';
 import { tr } from '../../i18n/index.ts';
 
@@ -11,6 +11,8 @@ interface TextMetric {
   template: (s: OverlayStyle) => string;
   value: (s: RideSample, style: OverlayStyle) => { text: string; color?: string };
   unit: (style: OverlayStyle) => string;
+  /** Smaller second line under the value (power: W/kg), when the style asks for it. */
+  second?: (s: RideSample, style: OverlayStyle) => { text: string; unit: string } | null;
   /** Extra drawing after the unit (e.g. grade wedge); returns used width. */
   extra?: { width: number; draw: (ctx: Ctx2D, x: number, baseline: number, s: RideSample, style: OverlayStyle) => void };
 }
@@ -37,6 +39,8 @@ const VALUE_SIZE = 72;
 const UNIT_SIZE = 28;
 const DIGIT_W = VALUE_SIZE * 0.72;
 const PAD = 14;
+/** Second line (W/kg) under the value. */
+const SECOND_SIZE = 38;
 
 const metrics: TextMetric[] = [
   {
@@ -107,6 +111,7 @@ const metrics: TextMetric[] = [
     template: () => '1888',
     value: (s) => ({ text: fmt(s.power, 0) }),
     unit: () => 'W',
+    second: (s, st) => (showsWkg(st) ? { text: fmt(s.power / st.weightKg, 1), unit: 'W/kg' } : null),
   },
   {
     id: 'temperature',
@@ -147,12 +152,16 @@ function layout(m: TextMetric, style: OverlayStyle) {
   const unit = style.showUnit ? m.unit(style) : '';
   const unitW = unit ? unit.length * UNIT_SIZE * 0.62 + 10 : 0;
   const extraW = m.extra?.width ?? 0;
-  const width = Math.ceil(PAD * 2 + valueW + unitW + extraW);
+  const hasSecond = !!m.second && showsWkg(style);
+  // The second line's unit ("W/kg") is wider than the first one's ("W").
+  const secondUnitW = hasSecond && style.showUnit ? 4 * UNIT_SIZE * 0.8 * 0.62 + 12 : 0;
+  const width = Math.ceil(PAD * 2 + valueW + Math.max(unitW, secondUnitW) + extraW);
   const top = style.showLabel ? LABEL_SIZE + 10 : 0;
   const baseline = PAD + top + VALUE_SIZE * 0.76;
   // Room below the baseline for the decimal comma and the outline.
-  const height = Math.ceil(baseline + VALUE_SIZE * 0.2 + PAD);
-  return { valueW, unit, unitW, width, height, baseline };
+  const secondBaseline = baseline + SECOND_SIZE + 14;
+  const height = Math.ceil((hasSecond ? secondBaseline : baseline) + VALUE_SIZE * 0.2 + PAD);
+  return { valueW, unit, unitW, width, height, baseline, hasSecond, secondBaseline };
 }
 
 function makeOverlay(m: TextMetric): OverlayDefinition {
@@ -182,6 +191,11 @@ function makeOverlay(m: TextMetric): OverlayDefinition {
         x += l.unitW;
       }
       m.extra?.draw(ctx, x, l.baseline, s, style);
+      const second = l.hasSecond ? m.second?.(s, style) : null;
+      if (second) {
+        const w = drawText(ctx, second.text, valueRight, l.secondBaseline, style, { size: SECOND_SIZE, weight: 800, align: 'right' });
+        if (style.showUnit && w) drawText(ctx, second.unit, valueRight + 8, l.secondBaseline, style, { size: UNIT_SIZE * 0.8, weight: 600, tabular: false });
+      }
     },
   };
 }

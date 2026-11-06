@@ -1,4 +1,5 @@
 import { DEFAULT_LANG, formatNumber, type Lang } from '../i18n/index.ts';
+import type { OverlayStyle } from './types.ts';
 
 export type UnitSystem = 'metric' | 'imperial';
 export type TemperatureUnit = 'C' | 'F';
@@ -31,4 +32,9 @@ export function setNumberLang(lang: Lang | undefined) {
 /** Overlay number formatting: fixed decimals, separator of the overlay language. NaN → "—". */
 export function fmt(v: number, decimals = 0): string {
   return formatNumber(v, decimals, numberLang);
+}
+
+/** "245 W" companion for the power gadgets: "3.3 W/kg" when the style shows W/kg, else "". */
+export function wkgText(power: number, style: OverlayStyle): string {
+  return style.powerWkg && style.weightKg > 0 ? `${fmt(power / style.weightKg, 1)} W/kg` : '';
 }

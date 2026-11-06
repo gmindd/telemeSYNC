@@ -27,6 +27,38 @@ export function movingAverageByTime(t: Float64Array, v: Float64Array, windowMs: 
   return out;
 }
 
+/**
+ * Trailing average over the last `windowMs` (as a bike computer's "3 s power"): the mean of the values
+ * in (t − window, t]. NaN values are ignored, and the window never reaches back across a gap.
+ */
+export function trailingAverageByTime(t: Float64Array, v: Float64Array, windowMs: number, gapMs = Infinity): Float64Array {
+  const n = v.length;
+  const out = new Float64Array(n).fill(NaN);
+  let lo = 0;
+  let sum = 0;
+  let cnt = 0;
+  for (let i = 0; i < n; i++) {
+    if (i > 0 && t[i] - t[i - 1] > gapMs) {
+      lo = i;
+      sum = 0;
+      cnt = 0;
+    }
+    if (!Number.isNaN(v[i])) {
+      sum += v[i];
+      cnt++;
+    }
+    while (lo < i && t[lo] <= t[i] - windowMs) {
+      if (!Number.isNaN(v[lo])) {
+        sum -= v[lo];
+        cnt--;
+      }
+      lo++;
+    }
+    out[i] = cnt > 0 && !Number.isNaN(v[i]) ? sum / cnt : NaN;
+  }
+  return out;
+}
+
 /** Centered median filter over `radius` samples on each side. NaN values are ignored. */
 export function medianFilter(v: Float64Array, radius: number): Float64Array {
   const n = v.length;

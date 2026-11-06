@@ -5,7 +5,7 @@ import { dialPaint } from '../dial/common.ts';
 import { drawCard } from '../dial/profile.ts';
 import { drawText, font, labelSize } from '../draw.ts';
 import { withAlpha } from '../panel/paint.ts';
-import type { Ctx2D, OverlayDefinition, OverlayId, OverlayStyle } from '../types.ts';
+import { showsWkg, type Ctx2D, type OverlayDefinition, type OverlayId, type OverlayStyle } from '../types.ts';
 import { convert, fmt } from '../units.ts';
 
 // Segment gadgets: the segment being ridden (running time with tenths, figures so far, comparison with
@@ -15,6 +15,8 @@ import { convert, fmt } from '../units.ts';
 interface StatColumn {
   key: CoreKey;
   requires: MetricKey;
+  /** Shown only when the style asks for it (W/kg). */
+  when?: (st: OverlayStyle) => boolean;
   value: (s: SegmentStats, st: OverlayStyle) => string;
   unit: (st: OverlayStyle) => string;
 }
@@ -25,6 +27,7 @@ const STATS: StatColumn[] = [
   { key: 'seg.avgSpeed', requires: 'speed', value: (s, st) => fmt(convert.speed(s.avgSpeed, st.units), 1), unit: (st) => convert.speedUnit(st.units) },
   { key: 'seg.avgHr', requires: 'heartRate', value: (s) => fmt(s.avgHeartRate, 0), unit: () => 'bpm' },
   { key: 'seg.avgPower', requires: 'power', value: (s) => fmt(s.avgPower, 0), unit: () => 'W' },
+  { key: 'seg.avgWkg', requires: 'power', when: showsWkg, value: (s, st) => fmt(s.avgPower / st.weightKg, 2), unit: () => 'W/kg' },
   { key: 'seg.avgCadence', requires: 'cadence', value: (s) => fmt(s.avgCadence, 0), unit: () => 'rpm' },
   { key: 'seg.loss', requires: 'elevationGain', value: (s, st) => fmt(convert.elevation(s.lossM, st.units), 0), unit: (st) => convert.elevationUnit(st.units) },
   { key: 'seg.maxSpeed', requires: 'speed', value: (s, st) => fmt(convert.speed(s.maxSpeed, st.units), 1), unit: (st) => convert.speedUnit(st.units) },
@@ -33,9 +36,9 @@ const STATS: StatColumn[] = [
   { key: 'seg.avgTemp', requires: 'temperature', value: (s, st) => fmt(convert.temperature(s.avgTemperature, st.units), 0), unit: (st) => convert.temperatureUnit(st.units) },
 ];
 
-function statsFor(ride: RideData, n: number, only?: CoreKey[]): StatColumn[] {
+function statsFor(ride: RideData, style: OverlayStyle, n: number, only?: CoreKey[]): StatColumn[] {
   const list = only ? only.map((k) => STATS.find((c) => c.key === k)!) : STATS;
-  return list.filter((c) => ride.available.has(c.requires)).slice(0, n);
+  return list.filter((c) => ride.available.has(c.requires) && (!c.when || c.when(style))).slice(0, n);
 }
 
 /** Text cut with "…" to fit maxW at the current font. */
@@ -131,7 +134,7 @@ export const segmentLiveOverlay: OverlayDefinition = {
     }
 
     // Figures: two rows of three.
-    const cols = statsFor(ride, 6);
+    const cols = statsFor(ride, style, 6);
     const cellW = (LW - 52) / 3;
     cols.forEach((c, i) => {
       const x = 26 + (i % 3) * cellW;
@@ -193,8 +196,9 @@ export const segmentLapsOverlay: OverlayDefinition = {
     drawText(ctx, `${doneCount}/${all.length}`, TW - 26, 40, p.ts, { size: 20, weight: 800, align: 'right' });
 
     // Columns: name, time, then up to three figures.
-    const cols = statsFor(ride, 3, ['seg.avgSpeed', 'seg.avgHr', 'seg.avgPower', 'seg.gain', 'seg.avgCadence']);
-    const timeRight = 300;
+    // A fourth column when W/kg is on, so it is kept next to the average power.
+    const cols = statsFor(ride, style, showsWkg(style) ? 4 : 3, ['seg.avgSpeed', 'seg.avgHr', 'seg.avgPower', 'seg.avgWkg', 'seg.gain', 'seg.avgCadence']);
+    const timeRight = cols.length > 3 ? 262 : 300;
     const colRight = (i: number) => timeRight + ((TW - 26 - timeRight) * (i + 1)) / cols.length;
     const hy = HEAD - 14;
     drawText(ctx, tr(lang, 'seg.time'), timeRight, hy, p.ts, { size: 12, weight: 700, align: 'right', tabular: false, color: p.label });

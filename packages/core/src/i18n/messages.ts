@@ -46,6 +46,7 @@ export const CORE_MESSAGES = {
   'seg.avgHr': ['AVG HR', 'FC MÉD.', 'FC MOY.', 'FC MED.', 'Ø HF'],
   'seg.maxHr': ['MAX HR', 'FC MÁX.', 'FC MAX', 'FC MÁX.', 'MAX. HF'],
   'seg.avgPower': ['AVG POWER', 'POT. MÉD.', 'PUISS. MOY.', 'POT. MED.', 'Ø LEISTUNG'],
+  'seg.avgWkg': ['AVG W/KG', 'W/KG MÉD.', 'W/KG MOY.', 'W/KG MED.', 'Ø W/KG'],
   'seg.avgCadence': ['AVG CAD.', 'CAD. MÉD.', 'CAD. MOY.', 'CAD. MED.', 'Ø TRITTFR.'],
   'seg.avgGrade': ['AVG GRADE', 'INCL. MÉD.', 'PENTE MOY.', 'PEND. MED.', 'Ø STEIGUNG'],
   'seg.avgTemp': ['AVG TEMP.', 'TEMP. MÉD.', 'TEMP. MOY.', 'TEMP. MED.', 'Ø TEMP.'],

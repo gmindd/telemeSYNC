@@ -8,7 +8,7 @@ import { drawIcon, mixColor, withAlpha } from '../panel/paint.ts';
 import type { IconId } from '../panel/series.ts';
 import { hrZone } from '../text/metrics.ts';
 import type { Ctx2D, FrameState, OverlayContext, OverlayDefinition, OverlayId, OverlayStyle } from '../types.ts';
-import { convert, fmt } from '../units.ts';
+import { convert, fmt, wkgText } from '../units.ts';
 import { antler, bow, candyCane, candyRing, holly, lightsOnArc, logRing, ribbon, santaHat, snowOnArc, woodRing, wreathRing } from './deco.ts';
 import { natalNames, type Variant } from './names.ts';
 
@@ -145,7 +145,10 @@ function drawValue(ctx: Ctx2D, spec: NatalDialSpec, s: RideSample, style: Overla
   }
   const size = fitSize(ctx, p.ts, spec.template(style), 168, 66);
   drawText(ctx, text, CX, baseline, p.ts, { size, weight: 800, align: 'center' });
-  if (unit) drawText(ctx, unit, CX, baseline + 33, p.ts, { size: 19, weight: 600, align: 'center', tabular: false, color: 'rgba(255,255,255,0.85)' });
+  // Power with W/kg: a smaller second line "W · 3.3 W/kg".
+  const wkg = spec.requires === 'power' ? wkgText(s.power, style) : '';
+  const line = [unit, wkg].filter(Boolean).join(' · ');
+  if (line) drawText(ctx, line, CX, baseline + 33, p.ts, { size: wkg ? 17 : 19, weight: wkg ? 700 : 600, align: 'center', tabular: false, color: 'rgba(255,255,255,0.85)' });
 }
 
 const TOP = -Math.PI / 2;

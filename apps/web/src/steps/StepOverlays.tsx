@@ -3,6 +3,7 @@ import {
   availableOverlays,
   DEFAULT_STYLE,
   effectiveStart,
+  getOverlay,
   isDialOverlay,
   isSegmentOverlay,
   segmentAt,
@@ -36,6 +37,53 @@ function storedTheme(): OverlayTheme {
     /* ignore */
   }
   return 'default';
+}
+
+const LB_PER_KG = 2.20462;
+
+/** Power options, shown when a gadget with power is chosen: instantaneous or 3 s average, and W/kg with the weight. */
+function PowerOptions() {
+  const { style, setStyle } = useApp();
+  const tr = useT();
+  const imperial = style.units.system === 'imperial';
+  const unit = imperial ? 'lb' : 'kg';
+  const shown = style.weightKg > 0 ? Math.round(style.weightKg * (imperial ? LB_PER_KG : 1) * 10) / 10 : '';
+  const needWeight = style.powerWkg && !(style.weightKg > 0);
+  return (
+    <div className="card power-options">
+      <h3>{tr('ov.power.title')}</h3>
+      <div className="row">
+        <label className="field">
+          {tr('ov.power.mode')}
+          <select value={style.powerSmoothing} onChange={(e) => setStyle({ powerSmoothing: e.target.value as OverlayStyle['powerSmoothing'] })}>
+            <option value="instant">{tr('ov.power.instant')}</option>
+            <option value="3s">{tr('ov.power.avg3s')}</option>
+          </select>
+        </label>
+        <label className="field check">
+          <input type="checkbox" checked={style.powerWkg} onChange={(e) => setStyle({ powerWkg: e.target.checked })} /> {tr('ov.power.wkg')}
+        </label>
+        {style.powerWkg ? (
+          <label className={`field${needWeight ? ' required' : ''}`}>
+            {tr('ov.power.weight', { unit })}
+            <input
+              type="number"
+              min={imperial ? 66 : 30}
+              max={imperial ? 440 : 200}
+              step={0.1}
+              value={shown}
+              autoFocus={needWeight}
+              onChange={(e) => {
+                const v = Number(e.target.value);
+                setStyle({ weightKg: v > 0 ? v / (imperial ? LB_PER_KG : 1) : 0 });
+              }}
+            />
+          </label>
+        ) : null}
+      </div>
+      {needWeight ? <p className="notice small">{tr('ov.power.needWeight')}</p> : style.powerWkg ? <p className="muted small">{tr('ov.power.lead')}</p> : null}
+    </div>
+  );
 }
 
 function Color({ label, k }: { label: string; k: 'textColor' | 'accentColor' | 'outlineColor' | 'gradientFrom' | 'gradientTo' }) {
@@ -80,6 +128,7 @@ export function StepOverlays() {
   const clipStart = cs ?? ride.startTime + (ride.endTime - ride.startTime) * 0.4;
   const clipEnd = clip ? clipStart + clip.meta.durationMs : clipStart + 60_000;
   const t = playhead?.t ?? clipStart + 1000;
+  const showPower = ride.available.has('power') && overlays.some((o) => getOverlay(o).requires === 'power' || isSegmentOverlay(o));
   // Segment gadgets are empty outside segments: preview them inside one (the second lap, if any).
   const sortedSegs = sortedSegments(style.segments);
   const sample = sortedSegs[Math.min(1, sortedSegs.length - 1)];
@@ -100,6 +149,8 @@ export function StepOverlays() {
           );
         })}
       </div>
+
+      {showPower ? <PowerOptions /> : null}
 
       {theme === 'default' ? (
         <>
@@ -305,7 +356,7 @@ export function StepOverlays() {
             <input type="number" min={50} max={600} step={5} value={style.ftp} onChange={(e) => Number(e.target.value) > 0 && setStyle({ ftp: Number(e.target.value) })} />
           </label>
         ) : null}
-        <button className="small" onClick={() => setStyle({ ...DEFAULT_STYLE, language: style.language })}>{tr('ov.resetStyle')}</button>
+        <button className="small" onClick={() => setStyle({ ...DEFAULT_STYLE, language: style.language, segments: style.segments, weightKg: style.weightKg })}>{tr('ov.resetStyle')}</button>
       </div>
       <button className="primary" onClick={() => setStep('render')} disabled={!overlays.length}>{tr('ov.next')}</button>
     </section>

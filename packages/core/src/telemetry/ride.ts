@@ -2,7 +2,7 @@ import { haversine } from '../util/geo.ts';
 import { lowerIndex } from '../util/search.ts';
 import { cumulativeGain, filterAltitude } from '../metrics/elevation.ts';
 import { gradeOverDistance } from '../metrics/grade.ts';
-import { movingAverageByTime } from '../metrics/smoothing.ts';
+import { movingAverageByTime, trailingAverageByTime } from '../metrics/smoothing.ts';
 import type { ChannelKey, RawSample, RawTelemetry } from './types.ts';
 import { LocalizedError } from '../i18n/index.ts';
 
@@ -82,6 +82,8 @@ export interface RideData {
   heartRate: Float64Array;
   cadence: Float64Array;
   power: Float64Array;
+  /** Power averaged over the last 3 s, as bike computers show it. */
+  power3s: Float64Array;
   temperature: Float64Array;
   /** Which raw channels exist in the file. */
   channels: Set<ChannelKey>;
@@ -241,6 +243,7 @@ export function buildRide(raw: RawTelemetry, opts: RideOptions = {}): RideData {
     heartRate,
     cadence,
     power,
+    power3s: trailingAverageByTime(t, power, 3000, gapThresholdMs),
     temperature,
     channels,
     available,
@@ -282,6 +285,8 @@ export interface RideSample {
 export interface SampleOptions {
   /** What speed shows inside a gap: 0 or NaN (rendered as "—"). */
   gapSpeed?: 'zero' | 'dash';
+  /** Power averaged over the last 3 s instead of the instantaneous reading. */
+  power3s?: boolean;
 }
 
 function lerp(a: number, b: number, f: number): number {
@@ -321,7 +326,7 @@ export function sampleAt(ride: RideData, time: number, opts: SampleOptions = {})
     elevationGain: at(ride.elevationGain),
     heartRate: inGap ? NaN : at(ride.heartRate),
     cadence: inGap ? (outside ? NaN : 0) : at(ride.cadence),
-    power: inGap ? (outside ? NaN : 0) : at(ride.power),
+    power: inGap ? (outside ? NaN : 0) : at(opts.power3s ? ride.power3s : ride.power),
     temperature: instantaneousOrNaN(ride.temperature),
     elapsedMs: Math.max(0, Math.min(time, ride.endTime) - ride.startTime),
   };

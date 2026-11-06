@@ -163,6 +163,12 @@ export interface OverlayStyle {
   language: Lang;
   /** Segments and laps marked on this ride (segment gadgets); saved with the project, not between rides. */
   segments: Segment[];
+  /** Power shown: the instantaneous reading or the average of the last 3 s. */
+  powerSmoothing: 'instant' | '3s';
+  /** Also show power per kilogram (needs weightKg). */
+  powerWkg: boolean;
+  /** Rider's weight in kg, for W/kg (0 = not entered). */
+  weightKg: number;
 }
 
 export const DEFAULT_STYLE: OverlayStyle = {
@@ -194,7 +200,15 @@ export const DEFAULT_STYLE: OverlayStyle = {
   panelRate: 'smooth',
   language: 'en',
   segments: [],
+  powerSmoothing: 'instant',
+  powerWkg: false,
+  weightKg: 0,
 };
+
+/** True when W/kg should be shown (chosen and a weight entered). */
+export function showsWkg(style: OverlayStyle): boolean {
+  return !!style.powerWkg && style.weightKg > 0;
+}
 
 /** Context shared by all frames of one overlay render. */
 export interface OverlayContext {

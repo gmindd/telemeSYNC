@@ -50,7 +50,7 @@ export function textInstant(t: number, clipStart: number, rateHz: number): numbe
 }
 
 export function frameState(t: number, style: OverlayStyle, octx: OverlayContext): FrameState {
-  const opts = { gapSpeed: style.gapSpeed };
+  const opts = { gapSpeed: style.gapSpeed, power3s: style.powerSmoothing === '3s' };
   const tt = textInstant(t, octx.clipStart, style.textRateHz);
   return { t, sample: sampleAt(octx.ride, t, opts), textSample: sampleAt(octx.ride, tt, opts) };
 }

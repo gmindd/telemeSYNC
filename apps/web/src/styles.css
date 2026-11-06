@@ -164,6 +164,10 @@ button.toggle-on { border-color: var(--accent); color: var(--accent); }
 button.tiny { padding: 0 6px; font-size: 11px; }
 .values { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px; }
 
+.power-options { margin-bottom: 14px; }
+.power-options h3 { margin: 0 0 6px; }
+.power-options .row { flex-wrap: wrap; gap: 14px; align-items: flex-end; }
+.field.required input { border-color: var(--warn); box-shadow: 0 0 0 2px rgba(255, 200, 87, 0.25); }
 .theme-tabs { display: flex; gap: 6px; margin: 4px 0 14px; border-bottom: 1px solid var(--border); }
 .theme-tabs button { border: 1px solid transparent; border-bottom: none; border-radius: 8px 8px 0 0; background: transparent; padding: 8px 16px; font-weight: 700; margin-bottom: -1px; }
 .theme-tabs button.active { background: var(--panel); border-color: var(--border); color: var(--accent); }
