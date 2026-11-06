@@ -17,6 +17,7 @@ import {
   panelMetricOf,
   panelOptions,
   type Lang,
+  type OverlayId,
   type OverlayStyle,
   type OverlayTheme,
   type PanelMetric,
@@ -42,8 +43,15 @@ function storedTheme(): OverlayTheme {
 const LB_PER_KG = 2.20462;
 
 /** Power options, shown when a gadget with power is chosen: instantaneous or 3 s average, and W/kg with the weight. */
+/** Gadgets that colour or place values by power zone (need the FTP). */
+const POWER_ZONE_IDS: OverlayId[] = ['dialPower', 'panelPower'];
+/** Gadgets that show heart-rate zones (need the zone limits). */
+const HR_ZONE_IDS: OverlayId[] = ['heartRate', 'dialHeartRate', 'panelHeartRate', 'natalHeartRate', 'natalHeartRateReindeer'];
+
 function PowerOptions() {
-  const { style, setStyle } = useApp();
+  const { style, setStyle, overlays } = useApp();
+  const usesZones = overlays.some((o) => POWER_ZONE_IDS.includes(o));
+  const defaultFtp = style.ftp === DEFAULT_STYLE.ftp;
   const tr = useT();
   const imperial = style.units.system === 'imperial';
   const unit = imperial ? 'lb' : 'kg';
@@ -59,6 +67,10 @@ function PowerOptions() {
             <option value="instant">{tr('ov.power.instant')}</option>
             <option value="3s">{tr('ov.power.avg3s')}</option>
           </select>
+        </label>
+        <label className={`field${usesZones && defaultFtp ? ' suggested' : ''}`}>
+          FTP (W)
+          <input type="number" min={50} max={600} step={5} value={style.ftp} onChange={(e) => Number(e.target.value) > 0 && setStyle({ ftp: Number(e.target.value) })} />
         </label>
         <label className="field check">
           <input type="checkbox" checked={style.powerWkg} onChange={(e) => setStyle({ powerWkg: e.target.checked })} /> {tr('ov.power.wkg')}
@@ -81,7 +93,53 @@ function PowerOptions() {
           </label>
         ) : null}
       </div>
-      {needWeight ? <p className="notice small">{tr('ov.power.needWeight')}</p> : style.powerWkg ? <p className="muted small">{tr('ov.power.lead')}</p> : null}
+      {needWeight ? <p className="notice small">{tr('ov.power.needWeight')}</p> : null}
+      {usesZones && defaultFtp ? <p className="notice small">{tr('ov.power.ftpDefault', { ftp: DEFAULT_STYLE.ftp })}</p> : null}
+    </div>
+  );
+}
+
+/** Heart-rate zones, shown when a gadget with heart rate is chosen: from the max heart rate, or each limit by hand. */
+function HeartRateOptions() {
+  const { style, setStyle, overlays } = useApp();
+  const tr = useT();
+  const usesZones = overlays.some((o) => HR_ZONE_IDS.includes(o));
+  const defaultZones = style.hrMax <= 0 && style.hrZones.join() === DEFAULT_STYLE.hrZones.join();
+  const setZone = (k: number, v: number) => {
+    const z = [...style.hrZones];
+    z[k] = v;
+    setStyle({ hrZones: z, hrMax: 0 });
+  };
+  return (
+    <div className="card power-options">
+      <h3>{tr('ov.hr.title')}</h3>
+      <div className="row">
+        <label className={`field${usesZones && defaultZones ? ' suggested' : ''}`}>
+          {tr('ov.hr.max')}
+          <input
+            type="number"
+            min={120}
+            max={230}
+            step={1}
+            value={style.hrMax > 0 ? style.hrMax : ''}
+            onChange={(e) => {
+              const max = Math.round(Number(e.target.value));
+              if (max >= 100 && max <= 240) setStyle({ hrMax: max, hrZones: [0.6, 0.7, 0.8, 0.9].map((f) => Math.round(max * f)) });
+              else setStyle({ hrMax: 0 });
+            }}
+          />
+        </label>
+        {style.hrZones.map((v, k) => (
+          <label key={k} className="field zone">
+            {tr('ov.hr.zoneUpTo', { n: k + 1 })}
+            <input type="number" min={60} max={230} step={1} value={v} onChange={(e) => Number(e.target.value) > 0 && setZone(k, Math.round(Number(e.target.value)))} />
+          </label>
+        ))}
+        <label className="field check">
+          <input type="checkbox" checked={style.colorByZone} onChange={(e) => setStyle({ colorByZone: e.target.checked })} /> {tr('ov.hrZoneColor')}
+        </label>
+      </div>
+      {usesZones && defaultZones ? <p className="notice small">{tr('ov.hr.default')}</p> : null}
     </div>
   );
 }
@@ -128,6 +186,7 @@ export function StepOverlays() {
   const clipStart = cs ?? ride.startTime + (ride.endTime - ride.startTime) * 0.4;
   const clipEnd = clip ? clipStart + clip.meta.durationMs : clipStart + 60_000;
   const t = playhead?.t ?? clipStart + 1000;
+  const showHr = ride.available.has('heartRate') && overlays.some((o) => getOverlay(o).requires === 'heartRate');
   const showPower = ride.available.has('power') && overlays.some((o) => getOverlay(o).requires === 'power' || isSegmentOverlay(o));
   // Segment gadgets are empty outside segments: preview them inside one (the second lap, if any).
   const sortedSegs = sortedSegments(style.segments);
@@ -151,6 +210,7 @@ export function StepOverlays() {
       </div>
 
       {showPower ? <PowerOptions /> : null}
+      {showHr ? <HeartRateOptions /> : null}
 
       {theme === 'default' ? (
         <>
@@ -314,21 +374,6 @@ export function StepOverlays() {
             <option value="dash">—</option>
           </select>
         </label>
-        {ride.available.has('heartRate') ? (
-          <>
-            <label className="field check"><input type="checkbox" checked={style.colorByZone} onChange={(e) => setStyle({ colorByZone: e.target.checked })} /> {tr('ov.hrZoneColor')}</label>
-            <label className="field">
-              {tr('ov.hrZones')}
-              <input
-                value={style.hrZones.join(' / ')}
-                onChange={(e) => {
-                  const z = e.target.value.split(/[\s/;,]+/).map(Number).filter((n) => n > 0);
-                  if (z.length === 4) setStyle({ hrZones: z });
-                }}
-              />
-            </label>
-          </>
-        ) : null}
         <Color label={tr('ov.gradientLow')} k="gradientFrom" />
         <Color label={tr('ov.gradientHigh')} k="gradientTo" />
         <label className="field">
@@ -350,13 +395,7 @@ export function StepOverlays() {
           {tr('ov.distWindow', { unit: distUnit })}
           <input type="number" min={0.5} max={200} step={0.5} value={style.chartDistance} onChange={(e) => Number(e.target.value) > 0 && setStyle({ chartDistance: Number(e.target.value) })} />
         </label>
-        {ride.available.has('power') ? (
-          <label className="field">
-            FTP (W)
-            <input type="number" min={50} max={600} step={5} value={style.ftp} onChange={(e) => Number(e.target.value) > 0 && setStyle({ ftp: Number(e.target.value) })} />
-          </label>
-        ) : null}
-        <button className="small" onClick={() => setStyle({ ...DEFAULT_STYLE, language: style.language, segments: style.segments, weightKg: style.weightKg })}>{tr('ov.resetStyle')}</button>
+        <button className="small" onClick={() => setStyle({ ...DEFAULT_STYLE, language: style.language, segments: style.segments, weightKg: style.weightKg, ftp: style.ftp, hrZones: style.hrZones, hrMax: style.hrMax })}>{tr('ov.resetStyle')}</button>
       </div>
       <button className="primary" onClick={() => setStep('render')} disabled={!overlays.length}>{tr('ov.next')}</button>
     </section>

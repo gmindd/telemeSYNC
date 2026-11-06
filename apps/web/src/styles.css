@@ -89,7 +89,7 @@ td.warnings { color: var(--warn); font-size: 12px; max-width: 360px; }
 .grow { flex: 1; }
 .field { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--muted); }
 .field.check { flex-direction: row; align-items: center; color: var(--text); }
-.field input:not([type]), .field select { color: var(--text); }
+.field input:not([type]), .field input[type="number"], .field input[type="text"], .field select { color: var(--text); }
 .progress-cell progress { width: 160px; vertical-align: middle; }
 progress { accent-color: var(--accent); height: 10px; }
 
@@ -167,6 +167,8 @@ button.tiny { padding: 0 6px; font-size: 11px; }
 .power-options { margin-bottom: 14px; }
 .power-options h3 { margin: 0 0 6px; }
 .power-options .row { flex-wrap: wrap; gap: 14px; align-items: flex-end; }
+.field.suggested input { border-color: var(--accent); }
+.field.zone input { width: 70px; }
 .field.required input { border-color: var(--warn); box-shadow: 0 0 0 2px rgba(255, 200, 87, 0.25); }
 .theme-tabs { display: flex; gap: 6px; margin: 4px 0 14px; border-bottom: 1px solid var(--border); }
 .theme-tabs button { border: 1px solid transparent; border-bottom: none; border-radius: 8px 8px 0 0; background: transparent; padding: 8px 16px; font-weight: 700; margin-bottom: -1px; }

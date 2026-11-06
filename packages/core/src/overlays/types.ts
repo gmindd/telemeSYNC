@@ -169,6 +169,8 @@ export interface OverlayStyle {
   powerWkg: boolean;
   /** Rider's weight in kg, for W/kg (0 = not entered). */
   weightKg: number;
+  /** Max heart rate the zones were worked out from (0 = zones entered by hand or default). */
+  hrMax: number;
 }
 
 export const DEFAULT_STYLE: OverlayStyle = {
@@ -203,6 +205,7 @@ export const DEFAULT_STYLE: OverlayStyle = {
   powerSmoothing: 'instant',
   powerWkg: false,
   weightKg: 0,
+  hrMax: 0,
 };
 
 /** True when W/kg should be shown (chosen and a weight entered). */

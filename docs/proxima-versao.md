@@ -14,3 +14,8 @@ e apagar daqui.
 - **Potência instantânea ou média de 3 segundos:** na mesma caixa escolhe-se a potência mostrada: a leitura
   instantânea ou a média dos últimos 3 segundos, como nos ciclocomputadores (mais estável, sem saltos). A média não
   atravessa pausas.
+- **Definições onde são precisas:** o FTP passa para a caixa "Potência" e as zonas de frequência cardíaca para uma
+  caixa "Frequência cardíaca", que só aparecem quando se escolhe um gadget dessa métrica. As zonas de FC podem ser
+  calculadas a partir da FC máxima (60, 70, 80 e 90 %) e cada limite acerta-se num campo próprio. Quando um gadget usa
+  zonas e o FTP ou as zonas ainda estão nos valores predefinidos, a app avisa para indicar os seus. Os números escritos
+  nos campos ficam mais legíveis.
