@@ -11,6 +11,7 @@ import {
   clipSyncInfo,
   effectiveStart,
   getOverlay,
+  OVERLAYS,
   parseProject,
   parseTelemetryFile,
   PROJECT_VERSION,
@@ -125,6 +126,20 @@ const LAYOUT_KEY = 'telemesync.layout';
 const FORMAT_KEY = 'telemesync.format';
 const MAX_FPS_KEY = 'telemesync.maxFps';
 const OVERLAY_LANG_KEY = 'telemesync.overlayLang';
+const OVERLAYS_KEY = 'telemesync.overlays';
+const EXPORT_KEY = 'telemesync.export';
+
+const DEFAULT_OVERLAYS: OverlayId[] = ['speed', 'grade', 'map', 'elevationProfile'];
+
+/** Gadgets chosen last time (only ids this version knows). */
+function loadStoredOverlays(): OverlayId[] {
+  const v = loadStored<unknown>(OVERLAYS_KEY, null);
+  if (!Array.isArray(v)) return DEFAULT_OVERLAYS;
+  const known = new Set<string>(OVERLAYS.map((o) => o.id));
+  return v.filter((id): id is OverlayId => typeof id === 'string' && known.has(id));
+}
+
+const storedExport = loadStored<Partial<Pick<State, 'exportSeparate' | 'exportComposite' | 'compositeShortSide'>>>(EXPORT_KEY, {});
 
 function loadStored<T>(key: string, fallback: T): T {
   try {
@@ -174,7 +189,7 @@ export const useApp = create<State & Actions>((set, get) => ({
   files: {},
   selected: {},
   clipErrors: [],
-  overlays: ['speed', 'grade', 'map', 'elevationProfile'],
+  overlays: loadStoredOverlays(),
   style: loadStoredStyle(initialOverlayLang),
   overlayLang: initialOverlayLang,
   format: loadStored<OutputFormat>(FORMAT_KEY, DEFAULT_OUTPUT_FORMAT),
@@ -182,9 +197,9 @@ export const useApp = create<State & Actions>((set, get) => ({
   outputDir: '',
   rideName: t('store.defaultRide'),
   layout: loadStored<GadgetLayout>(LAYOUT_KEY, {}),
-  exportSeparate: true,
-  exportComposite: false,
-  compositeShortSide: 1080,
+  exportSeparate: storedExport.exportSeparate ?? true,
+  exportComposite: storedExport.exportComposite ?? false,
+  compositeShortSide: [720, 1080, 1440, 2160].includes(Number(storedExport.compositeShortSide)) ? Number(storedExport.compositeShortSide) : 1080,
 
   setStep: (step) => set({ step }),
 
@@ -329,6 +344,9 @@ export const useApp = create<State & Actions>((set, get) => ({
   toggleOverlay(id, on) {
     const cur = get().overlays.filter((o) => o !== id);
     set({ overlays: on ? [...cur, id] : cur });
+    // Remembered for the next ride; gadgets this ride cannot show (e.g. power) stay chosen for the next one.
+    const saved = loadStoredOverlays().filter((o) => o !== id && !cur.includes(o));
+    store(OVERLAYS_KEY, [...saved, ...(on ? [...cur, id] : cur)]);
   },
 
   setStyle(p) {
@@ -535,7 +553,11 @@ export const useApp = create<State & Actions>((set, get) => ({
     set({ layout: {} });
     store(LAYOUT_KEY, {});
   },
-  setExportOptions: (o) => set(o),
+  setExportOptions(o) {
+    set(o);
+    const { exportSeparate, exportComposite, compositeShortSide } = get();
+    store(EXPORT_KEY, { exportSeparate, exportComposite, compositeShortSide });
+  },
   dismissNotice: () => set({ notice: undefined }),
 }));
 

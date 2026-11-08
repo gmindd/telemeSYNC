@@ -19,3 +19,7 @@ e apagar daqui.
   calculadas a partir da FC máxima (60, 70, 80 e 90 %) e cada limite acerta-se num campo próprio. Quando um gadget usa
   zonas e o FTP ou as zonas ainda estão nos valores predefinidos, a app avisa para indicar os seus. Os números escritos
   nos campos ficam mais legíveis.
+- **Os gadgets escolhidos ficam guardados:** a app passa a lembrar-se dos gadgets selecionados e do modo de exportação
+  (gadgets separados, composição e resolução) para a volta seguinte, como já fazia com as cores, as posições e as
+  outras definições. Um gadget que uma volta não pode mostrar (ex.: potência sem medidor) volta a aparecer escolhido
+  na volta seguinte que o tenha.
