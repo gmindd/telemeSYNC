@@ -219,6 +219,13 @@ p { margin: 0 0 var(--spacing-sm); }
 
 /* Changelog */
 .changelog { display: grid; gap: var(--spacing-md); }
+.changelog-older { text-align: center; }
+.changelog-older > .changelog { text-align: left; }
+.changelog-older > summary { list-style: none; cursor: pointer; display: inline-flex; }
+.changelog-older > summary::-webkit-details-marker { display: none; }
+.changelog-older > summary::after { content: ' ▾'; }
+.changelog-older[open] > summary::after { content: ' ▴'; }
+.changelog-older[open] > summary { margin-bottom: var(--spacing-md); }
 .release { background: var(--color-panel); border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: var(--spacing-md); }
 .release__head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: var(--spacing-xs); margin-bottom: var(--spacing-xs); }
 .release__head h3 { margin: 0; }

@@ -1,18 +1,18 @@
 {
-  "version": "1.1.0",
-  "date": "2026-11-04",
-  "summary": "Segmentos e voltas com tempos e médias, tema de Natal, rodar o vídeo 180° e painéis sem fundo duplo.",
+  "version": "1.1.1",
+  "date": "2026-11-09",
+  "summary": "W/kg e potência média de 3 s, zonas das redes sociais na pré-visualização e definições junto aos gadgets.",
   "summaries": {
-    "en": "Segments and laps with times and averages, a Christmas theme, rotate the video 180° and panels without a double background.",
-    "pt": "Segmentos e voltas com tempos e médias, tema de Natal, rodar o vídeo 180° e painéis sem fundo duplo.",
-    "fr": "Segments et tours avec temps et moyennes, thème de Noël, rotation de la vidéo à 180° et panneaux sans double fond.",
-    "es": "Segmentos y vueltas con tiempos y medias, tema de Navidad, girar el vídeo 180° y paneles sin fondo doble.",
-    "de": "Segmente und Runden mit Zeiten und Durchschnittswerten, Weihnachtsthema, Video um 180° drehen und Panels ohne doppelten Hintergrund."
+    "en": "W/kg and 3-second power, social media zones in the preview and settings next to the gadgets.",
+    "pt": "W/kg e potência média de 3 s, zonas das redes sociais na pré-visualização e definições junto aos gadgets.",
+    "fr": "W/kg et puissance sur 3 s, zones des réseaux sociaux dans l’aperçu et réglages à côté des gadgets.",
+    "es": "W/kg y potencia media de 3 s, zonas de las redes sociales en la vista previa y ajustes junto a los gadgets.",
+    "de": "W/kg und 3-Sekunden-Leistung, Zonen der sozialen Netzwerke in der Vorschau und Einstellungen bei den Gadgets."
   },
-  "downloadUrl": "https://github.com/gmindd/telemeSYNC/releases/download/v1.1.0/telemeSYNC-1.1.0-windows.zip",
+  "downloadUrl": "https://github.com/gmindd/telemeSYNC/releases/download/v1.1.1/telemeSYNC-1.1.1-windows.zip",
   "downloads": {
-    "windows": "https://github.com/gmindd/telemeSYNC/releases/download/v1.1.0/telemeSYNC-1.1.0-windows.zip",
-    "mac": "https://github.com/gmindd/telemeSYNC/releases/download/v1.1.0/telemeSYNC-1.1.0-macos.zip"
+    "windows": "https://github.com/gmindd/telemeSYNC/releases/download/v1.1.1/telemeSYNC-1.1.1-windows.zip",
+    "mac": "https://github.com/gmindd/telemeSYNC/releases/download/v1.1.1/telemeSYNC-1.1.1-macos.zip"
   },
   "changelogUrl": "https://telemesync.pereiragabriel.com/#novidades"
 }
