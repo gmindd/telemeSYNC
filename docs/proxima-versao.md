@@ -23,3 +23,8 @@ e apagar daqui.
   (gadgets separados, composição e resolução) para a volta seguinte, como já fazia com as cores, as posições e as
   outras definições. Um gadget que uma volta não pode mostrar (ex.: potência sem medidor) volta a aparecer escolhido
   na volta seguinte que o tenha.
+- **Zonas das redes sociais:** na pré-visualização do passo 3, botões para TikTok, Instagram Reels e YouTube Shorts
+  (podem ligar-se vários ao mesmo tempo) escurecem as zonas onde cada app põe o nome, a descrição e os botões de
+  gostos e partilha. Escuro: tapado pela app; claro: pode ficar tapado (descrição longa, anúncios). Os gadgets que
+  ficam por baixo ganham um contorno vermelho (amarelo nas zonas que podem ficar tapadas) e uma linha diz quantos são.
+  A camada é só de ajuda: não aparece nos ficheiros exportados.

@@ -35,6 +35,7 @@ import {
 } from '@telemesync/core';
 import { currentLang, t, t as tr, useLang } from '../i18n/index.tsx';
 import { api, type JobSnapshot } from './api.ts';
+import { SOCIAL_PLATFORMS, type SocialPlatform } from './safeZones.ts';
 
 export type Step = 'welcome' | 'telemetry' | 'clips' | 'sync' | 'overlays' | 'render';
 
@@ -77,6 +78,8 @@ interface State {
   notice?: string;
   /** Start marked for the next segment or lap (UTC ms), waiting for its end. */
   segAnchor?: number;
+  /** Social apps whose covered areas are shaded over the preview. */
+  safeZones: SocialPlatform[];
 }
 
 interface Actions {
@@ -104,6 +107,7 @@ interface Actions {
   removeSegment(id: string): void;
   clearSegments(): void;
   importDeviceLaps(): void;
+  toggleSafeZone(p: SocialPlatform): void;
   setFormat(f: OutputFormat): void;
   setMaxFps(fps: number): void;
   setOutputDir(d: string): void;
@@ -128,6 +132,7 @@ const MAX_FPS_KEY = 'telemesync.maxFps';
 const OVERLAY_LANG_KEY = 'telemesync.overlayLang';
 const OVERLAYS_KEY = 'telemesync.overlays';
 const EXPORT_KEY = 'telemesync.export';
+const SAFE_ZONES_KEY = 'telemesync.safeZones';
 
 const DEFAULT_OVERLAYS: OverlayId[] = ['speed', 'grade', 'map', 'elevationProfile'];
 
@@ -190,6 +195,7 @@ export const useApp = create<State & Actions>((set, get) => ({
   selected: {},
   clipErrors: [],
   overlays: loadStoredOverlays(),
+  safeZones: loadStored<SocialPlatform[]>(SAFE_ZONES_KEY, []).filter((p) => SOCIAL_PLATFORMS.includes(p)),
   style: loadStoredStyle(initialOverlayLang),
   overlayLang: initialOverlayLang,
   format: loadStored<OutputFormat>(FORMAT_KEY, DEFAULT_OUTPUT_FORMAT),
@@ -408,6 +414,13 @@ export const useApp = create<State & Actions>((set, get) => ({
     get().setStyle({
       segments: [...kept, ...laps.map((l, i) => ({ id: newSegmentId(), name: tr('seg.defaultLap', { n: i + 1 }), kind: 'lap' as const, startMs: l.startMs, endMs: l.endMs }))],
     });
+  },
+
+  toggleSafeZone(p) {
+    const cur = get().safeZones;
+    const safeZones = cur.includes(p) ? cur.filter((x) => x !== p) : [...cur, p];
+    set({ safeZones });
+    store(SAFE_ZONES_KEY, safeZones);
   },
 
   setFormat(format) {

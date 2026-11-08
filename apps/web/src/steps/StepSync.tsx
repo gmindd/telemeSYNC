@@ -5,6 +5,7 @@ import {
   describeCandidate,
   effectiveStart,
   formatNumber,
+  resolveLayout,
   profileLabel,
   utcToWall,
   wallToUtc,
@@ -13,6 +14,8 @@ import {
 } from '@telemesync/core';
 import { ClipList } from '../components/ClipList.tsx';
 import { SegmentsPanel } from '../components/SegmentsPanel.tsx';
+import { gadgetZones } from '../components/Preview.tsx';
+import { PLATFORM_NAMES, SOCIAL_PLATFORMS } from '../lib/safeZones.ts';
 import { Preview } from '../components/Preview.tsx';
 import { Timeline } from '../components/Timeline.tsx';
 import { ValuesPanel } from '../components/ValuesPanel.tsx';
@@ -65,6 +68,32 @@ function CameraRow({ cam }: { cam: Camera }) {
       <select value={cam.timeZone} onChange={(e) => setCameraTimeZone(cam.id, e.target.value)} title={t('sync.tzTitle')}>
         {[...new Set([cam.timeZone, ...TIME_ZONES])].map((z) => <option key={z}>{z}</option>)}
       </select>
+    </div>
+  );
+}
+
+/** Social-app zones over the preview: one toggle per app, and whether any gadget sits under their buttons. */
+function SafeZoneBar({ clip }: { clip: Clip }) {
+  const { safeZones, toggleSafeZone, overlays, layout, style } = useApp();
+  const t = useT();
+  const aspect = clip.meta.width && clip.meta.height ? clip.meta.width / clip.meta.height : 16 / 9;
+  const zones = gadgetZones(overlays, resolveLayout(overlays, layout, aspect, style), aspect, style, safeZones);
+  const covered = Object.values(zones).filter((z) => z === 'ui').length;
+  const maybe = Object.values(zones).filter((z) => z === 'maybe').length;
+  return (
+    <div className="safe-zone-bar">
+      <span className="muted">{t('sz.title')}</span>
+      {SOCIAL_PLATFORMS.map((p) => (
+        <button key={p} className={`small${safeZones.includes(p) ? ' toggle-on' : ''}`} aria-pressed={safeZones.includes(p)} onClick={() => toggleSafeZone(p)}>
+          {PLATFORM_NAMES[p]}
+        </button>
+      ))}
+      {safeZones.length ? (
+        <span className={`safe-zone-status ${covered ? 'bad' : maybe ? 'warn' : 'ok'}`}>
+          {covered ? `⚠ ${t('sz.covered', { n: covered })}` : maybe ? t('sz.maybe', { n: maybe }) : `✓ ${t('sz.allClear')}`}
+        </span>
+      ) : null}
+      {safeZones.length ? <p className="muted small">{t(aspect < 0.7 ? 'sz.help' : 'sz.notVertical')}</p> : null}
     </div>
   );
 }
@@ -179,6 +208,7 @@ export function StepSync() {
                 ⟲ {t('preview.rotate')}
               </button>
             </div>
+            <SafeZoneBar clip={clip} />
           </div>
           <div className="sync-side">
             <ClipDetail clip={clip} cam={cam} />

@@ -18,6 +18,27 @@ import {
 } from '@telemesync/core';
 import { useLang, useT, type T } from '../i18n/index.tsx';
 import { useApp } from '../lib/store.ts';
+import { zoneHit, zonesPath, type SocialPlatform } from '../lib/safeZones.ts';
+
+/** Which gadgets touch a social app's covered areas (by their box in the frame). */
+export function gadgetZones(
+  overlays: OverlayId[],
+  placements: Record<OverlayId, GadgetPlacement>,
+  aspect: number,
+  style: OverlayStyle,
+  platforms: SocialPlatform[],
+): Partial<Record<OverlayId, 'ui' | 'maybe'>> {
+  const out: Partial<Record<OverlayId, 'ui' | 'maybe'>> = {};
+  if (!platforms.length) return out;
+  for (const id of overlays) {
+    const p = placements[id];
+    if (!p) continue;
+    const s = overlayPixelSize(getOverlay(id), style);
+    const hit = zoneHit({ x: p.x, y: p.y, w: p.w, h: p.w * (s.height / s.width) * aspect }, platforms);
+    if (hit) out[id] = hit;
+  }
+  return out;
+}
 import { currentPlatform } from '../lib/updates.ts';
 
 type PlayState = 'loading' | 'ok' | 'error' | 'nofile' | 'unsupported';
@@ -37,6 +58,8 @@ function Gadget(props: {
   box: React.RefObject<HTMLDivElement | null>;
   canvasRef: (el: HTMLCanvasElement | null) => void;
   onChange: (p: GadgetPlacement) => void;
+  /** Covered by a social app's interface ('ui') or maybe covered ('maybe'). */
+  zone?: 'ui' | 'maybe';
 }) {
   const { id, p, style } = props;
   const t = useT();
@@ -61,7 +84,7 @@ function Gadget(props: {
   const end = () => (drag.current = null);
   return (
     <div
-      className="gadget"
+      className={`gadget${props.zone ? ` zone-${props.zone}` : ''}`}
       style={{ left: `${p.x * 100}%`, top: `${p.y * 100}%`, width: `${p.w * 100}%` }}
       title={t('preview.gadget', { name: overlayLabel(id, lang) })}
       onPointerDown={start('move')}
@@ -192,6 +215,8 @@ export function Preview(props: {
 
   const aspect = clip.meta.width && clip.meta.height ? clip.meta.width / clip.meta.height : 16 / 9;
   const placements = resolveLayout(overlays, props.layout, aspect, style);
+  const platforms = useApp((s) => s.safeZones);
+  const zones = gadgetZones(overlays, placements, aspect, style, platforms);
   const canvasRef = (id: OverlayId) => (el: HTMLCanvasElement | null) => {
     if (el) canvases.current.set(id, el);
     else canvases.current.delete(id);
@@ -219,9 +244,15 @@ export function Preview(props: {
         ) : (
           <div className="preview-nodata" />
         )}
+        {platforms.length ? (
+          <svg className="safe-zones" viewBox="0 0 1 1" preserveAspectRatio="none" aria-hidden>
+            <path d={zonesPath(platforms, 'maybe')} fill="rgba(0,0,0,0.28)" />
+            <path d={zonesPath(platforms, 'ui')} fill="rgba(0,0,0,0.5)" />
+          </svg>
+        ) : null}
         <div className="overlay-layer">
           {overlays.map((id) => (
-            <Gadget key={id} id={id} p={placements[id]} style={style} box={box} canvasRef={canvasRef(id)} onChange={(p) => props.onPlacement(id, p)} />
+            <Gadget key={id} id={id} p={placements[id]} style={style} box={box} canvasRef={canvasRef(id)} onChange={(p) => props.onPlacement(id, p)} zone={zones[id]} />
           ))}
         </div>
       </div>
