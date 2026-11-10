@@ -32,6 +32,9 @@ import {
   type Segment,
   newSegmentId,
   type SyncState,
+  SPORTS,
+  overlaySports,
+  type Sport,
 } from '@telemesync/core';
 import { currentLang, t, t as tr, useLang } from '../i18n/index.tsx';
 import { api, type JobSnapshot } from './api.ts';
@@ -80,6 +83,8 @@ interface State {
   segAnchor?: number;
   /** Social apps whose covered areas are shaded over the preview. */
   safeZones: SocialPlatform[];
+  /** Sport whose gadgets step 4 shows (from the file when it says, else the last one chosen). */
+  sport: Sport;
 }
 
 interface Actions {
@@ -108,6 +113,7 @@ interface Actions {
   clearSegments(): void;
   importDeviceLaps(): void;
   toggleSafeZone(p: SocialPlatform): void;
+  setSport(s: Sport): void;
   setFormat(f: OutputFormat): void;
   setMaxFps(fps: number): void;
   setOutputDir(d: string): void;
@@ -133,6 +139,10 @@ const OVERLAY_LANG_KEY = 'telemesync.overlayLang';
 const OVERLAYS_KEY = 'telemesync.overlays';
 const EXPORT_KEY = 'telemesync.export';
 const SAFE_ZONES_KEY = 'telemesync.safeZones';
+const SPORT_KEY = 'telemesync.sport';
+
+/** First gadget chosen for a new ride with nothing chosen yet, per sport. */
+const FIRST_OVERLAY: Record<Sport, OverlayId[]> = { cycling: ['speed'], running: ['pace'], snow: ['speed'] };
 
 const DEFAULT_OVERLAYS: OverlayId[] = ['speed', 'grade', 'map', 'elevationProfile'];
 
@@ -196,6 +206,7 @@ export const useApp = create<State & Actions>((set, get) => ({
   clipErrors: [],
   overlays: loadStoredOverlays(),
   safeZones: loadStored<SocialPlatform[]>(SAFE_ZONES_KEY, []).filter((p) => SOCIAL_PLATFORMS.includes(p)),
+  sport: ((s) => (SPORTS.includes(s) ? s : 'cycling'))(loadStored<Sport>(SPORT_KEY, 'cycling')),
   style: loadStoredStyle(initialOverlayLang),
   overlayLang: initialOverlayLang,
   format: loadStored<OutputFormat>(FORMAT_KEY, DEFAULT_OUTPUT_FORMAT),
@@ -225,19 +236,26 @@ export const useApp = create<State & Actions>((set, get) => ({
       const ride = buildRide(parseTelemetryFile(file.name, buf));
       const { id } = await api.uploadTelemetry(file);
       const sync = resolveAll(get().sync, ride.startTime);
-      // Keep only overlays that this ride supports.
-      const overlays = get().overlays.filter((o) => ride.available.has(getOverlay(o).requires));
+      // The file's sport, when it says, opens that sport's gadgets.
+      const sport = ride.sport ?? get().sport;
+      if (ride.sport) store(SPORT_KEY, sport);
+      // Keep only overlays that this ride supports (and, when the file says its sport, that sport's).
+      const overlays = get().overlays.filter((o) => ride.available.has(getOverlay(o).requires) && (!ride.sport || overlaySports(o).includes(ride.sport)));
       // Segments from an opened project stay when they fall within this ride.
       const segments = get().style.segments.filter((g) => g.endMs > ride.startTime && g.startMs < ride.endTime);
+      // A PR race starting at a point of another ride starts at this one's beginning instead.
+      const ghost = get().style.ghost;
+      const ghostStart = ghost?.startMs != null && (ghost.startMs < ride.startTime || ghost.startMs > ride.endTime) ? null : ghost?.startMs ?? null;
       set({
-        style: { ...get().style, segments },
+        sport,
+        style: { ...get().style, segments, ghost: ghost ? { ...ghost, startMs: ghostStart } : null },
         segAnchor: undefined,
         ride,
         rideId: id,
         rideFile: { name: file.name, size: file.size },
         rideName: rideNameFrom(ride, file.name),
         sync,
-        overlays: overlays.length ? overlays : (['speed'] as OverlayId[]).filter((o) => ride.available.has(getOverlay(o).requires)),
+        overlays: overlays.length ? overlays : FIRST_OVERLAY[sport].filter((o) => ride.available.has(getOverlay(o).requires)),
         rideLoading: false,
       });
     } catch (e) {
@@ -414,6 +432,11 @@ export const useApp = create<State & Actions>((set, get) => ({
     get().setStyle({
       segments: [...kept, ...laps.map((l, i) => ({ id: newSegmentId(), name: tr('seg.defaultLap', { n: i + 1 }), kind: 'lap' as const, startMs: l.startMs, endMs: l.endMs }))],
     });
+  },
+
+  setSport(sport) {
+    set({ sport });
+    store(SPORT_KEY, sport);
   },
 
   toggleSafeZone(p) {
