@@ -132,8 +132,10 @@ function applyTranslations(texts) {
     root.dataset.ptTitle = document.title;
     root.dataset.ptDescription = meta?.content ?? '';
   }
-  document.title = texts?.['meta.title'] ?? root.dataset.ptTitle;
-  if (meta) meta.content = texts?.['meta.description'] ?? root.dataset.ptDescription;
+  // Pages other than the home page name their own title keys (<html data-i18n-meta="stats.meta">)
+  const metaKey = root.dataset.i18nMeta || 'meta';
+  document.title = texts?.[`${metaKey}.title`] ?? root.dataset.ptTitle;
+  if (meta) meta.content = texts?.[`${metaKey}.description`] ?? root.dataset.ptDescription;
   root.lang = currentLang;
   document.querySelectorAll('.js-date').forEach((el) => {
     const d = new Date(`${el.getAttribute('datetime')}T12:00:00`);
@@ -144,6 +146,7 @@ function applyTranslations(texts) {
   if (toggle) toggle.setAttribute('aria-label', t(toggle.getAttribute('aria-expanded') === 'true' ? 'ui.menuClose' : 'ui.menuOpen'));
   renderVideoLabel();
   if (supportersData) renderSupporters();
+  document.dispatchEvent(new CustomEvent('site:language', { detail: { lang: currentLang } }));
 }
 
 // Opens/closes the mobile menu and closes it after a link is chosen

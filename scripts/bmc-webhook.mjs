@@ -84,28 +84,32 @@ async function loadStore() {
 
 const day = (date) => String(date ?? '').slice(0, 10);
 
-/** Public list: manual entries + received ones, newest first. */
-async function publish(stored) {
-  const manualFile = await readJson(MANUAL, { supporters: [] });
-  const manual = (Array.isArray(manualFile.supporters) ? manualFile.supporters : []).map((s) => {
+/**
+ * Every supporter, newest first: manual entries + received ones. A support added by hand and also
+ * delivered by the webhook is listed once (the hand-added entry wins): same name on the same day, or
+ * exactly the same time (the hand entry copies it). Also used by the stats collector to count them.
+ */
+export function supporterList(manualFile, stored) {
+  const manual = (Array.isArray(manualFile?.supporters) ? manualFile.supporters : []).map((s) => {
     const entry = { name: String(s.name ?? '').slice(0, 40), coffees: Number(s.coffees) || 1, date: s.date ?? null };
     if (typeof s.url === 'string' && /^https:\/\/[^\s"<>]{1,200}$/.test(s.url)) entry.url = s.url;
     if (typeof s.message === 'string' && s.message.trim()) entry.message = s.message.trim().slice(0, 160);
     return entry;
   });
-  // A support added by hand and also delivered by the webhook is listed once (the hand-added entry
-  // wins): same name on the same day, or exactly the same time (the hand entry copies it).
   const sameTime = (a, b) => a && b && String(a).length > 10 && Date.parse(a) === Date.parse(b);
-  const received = stored
+  const received = (Array.isArray(stored) ? stored : [])
     .filter((s) => !manual.some((m) => (m.name && m.name === s.name && day(m.date) === day(s.date)) || sameTime(m.date, s.date)))
     .map((s) => {
       const entry = { name: String(s.name ?? '').slice(0, 40), coffees: Number(s.coffees) || 1, date: s.date ?? null };
       if (s.message) entry.message = String(s.message).slice(0, 160);
       return entry;
     });
-  const all = [...manual, ...received]
-    .sort((a, b) => String(b.date).localeCompare(String(a.date)))
-    .slice(0, MAX_PUBLIC);
+  return [...manual, ...received].sort((a, b) => String(b.date).localeCompare(String(a.date)));
+}
+
+/** Public list read by the page: the newest MAX_PUBLIC supporters. */
+async function publish(stored) {
+  const all = supporterList(await readJson(MANUAL, { supporters: [] }), stored).slice(0, MAX_PUBLIC);
   await writeJson(PUBLIC, { updatedAt: new Date().toISOString(), supporters: all });
   return all.length;
 }

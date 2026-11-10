@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="pt" data-i18n-meta="stats.meta">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>telemeSYNC em números · Estatísticas para patrocinadores</title>
+  <meta name="description" content="Visitas ao site, downloads do programa, países e origem dos visitantes do telemeSYNC, atualizados de hora a hora.">
+  <link rel="canonical" href="https://telemesync.pereiragabriel.com/stats">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://telemesync.pereiragabriel.com/stats">
+  <meta property="og:title" content="telemeSYNC em números">
+  <meta property="og:description" content="Visitas, downloads e de onde vêm os utilizadores do telemeSYNC, atualizados de hora a hora.">
+  <meta property="og:image" content="https://telemesync.pereiragabriel.com/assets/images/hero-composicao.webp">
+  <meta name="theme-color" content="#0b0f14">
+  <link rel="icon" href="assets/images/favicon.svg" type="image/svg+xml">
+  <link rel="preload" href="assets/fonts/Inter-800.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="style.css">
+  <script>
+    // Chosen language other than Portuguese: hide the page until script.js has translated it (at most 1.5 s)
+    try {
+      var l = new URLSearchParams(location.search).get('lang') || localStorage.getItem('telemesync-lang');
+      if (l && l !== 'pt') {
+        document.documentElement.classList.add('i18n-loading');
+        setTimeout(function () { document.documentElement.classList.remove('i18n-loading'); }, 1500);
+      }
+    } catch (e) {}
+  </script>
+  <script src="script.js" defer></script>
+  <script src="stats.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#conteudo" data-i18n="nav.skip">Saltar para o conteúdo</a>
+
+  <header class="site-header">
+    <div class="container site-header__inner">
+      <a class="brand" href="/" aria-label="telemeSYNC, início" data-i18n-aria-label="nav.home">tele<em>me</em>SYNC</a>
+      <div class="lang-switch js-lang" role="group" aria-label="Língua · Language">
+        <button type="button" class="lang-switch__flag" data-lang="pt" lang="pt" title="Português" aria-label="Português" aria-pressed="true">
+          <svg viewBox="0 0 30 20" aria-hidden="true"><rect width="12" height="20" fill="#006600"/><rect x="12" width="18" height="20" fill="#ff0000"/><circle cx="12" cy="10" r="4.2" fill="#ffcc00"/><circle cx="12" cy="10" r="2.6" fill="#ff0000" stroke="#fff" stroke-width=".8"/></svg>
+        </button>
+        <button type="button" class="lang-switch__flag" data-lang="en" lang="en" title="English" aria-label="English" aria-pressed="false">
+          <svg viewBox="0 0 60 40" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><rect width="60" height="40" fill="#012169"/><path d="M0 0 60 40M60 0 0 40" stroke="#fff" stroke-width="8"/><path d="M0 0 60 40M60 0 0 40" stroke="#c8102e" stroke-width="3"/><path d="M30 0v40M0 20h60" stroke="#fff" stroke-width="12"/><path d="M30 0v40M0 20h60" stroke="#c8102e" stroke-width="7"/></svg>
+        </button>
+        <button type="button" class="lang-switch__flag" data-lang="fr" lang="fr" title="Français" aria-label="Français" aria-pressed="false">
+          <svg viewBox="0 0 30 20" aria-hidden="true"><rect width="10" height="20" fill="#002654"/><rect x="10" width="10" height="20" fill="#fff"/><rect x="20" width="10" height="20" fill="#ce1126"/></svg>
+        </button>
+        <button type="button" class="lang-switch__flag" data-lang="es" lang="es" title="Español" aria-label="Español" aria-pressed="false">
+          <svg viewBox="0 0 30 20" aria-hidden="true"><rect width="30" height="20" fill="#aa151b"/><rect y="5" width="30" height="10" fill="#f1bf00"/></svg>
+        </button>
+        <button type="button" class="lang-switch__flag" data-lang="de" lang="de" title="Deutsch" aria-label="Deutsch" aria-pressed="false">
+          <svg viewBox="0 0 30 20" aria-hidden="true"><rect width="30" height="7" fill="#000"/><rect y="6.6" width="30" height="6.8" fill="#dd0000"/><rect y="13.3" width="30" height="6.7" fill="#ffce00"/></svg>
+        </button>
+      </div>
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="menu" aria-label="Abrir menu">
+        <span></span><span></span><span></span>
+      </button>
+      <nav class="site-nav" id="menu" aria-label="Navegação principal" data-i18n-aria-label="nav.aria">
+        <a href="/" data-i18n="stats.navHome">Início</a>
+        <a class="btn btn--small btn--coffee" href="/#apoiar" data-i18n="nav.support">☕ Apoiar</a>
+        <a class="btn btn--small btn--primary" href="/#download" data-i18n="nav.download">Download</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="conteudo" class="stats">
+    <section class="section stats-hero">
+      <div class="container">
+        <p class="eyebrow" data-i18n="stats.eyebrow">Para patrocinadores</p>
+        <h1 data-i18n="stats.title">telemeSYNC em números</h1>
+        <p class="lead" data-i18n="stats.lead">
+          Números públicos e verdadeiros, atualizados de hora a hora: quantas pessoas visitam o site, quantas descarregam o programa
+          e de onde vêm. Quem usa o telemeSYNC filma e partilha as suas voltas de bicicleta.
+        </p>
+        <p class="stats-updated" aria-live="polite"><span class="stats-updated__dot" aria-hidden="true"></span><span class="js-stats-updated" data-i18n="stats.loading">A carregar…</span></p>
+
+        <div class="kpis js-kpis" aria-label="Resumo" data-i18n-aria-label="stats.summary"></div>
+      </div>
+    </section>
+
+    <section class="section section--alt js-sec-visits" hidden>
+      <div class="container">
+        <h2 data-i18n="stats.visitsTitle">Visitas por dia</h2>
+        <p class="section__lead js-visits-lead"></p>
+        <figure class="chart-card">
+          <div class="chart js-chart-visits"></div>
+          <details class="chart-table"><summary data-i18n="stats.showData">Ver os dados</summary><div class="js-table-visits"></div></details>
+        </figure>
+      </div>
+    </section>
+
+    <section class="section js-sec-downloads" hidden>
+      <div class="container">
+        <h2 data-i18n="stats.downloadsTitle">Downloads por versão</h2>
+        <p class="section__lead js-downloads-lead"></p>
+        <figure class="chart-card">
+          <div class="chart-legend js-legend-downloads"></div>
+          <div class="chart js-chart-downloads"></div>
+          <details class="chart-table"><summary data-i18n="stats.showData">Ver os dados</summary><div class="js-table-downloads"></div></details>
+        </figure>
+      </div>
+    </section>
+
+    <section class="section section--alt js-sec-audience" hidden>
+      <div class="container">
+        <h2 data-i18n="stats.audienceTitle">Quem nos visita</h2>
+        <div class="rank-grid">
+          <article class="rank-card js-rank-countries" hidden>
+            <h3 data-i18n="stats.countries">Países</h3>
+            <ol class="rank js-list-countries"></ol>
+          </article>
+          <article class="rank-card js-rank-referrers" hidden>
+            <h3 data-i18n="stats.referrers">De onde chegam</h3>
+            <ol class="rank js-list-referrers"></ol>
+          </article>
+          <article class="rank-card js-rank-systems" hidden>
+            <h3 data-i18n="stats.systems">Sistemas</h3>
+            <ol class="rank js-list-systems"></ol>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container container--narrow stats-cta">
+        <h2 data-i18n="stats.ctaTitle">Quer chegar a quem filma as suas voltas?</h2>
+        <p class="section__lead" data-i18n="stats.ctaText">
+          Lojas de bicicletas, marcas de equipamento, eventos de ciclismo e empresas de turismo ativo podem patrocinar o telemeSYNC.
+          Os patrocinadores aparecem no site, sempre identificados como tal.
+        </p>
+        <div class="stats-cta__actions">
+          <a class="btn btn--primary btn--big" href="mailto:hello@pereiragabriel.com?subject=Patroc%C3%ADnio%20telemeSYNC" data-i18n="sponsor.button">Quero patrocinar</a>
+          <a class="btn btn--ghost btn--big" href="/#patrocinadores" data-i18n="stats.ctaSponsors">Ver os patrocinadores</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="section section--alt">
+      <div class="container container--narrow stats-method">
+        <h2 data-i18n="stats.methodTitle">Como contamos</h2>
+        <ul>
+          <li data-i18n="stats.method1"><b>Visitas:</b> contadas com o GoatCounter, de forma anónima, sem cookies e sem perfis. Contamos pessoas (visitantes), não carregamentos de página.</li>
+          <li data-i18n="stats.method2"><b>Downloads:</b> contados pelo GitHub, onde estão os ficheiros do programa, desde a versão 1.0.0. Inclui os downloads feitos a partir do aviso de nova versão dentro do programa.</li>
+          <li data-i18n="stats.method3"><b>Apoiantes:</b> pessoas que pagaram um café no Buy Me a Coffee. Não mostramos nomes nem valores aqui.</li>
+          <li data-i18n="stats.method4">Esta página atualiza-se sozinha de hora a hora. Nenhum número é escrito à mão, exceto os seguidores nas redes sociais, quando aparecem.</li>
+        </ul>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container site-footer__inner">
+      <p data-i18n="footer.copy">© 2026 <a href="https://www.pereiragabriel.com/" target="_blank" rel="noopener">Gabriel Pereira</a> · telemeSYNC é gratuito (freeware).</p>
+      <p><a href="legal.html" data-i18n="footer.legal">Aviso legal, termos e privacidade</a></p>
+    </div>
+  </footer>
+</body>
+</html>
