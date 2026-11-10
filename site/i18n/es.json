@@ -199,7 +199,7 @@
   "stats.ctaText": "Tiendas de bicicletas, marcas de equipamiento, eventos de ciclismo y empresas de turismo activo pueden patrocinar telemeSYNC. Los patrocinadores aparecen en el sitio, siempre identificados como tales.",
   "stats.ctaSponsors": "Ver los patrocinadores",
   "stats.methodTitle": "Cómo contamos",
-  "stats.method1": "<b>Visitas:</b> contadas con GoatCounter, de forma anónima, sin cookies ni perfiles. Contamos personas (visitantes), no cargas de página.",
+  "stats.method1": "<b>Visitas:</b> contadas por el propio servidor del sitio, sin cookies ni servicios de terceros, así que los bloqueadores de anuncios no las ocultan. Contamos personas distintas por día, no cargas de página, y dejamos fuera robots, vistas previas de enlaces y programas que solo leen la página.",
   "stats.method2": "<b>Descargas:</b> contadas por GitHub, donde están los archivos del programa, desde la versión 1.0.0. Incluye las descargas iniciadas desde el aviso de nueva versión dentro del programa.",
   "stats.method3": "<b>Apoyos:</b> personas que invitaron a un café en Buy Me a Coffee. Aquí no mostramos nombres ni importes.",
   "stats.method4": "Esta página se actualiza sola cada hora. Ninguna cifra se escribe a mano, salvo los seguidores en redes sociales, cuando aparecen.",
@@ -225,5 +225,15 @@
   "stats.colVersion": "Versión",
   "stats.colDate": "Fecha",
   "stats.colTotal": "Total",
-  "stats.version": "Versión {v}"
+  "stats.version": "Versión {v}",
+  "stats.kpiVisitsSince": "contadas desde el {date}",
+  "stats.kpiApp": "usaron el programa esta semana",
+  "stats.kpiAppLast": "usaron el programa la semana pasada",
+  "stats.kpiAppSub": "personas distintas que abrieron el programa",
+  "stats.appTitle": "Usuarios del programa por día",
+  "stats.appLead": "Personas distintas que abrieron el programa cada día (el programa comprueba si hay una versión nueva al abrirse).",
+  "stats.usersOn": "{n} personas",
+  "stats.colUsers": "Personas",
+  "stats.method5": "<b>Usuarios del programa:</b> el programa comprueba si hay una versión nueva cada vez que se abre; contamos las personas distintas que lo hacen cada día y cada semana.",
+  "stats.method6": "El país se obtiene de la dirección IP, con la base de datos <a href=\"https://db-ip.com\" target=\"_blank\" rel=\"noopener\">IP Geolocation by DB-IP</a> (CC BY 4.0). Las direcciones no se guardan."
 }

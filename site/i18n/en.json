@@ -199,7 +199,7 @@
   "stats.ctaText": "Bike shops, gear brands, cycling events and outdoor tourism companies can sponsor telemeSYNC. Sponsors appear on the site, always labelled as such.",
   "stats.ctaSponsors": "See the sponsors",
   "stats.methodTitle": "How we count",
-  "stats.method1": "<b>Visits:</b> counted with GoatCounter, anonymously, without cookies or profiles. We count people (visitors), not page loads.",
+  "stats.method1": "<b>Visits:</b> counted by the site’s own server, without cookies or third-party services, so ad blockers don’t hide them. We count different people per day, not page loads, and leave out bots, link previews and programs that only read the page.",
   "stats.method2": "<b>Downloads:</b> counted by GitHub, where the program files are, since version 1.0.0. Includes downloads started from the new-version notice inside the program.",
   "stats.method3": "<b>Supporters:</b> people who bought a coffee on Buy Me a Coffee. No names or amounts here.",
   "stats.method4": "This page updates itself every hour. No number is typed in by hand, except social media followers, when they appear.",
@@ -225,5 +225,15 @@
   "stats.colVersion": "Version",
   "stats.colDate": "Date",
   "stats.colTotal": "Total",
-  "stats.version": "Version {v}"
+  "stats.version": "Version {v}",
+  "stats.kpiVisitsSince": "counted since {date}",
+  "stats.kpiApp": "used the program this week",
+  "stats.kpiAppLast": "used the program last week",
+  "stats.kpiAppSub": "different people who opened the program",
+  "stats.appTitle": "Program users per day",
+  "stats.appLead": "Different people who opened the program each day (the program checks for a new version when it opens).",
+  "stats.usersOn": "{n} people",
+  "stats.colUsers": "People",
+  "stats.method5": "<b>Program users:</b> the program checks for a new version every time it opens; we count the different people who do so each day and each week.",
+  "stats.method6": "The country comes from the IP address, using the <a href=\"https://db-ip.com\" target=\"_blank\" rel=\"noopener\">IP Geolocation by DB-IP</a> database (CC BY 4.0). Addresses are not stored."
 }

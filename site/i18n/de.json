@@ -199,7 +199,7 @@
   "stats.ctaText": "Fahrradläden, Ausrüstungsmarken, Radsport-Events und Outdoor-Tourismusunternehmen können telemeSYNC sponsern. Sponsoren erscheinen auf der Website, immer als solche gekennzeichnet.",
   "stats.ctaSponsors": "Sponsoren ansehen",
   "stats.methodTitle": "Wie wir zählen",
-  "stats.method1": "<b>Besuche:</b> gezählt mit GoatCounter, anonym, ohne Cookies und ohne Profile. Wir zählen Menschen (Besucher), nicht Seitenaufrufe.",
+  "stats.method1": "<b>Besuche:</b> vom eigenen Server der Website gezählt, ohne Cookies und ohne Drittanbieter, deshalb verstecken Werbeblocker sie nicht. Wir zählen verschiedene Menschen pro Tag, nicht Seitenaufrufe, und lassen Bots, Link-Vorschauen und Programme weg, die nur die Seite lesen.",
   "stats.method2": "<b>Downloads:</b> gezählt von GitHub, wo die Programmdateien liegen, seit Version 1.0.0. Inklusive Downloads über den Hinweis auf eine neue Version im Programm.",
   "stats.method3": "<b>Unterstützer:</b> Menschen, die auf Buy Me a Coffee einen Kaffee spendiert haben. Hier keine Namen und keine Beträge.",
   "stats.method4": "Diese Seite aktualisiert sich stündlich von selbst. Keine Zahl wird von Hand eingetragen, außer Followern in sozialen Netzwerken, wenn sie angezeigt werden.",
@@ -225,5 +225,15 @@
   "stats.colVersion": "Version",
   "stats.colDate": "Datum",
   "stats.colTotal": "Gesamt",
-  "stats.version": "Version {v}"
+  "stats.version": "Version {v}",
+  "stats.kpiVisitsSince": "gezählt seit {date}",
+  "stats.kpiApp": "haben das Programm diese Woche genutzt",
+  "stats.kpiAppLast": "haben das Programm letzte Woche genutzt",
+  "stats.kpiAppSub": "verschiedene Menschen, die das Programm geöffnet haben",
+  "stats.appTitle": "Nutzer des Programms pro Tag",
+  "stats.appLead": "Verschiedene Menschen, die das Programm an jedem Tag geöffnet haben (das Programm prüft beim Öffnen, ob es eine neue Version gibt).",
+  "stats.usersOn": "{n} Menschen",
+  "stats.colUsers": "Menschen",
+  "stats.method5": "<b>Nutzer des Programms:</b> das Programm prüft bei jedem Öffnen, ob es eine neue Version gibt; wir zählen die verschiedenen Menschen, die das an jedem Tag und in jeder Woche tun.",
+  "stats.method6": "Das Land ergibt sich aus der IP-Adresse, mit der Datenbank <a href=\"https://db-ip.com\" target=\"_blank\" rel=\"noopener\">IP Geolocation by DB-IP</a> (CC BY 4.0). Adressen werden nicht gespeichert."
 }

@@ -14,6 +14,12 @@ const STATS_PT = {
   'stats.unavailable': 'Estatísticas indisponíveis de momento. Volte a tentar daqui a pouco.',
   'stats.kpiVisits': 'visitas ao site',
   'stats.kpiVisits30': '{n} nos últimos 30 dias',
+  'stats.kpiVisitsSince': 'contadas desde {date}',
+  'stats.kpiApp': 'usaram o programa esta semana',
+  'stats.kpiAppLast': 'usaram o programa na semana passada',
+  'stats.kpiAppSub': 'pessoas diferentes que abriram o programa',
+  'stats.appLead': 'Pessoas diferentes que abriram o programa em cada dia (o programa verifica se há versão nova ao abrir).',
+  'stats.usersOn': '{n} pessoas',
   'stats.kpiDownloads': 'downloads do programa',
   'stats.kpiDownloadsSince': 'desde {date}',
   'stats.kpiCountries': 'países',
@@ -29,6 +35,7 @@ const STATS_PT = {
   'stats.downloadsLead': '{n} downloads no total: {w} para Windows e {m} para macOS.',
   'stats.colDay': 'Dia',
   'stats.colVisitors': 'Visitantes',
+  'stats.colUsers': 'Pessoas',
   'stats.colVersion': 'Versão',
   'stats.colDate': 'Data',
   'stats.colTotal': 'Total',
@@ -109,7 +116,12 @@ function renderKpis(d) {
   const box = document.querySelector('.js-kpis');
   const tiles = [];
   const v = d.visits;
-  if (v?.total != null) tiles.push({ value: fmtNum(v.total), label: st('stats.kpiVisits'), sub: v.last30 != null ? st('stats.kpiVisits30', { n: fmtNum(v.last30) }) : '' });
+  if (v?.total != null) {
+    const recent = v.since && Date.now() - Date.parse(`${v.since}T00:00:00Z`) < 30 * 86_400_000;
+    tiles.push({ value: fmtNum(v.total), label: st('stats.kpiVisits'), sub: recent ? st('stats.kpiVisitsSince', { date: fmtDate(v.since) }) : st('stats.kpiVisits30', { n: fmtNum(v.last30) }) });
+  }
+  const week = d.app?.week;
+  if (week?.n) tiles.push({ value: fmtNum(week.n), label: st(week.complete ? 'stats.kpiAppLast' : 'stats.kpiApp'), sub: st('stats.kpiAppSub') });
   const dl = d.downloads;
   if (dl?.total != null) tiles.push({ value: fmtNum(dl.total), label: st('stats.kpiDownloads'), sub: dl.since ? st('stats.kpiDownloadsSince', { date: fmtDate(dl.since) }) : '' });
   if (v?.countriesCount) tiles.push({ value: fmtNum(v.countriesCount), label: st('stats.kpiCountries'), sub: st('stats.kpiCountriesSub') });
@@ -138,28 +150,24 @@ function renderKpis(d) {
   );
 }
 
-// ------------------------------------------------------------------------------------- Visits chart
+// -------------------------------------------------------------------------------------- Daily charts
 
-function renderVisits(d) {
-  const sec = document.querySelector('.js-sec-visits');
-  const daily = d.visits?.daily ?? [];
-  sec.hidden = daily.length < 2;
-  if (sec.hidden) return;
-  document.querySelector('.js-visits-lead').textContent = st('stats.visitsLead', { n: fmtNum(d.visits.last30), w: fmtNum(d.visits.last7) });
-
-  const host = document.querySelector('.js-chart-visits');
+/** Bar chart of one value per day (single series: no legend, the section title names it). */
+function drawDaily(host, daily, color, tipKey, title) {
   const W = Math.max(300, host.clientWidth);
   const H = W < 560 ? 220 : 280;
   const m = { top: 12, right: 8, bottom: 28, left: 40 };
   const iw = W - m.left - m.right;
   const ih = H - m.top - m.bottom;
   const { top, ticks } = niceScale(Math.max(...daily.map((x) => x.n)));
-  const slot = iw / daily.length;
+  // At least 14 slots, so the first days are not drawn as a few huge bars
+  const slots = Math.max(14, daily.length);
+  const slot = iw / slots;
   const gap = slot > 6 ? 2 : 1;
-  const bw = Math.max(1, slot - gap);
+  const bw = Math.max(1, Math.min(28, slot - gap));
   const y = (n) => m.top + ih - (n / top) * ih;
 
-  const chart = svg('svg', { viewBox: `0 0 ${W} ${H}`, width: W, height: H, role: 'img', 'aria-label': document.querySelector('.js-sec-visits h2').textContent });
+  const chart = svg('svg', { viewBox: `0 0 ${W} ${H}`, width: W, height: H, role: 'img', 'aria-label': title });
   for (const tv of ticks) {
     chart.append(svg('line', { x1: m.left, x2: W - m.right, y1: y(tv), y2: y(tv), class: tv === 0 ? 'chart-axis' : 'chart-grid' }));
     const label = svg('text', { x: m.left - 8, y: y(tv) + 4, 'text-anchor': 'end', class: 'chart-tick' });
@@ -178,20 +186,40 @@ function renderVisits(d) {
     chart.append(label);
   });
   daily.forEach((p, i) => {
-    const x = m.left + i * slot + gap / 2;
-    if (p.n > 0) chart.append(svg('path', { d: barPath(x, y(p.n), bw, m.top + ih - y(p.n), Math.min(4, bw / 2)), fill: STATS_COLORS.visits, class: 'chart-bar' }));
+    const x = m.left + i * slot + (slot - bw) / 2;
+    if (p.n > 0) chart.append(svg('path', { d: barPath(x, y(p.n), bw, m.top + ih - y(p.n), Math.min(4, bw / 2)), fill: color }));
     // Hover target: the whole column, wider than the bar
     const hit = svg('rect', { x: m.left + i * slot, y: m.top, width: slot, height: ih, class: 'chart-hit' });
-    hit.addEventListener('pointermove', (e) => showTip(`<b>${fmtDate(p.day, { weekday: 'short', day: 'numeric', month: 'short' })}</b><br>${st('stats.visitorsOn', { n: fmtNum(p.n) })}`, e));
+    hit.addEventListener('pointermove', (e) => showTip(`<b>${fmtDate(p.day, { weekday: 'short', day: 'numeric', month: 'short' })}</b><br>${st(tipKey, { n: fmtNum(p.n) })}`, e));
     hit.addEventListener('pointerleave', hideTip);
     chart.append(hit);
   });
   host.replaceChildren(chart);
+}
 
+function dailyTable(host, daily, colKey) {
   const rows = [...daily].reverse().map((p) => el('tr', {}, [el('td', { text: fmtDate(p.day) }), el('td', { text: fmtNum(p.n) })]));
-  document.querySelector('.js-table-visits').replaceChildren(
-    el('table', {}, [el('thead', {}, el('tr', {}, [el('th', { text: st('stats.colDay') }), el('th', { text: st('stats.colVisitors') })])), el('tbody', {}, rows)]),
-  );
+  host.replaceChildren(el('table', {}, [el('thead', {}, el('tr', {}, [el('th', { text: st('stats.colDay') }), el('th', { text: st(colKey) })])), el('tbody', {}, rows)]));
+}
+
+function renderVisits(d) {
+  const sec = document.querySelector('.js-sec-visits');
+  const daily = d.visits?.daily ?? [];
+  sec.hidden = !daily.length;
+  if (sec.hidden) return;
+  document.querySelector('.js-visits-lead').textContent = st('stats.visitsLead', { n: fmtNum(d.visits.last30), w: fmtNum(d.visits.last7) });
+  drawDaily(document.querySelector('.js-chart-visits'), daily, STATS_COLORS.visits, 'stats.visitorsOn', sec.querySelector('h2').textContent);
+  dailyTable(document.querySelector('.js-table-visits'), daily, 'stats.colVisitors');
+}
+
+function renderApp(d) {
+  const sec = document.querySelector('.js-sec-app');
+  const daily = d.app?.daily ?? [];
+  sec.hidden = !daily.some((p) => p.n > 0);
+  if (sec.hidden) return;
+  document.querySelector('.js-app-lead').textContent = st('stats.appLead');
+  drawDaily(document.querySelector('.js-chart-app'), daily, STATS_COLORS.windows, 'stats.usersOn', sec.querySelector('h2').textContent);
+  dailyTable(document.querySelector('.js-table-app'), daily, 'stats.colUsers');
 }
 
 // ---------------------------------------------------------------------------------- Downloads chart
@@ -328,6 +356,7 @@ function renderStats() {
   updated.textContent = st('stats.updated', { time: timeAgo(statsData.updatedAt) });
   renderKpis(statsData);
   renderVisits(statsData);
+  renderApp(statsData);
   renderDownloads(statsData);
   renderAudience(statsData);
 }
@@ -346,6 +375,6 @@ document.addEventListener('DOMContentLoaded', () => {
   let resizeTimer;
   window.addEventListener('resize', () => {
     clearTimeout(resizeTimer);
-    resizeTimer = setTimeout(() => statsData && (renderVisits(statsData), renderDownloads(statsData)), 150);
+    resizeTimer = setTimeout(() => statsData && (renderVisits(statsData), renderApp(statsData), renderDownloads(statsData)), 150);
   });
 });

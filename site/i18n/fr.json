@@ -199,7 +199,7 @@
   "stats.ctaText": "Magasins de vélos, marques d’équipement, événements cyclistes et entreprises de tourisme actif peuvent sponsoriser telemeSYNC. Les sponsors apparaissent sur le site, toujours identifiés comme tels.",
   "stats.ctaSponsors": "Voir les sponsors",
   "stats.methodTitle": "Comment nous comptons",
-  "stats.method1": "<b>Visites :</b> comptées avec GoatCounter, de façon anonyme, sans cookies ni profils. Nous comptons des personnes (visiteurs), pas des chargements de page.",
+  "stats.method1": "<b>Visites :</b> comptées par le serveur du site lui-même, sans cookies ni services tiers, donc les bloqueurs de publicité ne les cachent pas. Nous comptons des personnes différentes par jour, pas des chargements de page, et laissons de côté les robots, les aperçus de liens et les programmes qui ne font que lire la page.",
   "stats.method2": "<b>Téléchargements :</b> comptés par GitHub, où se trouvent les fichiers du programme, depuis la version 1.0.0. Inclut les téléchargements lancés depuis l’avis de nouvelle version dans le programme.",
   "stats.method3": "<b>Soutiens :</b> personnes qui ont offert un café sur Buy Me a Coffee. Ni noms ni montants ici.",
   "stats.method4": "Cette page se met à jour toute seule toutes les heures. Aucun chiffre n’est saisi à la main, sauf les abonnés sur les réseaux sociaux, quand ils apparaissent.",
@@ -225,5 +225,15 @@
   "stats.colVersion": "Version",
   "stats.colDate": "Date",
   "stats.colTotal": "Total",
-  "stats.version": "Version {v}"
+  "stats.version": "Version {v}",
+  "stats.kpiVisitsSince": "comptées depuis le {date}",
+  "stats.kpiApp": "ont utilisé le programme cette semaine",
+  "stats.kpiAppLast": "ont utilisé le programme la semaine dernière",
+  "stats.kpiAppSub": "personnes différentes qui ont ouvert le programme",
+  "stats.appTitle": "Utilisateurs du programme par jour",
+  "stats.appLead": "Personnes différentes qui ont ouvert le programme chaque jour (le programme vérifie s’il existe une nouvelle version à l’ouverture).",
+  "stats.usersOn": "{n} personnes",
+  "stats.colUsers": "Personnes",
+  "stats.method5": "<b>Utilisateurs du programme :</b> le programme vérifie s’il existe une nouvelle version à chaque ouverture ; nous comptons les personnes différentes qui le font chaque jour et chaque semaine.",
+  "stats.method6": "Le pays vient de l’adresse IP, grâce à la base de données <a href=\"https://db-ip.com\" target=\"_blank\" rel=\"noopener\">IP Geolocation by DB-IP</a> (CC BY 4.0). Les adresses ne sont pas conservées."
 }
