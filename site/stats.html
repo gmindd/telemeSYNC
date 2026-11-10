@@ -88,7 +88,18 @@
       </div>
     </section>
 
-    <section class="section js-sec-downloads" hidden>
+    <section class="section js-sec-app" hidden>
+      <div class="container">
+        <h2 data-i18n="stats.appTitle">Utilizadores do programa por dia</h2>
+        <p class="section__lead js-app-lead"></p>
+        <figure class="chart-card">
+          <div class="chart js-chart-app"></div>
+          <details class="chart-table"><summary data-i18n="stats.showData">Ver os dados</summary><div class="js-table-app"></div></details>
+        </figure>
+      </div>
+    </section>
+
+    <section class="section section--alt js-sec-downloads" hidden>
       <div class="container">
         <h2 data-i18n="stats.downloadsTitle">Downloads por versão</h2>
         <p class="section__lead js-downloads-lead"></p>
@@ -100,7 +111,7 @@
       </div>
     </section>
 
-    <section class="section section--alt js-sec-audience" hidden>
+    <section class="section js-sec-audience" hidden>
       <div class="container">
         <h2 data-i18n="stats.audienceTitle">Quem nos visita</h2>
         <div class="rank-grid">
@@ -138,10 +149,12 @@
       <div class="container container--narrow stats-method">
         <h2 data-i18n="stats.methodTitle">Como contamos</h2>
         <ul>
-          <li data-i18n="stats.method1"><b>Visitas:</b> contadas com o GoatCounter, de forma anónima, sem cookies e sem perfis. Contamos pessoas (visitantes), não carregamentos de página.</li>
+          <li data-i18n="stats.method1"><b>Visitas:</b> contadas pelo próprio servidor do site, sem cookies e sem serviços de terceiros, por isso os bloqueadores de anúncios não as escondem. Contamos pessoas diferentes por dia, não carregamentos de página, e deixamos de fora robôs, pré-visualizações de links e programas que só leem a página.</li>
+          <li data-i18n="stats.method5"><b>Utilizadores do programa:</b> o programa verifica se há versão nova sempre que é aberto; contamos as pessoas diferentes que o fazem em cada dia e em cada semana.</li>
           <li data-i18n="stats.method2"><b>Downloads:</b> contados pelo GitHub, onde estão os ficheiros do programa, desde a versão 1.0.0. Inclui os downloads feitos a partir do aviso de nova versão dentro do programa.</li>
           <li data-i18n="stats.method3"><b>Apoiantes:</b> pessoas que pagaram um café no Buy Me a Coffee. Não mostramos nomes nem valores aqui.</li>
           <li data-i18n="stats.method4">Esta página atualiza-se sozinha de hora a hora. Nenhum número é escrito à mão, exceto os seguidores nas redes sociais, quando aparecem.</li>
+          <li data-i18n="stats.method6">O país vem do endereço IP, através da base de dados <a href="https://db-ip.com" target="_blank" rel="noopener">IP Geolocation by DB-IP</a> (CC BY 4.0). Os endereços não são guardados.</li>
         </ul>
       </div>
     </section>

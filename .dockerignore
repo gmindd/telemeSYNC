@@ -5,3 +5,4 @@
 !scripts/nginx-site.conf
 !scripts/stats-collector.mjs
 !scripts/stats-collector.sh
+!scripts/visits.mjs
