@@ -129,7 +129,8 @@ export const segmentLiveOverlay: OverlayDefinition = {
     drawText(ctx, formatLapTime(timeStats.elapsedMs, dec), 26, 122, p.ts, { size: 68, weight: 800, color: running ? undefined : GOOD });
 
     // Comparison with the best lap/segment of the same kind finished before this one.
-    const best = bestBefore(ride, style.segments, seg.kind, running ? frame.t : seg.startMs, seg.id);
+    // Only laps race each other: segments are different stretches, each with its own figures.
+    const best = seg.kind === 'lap' ? bestBefore(ride, style.segments, 'lap', running ? frame.t : seg.startMs, seg.id) : undefined;
     if (best) {
       if (running) {
         drawText(ctx, tr(lang, 'seg.best', { time: formatLapTime(best.ms, dec) }), 28, 154, p.ts, { size: 17, weight: 700, tabular: false, color: p.label });
@@ -137,7 +138,7 @@ export const segmentLiveOverlay: OverlayDefinition = {
         const delta = timeStats.elapsedMs - best.ms;
         const d = `${delta < 0 ? '−' : '+'}${formatLapTime(Math.abs(delta), dec)} s`;
         const w = drawText(ctx, tr(lang, 'seg.vsBest', { delta: d }), 28, 154, p.ts, { size: 18, weight: 800, tabular: false, color: delta < 0 ? GOOD : BAD });
-        if (delta < 0) pill(ctx, 28 + w + 14, 148, `★ ${tr(lang, seg.kind === 'lap' ? 'seg.newBestLap' : 'seg.newBestTime')}`, '#ffd23f', style, 'left');
+        if (delta < 0) pill(ctx, 28 + w + 14, 148, `★ ${tr(lang, 'seg.newBestLap')}`, '#ffd23f', style, 'left');
       }
     }
 
@@ -187,13 +188,10 @@ export const segmentLapsOverlay: OverlayDefinition = {
     const dec = decimalSeparator(lang);
     const laps = all.every((seg) => seg.kind === 'lap');
 
-    // Best finished time of each kind, for the highlight.
-    const bestMs: Partial<Record<Segment['kind'], number>> = {};
-    for (const seg of started) {
-      if (seg.endMs > frame.t) continue;
-      const ms = seg.endMs - seg.startMs;
-      if (!(ms >= (bestMs[seg.kind] ?? Infinity))) bestMs[seg.kind] = ms;
-    }
+    // Best finished lap, for the highlight (segments are not compared with each other).
+    let bestLapMs = Infinity;
+    for (const seg of started) if (seg.kind === 'lap' && seg.endMs <= frame.t) bestLapMs = Math.min(bestLapMs, seg.endMs - seg.startMs);
+    const finishedLaps = rowsOf(started, frame.t);
 
     const rows = started.slice(-ROWS);
     // The card grows with the laps (the canvas keeps its size, for the video).
@@ -229,7 +227,7 @@ export const segmentLapsOverlay: OverlayDefinition = {
       const st = segmentStats(ride, seg, running ? frame.t : Infinity);
       const textSt = running ? segmentStats(ride, seg, Math.max(seg.startMs + 1, frame.textSample.t)) ?? st : st;
       if (!st || !textSt) return;
-      const isBest = !running && bestMs[seg.kind] === seg.endMs - seg.startMs && rows.filter((r) => r.kind === seg.kind && r.endMs <= frame.t).length > 1;
+      const isBest = !running && seg.kind === 'lap' && bestLapMs === seg.endMs - seg.startMs && finishedLaps > 1;
       if (running) {
         ctx.fillStyle = withAlpha(style.accentColor, 0.18);
         ctx.fillRect(22, y + 2, TW - 44, ROW_H - 4);
@@ -247,6 +245,11 @@ export const segmentLapsOverlay: OverlayDefinition = {
     });
   },
 };
+
+/** Laps finished by instant t. */
+function rowsOf(list: Segment[], t: number): number {
+  return list.filter((seg) => seg.kind === 'lap' && seg.endMs <= t).length;
+}
 
 export const segmentOverlays: OverlayDefinition[] = [segmentLiveOverlay, segmentLapsOverlay];
 

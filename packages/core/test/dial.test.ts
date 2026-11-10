@@ -70,3 +70,21 @@ describe('mostradores (dial gadgets)', () => {
     }
   });
 });
+
+describe('round map heading', () => {
+  it('turns smoothly between GPS fixes (no steps once a second)', async () => {
+    const { readFileSync } = await import('node:fs');
+    const { mapHeadingAt } = await import('../src/overlays/dial/map.ts');
+    const real = buildRide(parseFit(readFileSync(new URL('../../../fixtures/real/ride-0-2026-10-11-09-00-31.fit', import.meta.url))));
+    const diff = (a: number, b: number) => (Math.abs(((b - a + 3 * Math.PI) % (2 * Math.PI)) - Math.PI) * 180) / Math.PI;
+    let prev = NaN;
+    let jumps = 0;
+    for (let t = real.startTime + 60_000; t < real.startTime + 1_260_000; t += 1000 / 30) {
+      const h = mapHeadingAt(real, t);
+      if (!Number.isNaN(prev) && diff(prev, h) > 1.5) jumps++;
+      prev = h;
+    }
+    // Before: ~200 visible steps in these 20 minutes at 30 fps.
+    expect(jumps).toBeLessThan(10);
+  });
+});

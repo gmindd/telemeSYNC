@@ -27,11 +27,11 @@ export const SEGMENTS = {
   'seg.defaultSegment': ['Segment {n}', 'Segmento {n}', 'Segment {n}', 'Segmento {n}', 'Segment {n}'],
   'seg.section': ['Segments and laps', 'Segmentos e voltas', 'Segments et tours', 'Segmentos y vueltas', 'Segmente und Runden'],
   'seg.sectionLead': [
-    'The running time, distance, climb and averages of each segment, and a table that fills up as the laps are finished, with the best one highlighted. They only appear during the segments.',
-    'O tempo a correr, a distância, o desnível e as médias de cada segmento, e uma tabela que se vai preenchendo à medida que as voltas terminam, com a melhor em destaque. Só aparecem durante os segmentos.',
-    'Le temps qui défile, la distance, le dénivelé et les moyennes de chaque segment, et un tableau qui se remplit à chaque tour terminé, avec le meilleur mis en avant. Ils n’apparaissent que pendant les segments.',
-    'El tiempo en marcha, la distancia, el desnivel y las medias de cada segmento, y una tabla que se va llenando a medida que terminan las vueltas, con la mejor destacada. Solo aparecen durante los segmentos.',
-    'Laufende Zeit, Distanz, Höhenmeter und Durchschnittswerte jedes Segments, und eine Tabelle, die sich mit jeder beendeten Runde füllt, die beste hervorgehoben. Sie erscheinen nur während der Segmente.',
+    'The running time, distance, climb and averages of each segment and lap, and a table that fills up as they are finished. Laps race each other (the gap to the best lap, the best one highlighted); segments are different stretches, so each just shows its own figures. They only appear during the segments and laps.',
+    'O tempo a correr, a distância, o desnível e as médias de cada segmento e volta, e uma tabela que se vai preenchendo à medida que terminam. As voltas competem entre si (a diferença para a melhor volta, a melhor em destaque); os segmentos são troços diferentes, por isso cada um mostra só os seus números. Só aparecem durante os segmentos e as voltas.',
+    'Le temps qui défile, la distance, le dénivelé et les moyennes de chaque segment et tour, et un tableau qui se remplit à mesure qu’ils se terminent. Les tours sont comparés entre eux (l’écart au meilleur tour, le meilleur mis en avant) ; les segments sont des portions différentes, chacun n’affiche donc que ses propres chiffres. Ils n’apparaissent que pendant les segments et les tours.',
+    'El tiempo en marcha, la distancia, el desnivel y las medias de cada segmento y vuelta, y una tabla que se va llenando a medida que terminan. Las vueltas compiten entre sí (la diferencia con la mejor vuelta, la mejor destacada); los segmentos son tramos distintos, así que cada uno muestra solo sus propias cifras. Solo aparecen durante los segmentos y las vueltas.',
+    'Laufende Zeit, Distanz, Höhenmeter und Durchschnittswerte jedes Segments und jeder Runde, und eine Tabelle, die sich füllt, sobald sie beendet sind. Runden treten gegeneinander an (Abstand zur besten Runde, die beste hervorgehoben); Segmente sind verschiedene Abschnitte, deshalb zeigt jedes nur seine eigenen Werte. Sie erscheinen nur während der Segmente und Runden.',
   ],
   'seg.noneHint': [
     'Mark segments or laps in step 3 (Sync) to see these gadgets.',

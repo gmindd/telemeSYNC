@@ -42,3 +42,13 @@ dela.
     vai-se preenchendo com tempo, desnível, velocidade máxima e média de cada descida.
 - Os nomes dos ficheiros dos gadgets novos levam o desporto à frente (ex.: `corrida-mostrador-fc`), para não se
   confundirem com os de ciclismo.
+
+### Pequenas correções (sugestões de utilizadores)
+
+- **Mapa circular sem soluços:** a direção para onde o mapa roda deixou de saltar uma vez por segundo (a cada ponto do
+  GPS). Passa a ser calculada com pontos interpolados 30, 45 e 60 m para trás no percurso, por isso o mapa roda de
+  forma contínua, também nas curvas.
+- **Segmentos já não competem entre si:** só as voltas são comparadas (diferença para a melhor volta, a melhor em
+  destaque). Um segmento é um troço com início e fim marcados à mão; vários segmentos no mesmo vídeo aparecem na tabela
+  com as suas médias, sem comparações nem estrelas.
+

@@ -1,4 +1,4 @@
-import type { RideData, RideSample } from '../../telemetry/ride.ts';
+import { sampleAt, type RideData, type RideSample } from '../../telemetry/ride.ts';
 import { drawText } from '../draw.ts';
 import { withAlpha } from '../panel/paint.ts';
 import type { Ctx2D, FrameState, OverlayContext, OverlayDefinition, OverlayStyle } from '../types.ts';
@@ -17,6 +17,8 @@ interface Local {
   n: Float64Array;
   /** View radius in metres (from the size of the ride). */
   viewM: number;
+  /** Path length from the start to each sample (m, carried over samples without position). */
+  cum: Float64Array;
 }
 
 const localCache = new WeakMap<RideData, Local>();
@@ -50,7 +52,15 @@ function localOf(ride: RideData): Local {
     maxN = Math.max(maxN, n[i]);
   }
   const extent = Number.isFinite(minE) ? Math.max(maxE - minE, maxN - minN) : 1000;
-  l = { e, n, viewM: Math.max(300, Math.min(2500, extent * 0.3)) };
+  const cum = new Float64Array(len);
+  let last = -1;
+  for (let i = 0; i < len; i++) {
+    cum[i] = i > 0 ? cum[i - 1] : 0;
+    if (Number.isNaN(e[i])) continue;
+    if (last >= 0) cum[i] += Math.hypot(e[i] - e[last], n[i] - n[last]);
+    last = i;
+  }
+  l = { e, n, viewM: Math.max(300, Math.min(2500, extent * 0.3)), cum };
   localCache.set(ride, l);
   return l;
 }
@@ -67,22 +77,52 @@ function positionAt(ride: RideData, l: Local, s: RideSample): { e: number; n: nu
   return { e: l.e[a] + (l.e[j] - l.e[a]) * f, n: l.n[a] + (l.n[j] - l.n[a]) * f };
 }
 
-/** Direction of travel (radians clockwise from north) over the last ~40 m, stable when stopped. */
+/** Point of the path at path length `d` (interpolated between fixes), or null outside the path. */
+function pointAtLength(l: Local, d: number): { e: number; n: number } | null {
+  const c = l.cum;
+  const len = c.length;
+  if (!len || d < 0 || d > c[len - 1]) return null;
+  let lo = 0;
+  let hi = len - 1;
+  while (hi - lo > 1) {
+    const mid = (lo + hi) >> 1;
+    if (c[mid] < d) lo = mid;
+    else hi = mid;
+  }
+  let a = lo;
+  while (a > 0 && Number.isNaN(l.e[a])) a--;
+  let b = hi;
+  while (b < len - 1 && Number.isNaN(l.e[b])) b++;
+  if (Number.isNaN(l.e[a]) || Number.isNaN(l.e[b])) return null;
+  const f = c[b] > c[a] ? (d - c[a]) / (c[b] - c[a]) : 0;
+  return { e: l.e[a] + (l.e[b] - l.e[a]) * f, n: l.n[a] + (l.n[b] - l.n[a]) * f };
+}
+
+/**
+ * Direction of travel (radians clockwise from north), stable when stopped. Points 30, 45 and 60 m
+ * back along the path are interpolated, so the direction turns smoothly between GPS fixes instead of
+ * jumping once a second, and their average softens the corners.
+ */
 function headingAt(ride: RideData, l: Local, s: RideSample, pos: { e: number; n: number }): number {
-  for (let i = Math.min(ride.t.length - 1, s.index); i >= 0 && s.index - i < 2000; i--) {
-    if (Number.isNaN(l.e[i])) continue;
-    const de = pos.e - l.e[i];
-    const dn = pos.n - l.n[i];
-    if (de * de + dn * dn >= 40 * 40) return Math.atan2(de, dn);
+  const i = Math.max(0, Math.min(ride.t.length - 1, s.index));
+  const j = Math.min(ride.t.length - 1, i + 1);
+  const here = l.cum[i] + (l.cum[j] - l.cum[i]) * Math.max(0, Math.min(1, s.fractionalIndex - i));
+  let ve = 0;
+  let vn = 0;
+  for (const back of [30, 45, 60]) {
+    // Early in the ride there is no path behind yet: look ahead instead.
+    const behind = here - back >= 0;
+    const q = pointAtLength(l, behind ? here - back : here + back);
+    if (!q) continue;
+    const de = behind ? pos.e - q.e : q.e - pos.e;
+    const dn = behind ? pos.n - q.n : q.n - pos.n;
+    const m = Math.hypot(de, dn);
+    if (m > 1) {
+      ve += de / m;
+      vn += dn / m;
+    }
   }
-  // Start of the ride: look ahead instead.
-  for (let i = s.index + 1; i < ride.t.length && i - s.index < 2000; i++) {
-    if (Number.isNaN(l.e[i])) continue;
-    const de = l.e[i] - pos.e;
-    const dn = l.n[i] - pos.n;
-    if (de * de + dn * dn >= 40 * 40) return Math.atan2(de, dn);
-  }
-  return 0;
+  return ve || vn ? Math.atan2(ve, vn) : 0;
 }
 
 /**
@@ -232,3 +272,11 @@ export const dialMapOverlay: OverlayDefinition = {
   draw: (ctx: Ctx2D, frame, style, octx) =>
     drawRoundMap(ctx, frame, style, octx, (c) => drawDialBase(c, { from: style.accentColor, to: style.accentColor }, dialPaint(style), true)),
 };
+
+/** Direction the round map turns to at instant t (radians clockwise from north), for tests. */
+export function mapHeadingAt(ride: RideData, t: number): number {
+  const l = localOf(ride);
+  const s = sampleAt(ride, t);
+  const pos = positionAt(ride, l, s);
+  return pos ? headingAt(ride, l, s, pos) : NaN;
+}
