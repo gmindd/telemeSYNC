@@ -1,0 +1,4 @@
+{
+  "_help": "Numbers added by hand to the /stats page, e.g. {\"label\": \"Instagram followers\", \"value\": 1200, \"url\": \"https://www.instagram.com/...\"}. Shown as they are; the collector reads this file every hour.",
+  "audience": []
+}

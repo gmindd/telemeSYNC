@@ -3,3 +3,5 @@
 !scripts/bmc-webhook.mjs
 !scripts/bmc-webhook.sh
 !scripts/nginx-site.conf
+!scripts/stats-collector.mjs
+!scripts/stats-collector.sh
