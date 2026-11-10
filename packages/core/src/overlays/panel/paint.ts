@@ -184,6 +184,63 @@ export function drawIcon(ctx: Ctx2D, icon: IconId, cx: number, cy: number, s: nu
         line([[Math.cos(a) * 0.31, Math.sin(a) * 0.31], [Math.cos(a) * 0.46, Math.sin(a) * 0.46]]);
       }
       break;
+    case 'shoe':
+      // Running shoe, side view, toe to the right.
+      P([[-0.48, 0.22], [-0.46, -0.22], [-0.22, -0.24], [-0.1, -0.06], [0.2, 0.02], [0.44, 0.1], [0.5, 0.22]]);
+      ctx.fill();
+      ctx.fillRect(cx - s * 0.5, cy + s * 0.26, s * 1.0, s * 0.1);
+      break;
+    case 'steps': {
+      // Two footprints.
+      const foot = (ox: number, oy: number) => {
+        ctx.beginPath();
+        ctx.ellipse(cx + ox * s, cy + oy * s, s * 0.12, s * 0.2, -0.25, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(cx + (ox + 0.07) * s, cy + (oy - 0.29) * s, s * 0.07, 0, Math.PI * 2);
+        ctx.fill();
+      };
+      foot(-0.2, 0.16);
+      foot(0.16, -0.06);
+      break;
+    }
+    case 'route':
+      ctx.lineWidth = Math.max(2, s * 0.11);
+      ctx.beginPath();
+      ctx.moveTo(cx - s * 0.38, cy + s * 0.32);
+      ctx.bezierCurveTo(cx + s * 0.4, cy + s * 0.3, cx - s * 0.5, cy - s * 0.18, cx + s * 0.3, cy - s * 0.24);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(cx - s * 0.38, cy + s * 0.32, s * 0.1, 0, Math.PI * 2);
+      ctx.fill();
+      P([[0.3, -0.48], [0.3, -0.14], [0.52, -0.31]]);
+      ctx.fill();
+      break;
+    case 'snowflake':
+      ctx.lineWidth = Math.max(1.8, s * 0.09);
+      for (let k = 0; k < 3; k++) {
+        const a = (k * Math.PI) / 3 + Math.PI / 2;
+        const ux = Math.cos(a);
+        const uy = Math.sin(a);
+        line([[-ux * 0.46, -uy * 0.46], [ux * 0.46, uy * 0.46]]);
+        for (const sign of [-1, 1]) {
+          const bx = ux * 0.3 * sign;
+          const by = uy * 0.3 * sign;
+          for (const turn of [-0.6, 0.6]) {
+            const b = a + (sign < 0 ? Math.PI : 0) + turn;
+            line([[bx, by], [bx + Math.cos(b) * 0.14, by + Math.sin(b) * 0.14]]);
+          }
+        }
+      }
+      break;
+    case 'updown':
+      P([[-0.2, -0.46], [0.06, -0.12], [-0.46, -0.12]]);
+      ctx.fill();
+      P([[0.2, 0.46], [0.46, 0.12], [-0.06, 0.12]]);
+      ctx.fill();
+      line([[-0.2, -0.14], [-0.2, 0.34]]);
+      line([[0.2, 0.14], [0.2, -0.34]]);
+      break;
   }
   ctx.restore();
 }

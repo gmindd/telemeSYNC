@@ -1,12 +1,12 @@
 import { decodeFit } from './fitDecoder.ts';
-import type { RawSample, RawTelemetry } from './types.ts';
+import type { RawSample, RawTelemetry, Sport } from './types.ts';
 import { LocalizedError } from '../i18n/index.ts';
 
 const SEMICIRCLE_TO_DEG = 180 / 2 ** 31;
 /** FIT timestamps are seconds since 1989-12-31T00:00:00Z. */
 export const FIT_EPOCH_MS = Date.UTC(1989, 11, 31);
 
-const MSG = { fileId: 0, lap: 19, record: 20, activity: 34 } as const;
+const MSG = { fileId: 0, sport: 12, session: 18, lap: 19, record: 20, activity: 34 } as const;
 
 /** record message field numbers and scales (FIT profile). */
 const REC = {
@@ -22,7 +22,21 @@ const REC = {
   temperature: 13, // sint8
   enhancedSpeed: 73, // uint32, scale 1000
   enhancedAltitude: 78, // uint32, scale 5, offset 500
+  fractionalCadence: 53, // uint8, scale 128
 } as const;
+
+/**
+ * FIT sport enum → the app's sports: running (1), walking (11), mountaineering (16), hiking (17) →
+ * running; cross-country skiing (12), alpine skiing (13), snowboarding (14) → snow; cycling (2) and
+ * e-biking (21) → cycling.
+ */
+export function sportFromFit(code: number | undefined): Sport | undefined {
+  if (code === undefined) return undefined;
+  if ([1, 11, 16, 17].includes(code)) return 'running';
+  if ([12, 13, 14].includes(code)) return 'snow';
+  if ([2, 21].includes(code)) return 'cycling';
+  return undefined;
+}
 
 const MANUFACTURERS: Record<number, string> = {
   1: 'garmin',
@@ -46,7 +60,7 @@ const num = (v: number | string | undefined) => (typeof v === 'number' && Number
  */
 export function parseFit(data: ArrayBuffer | Uint8Array, name?: string): RawTelemetry {
   const bytes = data instanceof Uint8Array ? data : new Uint8Array(data);
-  const messages = decodeFit(bytes, new Set([MSG.fileId, MSG.lap, MSG.record, MSG.activity]));
+  const messages = decodeFit(bytes, new Set([MSG.fileId, MSG.sport, MSG.session, MSG.lap, MSG.record, MSG.activity]));
   const records = messages.filter((m) => m.num === MSG.record);
   if (records.length === 0) throw new LocalizedError('err.fitNoRecords');
 
@@ -74,12 +88,21 @@ export function parseFit(data: ArrayBuffer | Uint8Array, name?: string): RawTele
     const d = num(f.get(REC.distance));
     s.distance = d !== undefined ? d / 100 : undefined;
     s.heartRate = num(f.get(REC.heartRate));
-    s.cadence = num(f.get(REC.cadence));
+    const cad = num(f.get(REC.cadence));
+    const frac = num(f.get(REC.fractionalCadence));
+    s.cadence = cad !== undefined && frac !== undefined ? cad + frac / 128 : cad;
     s.power = num(f.get(REC.power));
     s.temperature = num(f.get(REC.temperature));
     samples.push(s);
   }
   if (samples.length === 0) throw new LocalizedError('err.fitNoTime');
+
+  // Sport: session.sport (field 5), else sport.sport (field 0).
+  const sessionSport = num(messages.find((m) => m.num === MSG.session)?.fields.get(5));
+  const sportMsg = num(messages.find((m) => m.num === MSG.sport)?.fields.get(0));
+  const sport = sportFromFit(sessionSport) ?? sportFromFit(sportMsg);
+  // Running cadence is written per leg (strides per minute): steps per minute are twice that.
+  if (sport === 'running') for (const smp of samples) if (smp.cadence !== undefined) smp.cadence *= 2;
 
   // Local time offset: activity.local_timestamp (field 5) − activity.timestamp (field 253).
   let localOffsetMs: number | undefined;
@@ -110,5 +133,5 @@ export function parseFit(data: ArrayBuffer | Uint8Array, name?: string): RawTele
   }
   laps.sort((a, b) => a.startMs - b.startMs);
 
-  return { source: 'fit', name, device, localOffsetMs, samples, recordFields: [...recordFields].sort(), laps: laps.length ? laps : undefined };
+  return { source: 'fit', name, device, localOffsetMs, samples, recordFields: [...recordFields].sort(), laps: laps.length ? laps : undefined, sport };
 }

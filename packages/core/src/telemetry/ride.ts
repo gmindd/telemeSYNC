@@ -3,7 +3,7 @@ import { lowerIndex } from '../util/search.ts';
 import { cumulativeGain, filterAltitude } from '../metrics/elevation.ts';
 import { gradeOverDistance } from '../metrics/grade.ts';
 import { movingAverageByTime, trailingAverageByTime } from '../metrics/smoothing.ts';
-import type { ChannelKey, RawSample, RawTelemetry } from './types.ts';
+import type { ChannelKey, RawSample, RawTelemetry, Sport } from './types.ts';
 import { LocalizedError } from '../i18n/index.ts';
 
 export type MetricKey =
@@ -64,6 +64,8 @@ export interface RideData {
   localOffsetMs?: number;
   /** Laps recorded by the device, if any (UTC ms). */
   laps?: { startMs: number; endMs: number }[];
+  /** Sport the file says it is, when it says (running cadence is then in steps per minute). */
+  sport?: Sport;
   startTime: number;
   endTime: number;
   gapThresholdMs: number;
@@ -228,6 +230,7 @@ export function buildRide(raw: RawTelemetry, opts: RideOptions = {}): RideData {
     device: raw.device,
     localOffsetMs: raw.localOffsetMs,
     laps: raw.laps,
+    sport: raw.sport,
     startTime: t[0],
     endTime: t[n - 1],
     gapThresholdMs,

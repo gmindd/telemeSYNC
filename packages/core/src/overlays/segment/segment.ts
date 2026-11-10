@@ -7,6 +7,7 @@ import { drawText, font, labelSize } from '../draw.ts';
 import { withAlpha } from '../panel/paint.ts';
 import { showsWkg, type Ctx2D, type OverlayDefinition, type OverlayId, type OverlayStyle } from '../types.ts';
 import { convert, fmt } from '../units.ts';
+import { formatPace, paceUnit } from '../../metrics/running.ts';
 
 // Segment gadgets: the segment being ridden (running time with tenths, figures so far, comparison with
 // the best lap) and the laps table that fills up as the laps are finished. Both draw nothing outside
@@ -36,13 +37,20 @@ const STATS: StatColumn[] = [
   { key: 'seg.avgTemp', requires: 'temperature', value: (s, st) => fmt(convert.temperature(s.avgTemperature, st.units), 0), unit: (st) => convert.temperatureUnit(st.units) },
 ];
 
+/** Running files show pace where cycling shows speed, and cadence in steps. */
+const RUN_STATS: Partial<Record<CoreKey, StatColumn>> = {
+  'seg.avgSpeed': { key: 'run.avgPace', requires: 'distance', value: (s, st) => formatPace(s.avgSpeed, st.units), unit: (st) => paceUnit(st.units).slice(1) },
+  'seg.avgCadence': { key: 'run.avgCadence', requires: 'cadence', value: (s) => fmt(s.avgCadence, 0), unit: (st) => tr(st.language, 'unit.spm') },
+};
+
 function statsFor(ride: RideData, style: OverlayStyle, n: number, only?: CoreKey[]): StatColumn[] {
-  const list = only ? only.map((k) => STATS.find((c) => c.key === k)!) : STATS;
+  let list = only ? only.map((k) => STATS.find((c) => c.key === k)!) : STATS;
+  if (ride.sport === 'running') list = list.filter((c) => c.key !== 'seg.maxSpeed').map((c) => RUN_STATS[c.key] ?? c);
   return list.filter((c) => ride.available.has(c.requires) && (!c.when || c.when(style))).slice(0, n);
 }
 
 /** Text cut with "…" to fit maxW at the current font. */
-function fitText(ctx: Ctx2D, text: string, maxW: number): string {
+export function fitText(ctx: Ctx2D, text: string, maxW: number): string {
   if (ctx.measureText(text).width <= maxW) return text;
   let t = text;
   while (t.length > 1 && ctx.measureText(`${t}…`).width > maxW) t = t.slice(0, -1);
@@ -50,7 +58,7 @@ function fitText(ctx: Ctx2D, text: string, maxW: number): string {
 }
 
 /** Rounded badge; `edge` is its right end (align 'right') or its left end ('left'). Returns its width. */
-function pill(ctx: Ctx2D, edge: number, cy: number, text: string, color: string, style: OverlayStyle, align: 'left' | 'right' = 'right') {
+export function pill(ctx: Ctx2D, edge: number, cy: number, text: string, color: string, style: OverlayStyle, align: 'left' | 'right' = 'right') {
   const p = dialPaint(style);
   ctx.font = font(p.ts, 13, 800);
   const w = ctx.measureText(text).width + 22;
@@ -70,7 +78,7 @@ function pill(ctx: Ctx2D, edge: number, cy: number, text: string, color: string,
 }
 
 /** Chequered flag icon. */
-function flag(ctx: Ctx2D, x: number, y: number, s: number) {
+export function flag(ctx: Ctx2D, x: number, y: number, s: number) {
   ctx.fillStyle = '#ffffff';
   ctx.fillRect(x, y, 2.5, s);
   const cw = s * 0.18;
@@ -82,8 +90,8 @@ function flag(ctx: Ctx2D, x: number, y: number, s: number) {
   }
 }
 
-const GOOD = '#4ade80';
-const BAD = '#f87171';
+export const GOOD = '#4ade80';
+export const BAD = '#f87171';
 
 // ---------------------------------------------------------------------------------------------
 

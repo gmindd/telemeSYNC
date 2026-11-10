@@ -8,7 +8,8 @@ import { chartRange, gaugeRange, PANEL_METRIC_INFO, statsUpTo, windowSeries, typ
 import { hrZone } from '../text/metrics.ts';
 import type { Ctx2D, FrameState, OverlayContext, OverlayDefinition, OverlayId, OverlayStyle, PanelMetric } from '../types.ts';
 import { convert, fmt, wkgText } from '../units.ts';
-import { tr, type CoreKey } from '../../i18n/index.ts';
+import { tr, type CoreKey, type Lang } from '../../i18n/index.ts';
+import type { Sport } from '../../telemetry/types.ts';
 import {
   BELOW_H,
   CX,
@@ -20,6 +21,7 @@ import {
   drawDialBase,
   drawZoneBar,
   fitSize,
+  type DialRim,
   R_INNER,
   type BelowItem,
   type DialColors,
@@ -41,7 +43,7 @@ export function beforeStart(ride: RideData, s: RideSample): boolean {
 
 type Inner = 'hrZone' | 'powerZone' | 'terrain' | 'terrainTinted';
 
-interface DialSpec {
+export interface DialSpec {
   id: OverlayId;
   name: CoreKey;
   requires: MetricKey;
@@ -51,6 +53,13 @@ interface DialSpec {
   iconColor?: string;
   /** Chainring rim (BTT); false = plain ring (road). */
   toothed?: boolean;
+  /** Named rim (track for running, snow); wins over `toothed`. */
+  rim?: DialRim;
+  /** Sports whose catalogue lists it (default cycling). */
+  sports?: Sport[];
+  /** Name and file slug when not built from the id (variants for other sports). */
+  labelFor?: (lang: Lang | undefined) => string;
+  slugFor?: (lang: Lang | undefined) => string;
   /** Widest expected value, for a font size that never changes. */
   template: (style: OverlayStyle) => string;
   value: (s: RideSample, style: OverlayStyle, ride: RideData) => string;
@@ -85,7 +94,7 @@ function avgMax(m: PanelMetric, decimals: number) {
   };
 }
 
-const SPECS: DialSpec[] = [
+export const DIAL_SPECS: DialSpec[] = [
   {
     id: 'dialHeartRate',
     name: 'metric.heartRate',
@@ -279,12 +288,15 @@ function drawValue(ctx: Ctx2D, spec: DialSpec, s: RideSample, style: OverlayStyl
   if (line) drawText(ctx, line, CX, baseline + 33, p.ts, { size: wkg ? 17 : 19, weight: wkg ? 700 : 600, align: 'center', tabular: false, color: 'rgba(255,255,255,0.85)' });
 }
 
-function makeDial(spec: DialSpec): OverlayDefinition {
+export function makeDial(spec: DialSpec): OverlayDefinition {
   const height = spec.below ? DIAL + BELOW_H : DIAL;
   return {
     id: spec.id,
     label: tr('en', 'overlay.dial', { name: tr('en', spec.name) }),
     requires: spec.requires,
+    sports: spec.sports,
+    labelFor: spec.labelFor,
+    slugFor: spec.slugFor,
     textOnly: false,
     textRateOnly: (style) => style.panelRate === 'text',
     size: () => ({ width: DIAL, height }),
@@ -292,7 +304,7 @@ function makeDial(spec: DialSpec): OverlayDefinition {
       const frame = style.panelRate === 'text' ? { ...fullFrame, sample: fullFrame.textSample } : fullFrame;
       const ride = octx.ride;
       const p = dialPaint(style);
-      drawDialBase(ctx, spec.colors, p, spec.toothed ?? true);
+      drawDialBase(ctx, spec.colors, p, spec.rim ?? spec.toothed ?? true);
       const arc = spec.arc(frame.sample, style, ride);
       const tip = beforeStart(ride, frame.sample) ? NaN : arc.f;
       drawDialArc(ctx, spec.colors, arc.origin, Number.isFinite(tip) ? tip : arc.origin, tip);
@@ -324,4 +336,11 @@ function makeDial(spec: DialSpec): OverlayDefinition {
   };
 }
 
-export const dialOverlays: OverlayDefinition[] = SPECS.map(makeDial);
+export const dialOverlays: OverlayDefinition[] = DIAL_SPECS.map(makeDial);
+
+/** A cycling dial's spec under another id, for another sport's catalogue. */
+export function dialSpec(id: OverlayId): DialSpec {
+  const spec = DIAL_SPECS.find((d) => d.id === id);
+  if (!spec) throw new Error(`Unknown dial: ${id}`);
+  return spec;
+}

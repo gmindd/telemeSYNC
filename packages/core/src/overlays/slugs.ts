@@ -21,3 +21,24 @@ export const METRIC_SLUGS: Record<string, Translations> = {
   segmentLaps: ['laps', 'voltas', 'tours', 'vueltas', 'runden'],
   dialSummary: ['compact-panel', 'painel-compacto', 'panneau-compact', 'panel-compacto', 'kompakt-panel'],
 };
+
+/** File slug words for the gadgets of the other sports ("corrida-mostrador-fc.mov"). */
+export const SPORT_SLUGS: Record<'running' | 'snow', Translations> = {
+  running: ['run', 'corrida', 'course', 'carrera', 'lauf'],
+  snow: ['snow', 'neve', 'neige', 'nieve', 'schnee'],
+};
+export const DIAL_SLUG: Translations = ['dial', 'mostrador', 'cadran', 'esfera', 'rundinstrument'];
+
+Object.assign(METRIC_SLUGS, {
+  pace: ['pace', 'ritmo', 'allure', 'ritmo', 'pace'],
+  gap: ['gap', 'ritmo-ajustado', 'allure-ajustee', 'ritmo-ajustado', 'gap'],
+  runCadence: ['cadence', 'cadencia', 'cadence', 'cadencia', 'schrittfrequenz'],
+  verticalSpeed: ['vertical-speed', 'velocidade-vertical', 'vitesse-verticale', 'velocidad-vertical', 'vertikalgeschwindigkeit'],
+  runSplits: ['splits', 'parciais', 'temps-intermediaires', 'parciales', 'zwischenzeiten'],
+  runGhost: ['pr-ghost', 'fantasma-pr', 'fantome-record', 'fantasma-record', 'pr-geist'],
+  slope: ['slope', 'declive', 'pente', 'pendiente', 'gefaelle'],
+  verticalDrop: ['vertical-drop', 'desnivel-descido', 'denivele-descendu', 'desnivel-bajado', 'abfahrtshoehenmeter'],
+  maxSpeed: ['max-speed', 'velocidade-maxima', 'vitesse-max', 'velocidad-maxima', 'hoechstgeschwindigkeit'],
+  snowRunLive: ['run', 'descida', 'descente', 'bajada', 'abfahrt'],
+  snowRuns: ['runs', 'descidas', 'descentes', 'bajadas', 'abfahrten'],
+});

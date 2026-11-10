@@ -41,4 +41,20 @@ export interface RawTelemetry {
   recordFields?: string[];
   /** Laps recorded by the device (lap button or auto-lap), UTC ms. */
   laps?: { startMs: number; endMs: number }[];
+  /** Sport the file says it is (FIT session/sport, GPX track type), when it says. */
+  sport?: Sport;
+}
+
+/** Sports the overlays are designed for. Walking and hiking count as running; skiing and snowboarding as snow. */
+export type Sport = 'cycling' | 'running' | 'snow';
+export const SPORTS: Sport[] = ['cycling', 'running', 'snow'];
+
+/** Sport from a free text such as a GPX track type ("trail_running", "resort_skiing_snowboarding_ws"). */
+export function sportFromText(text: string | undefined): Sport | undefined {
+  const t = String(text ?? '').toLowerCase();
+  if (!t) return undefined;
+  if (/ski|snow/.test(t)) return 'snow';
+  if (/run|walk|hik|trek|jog/.test(t)) return 'running';
+  if (/cycl|bik|ride|velo|gravel|mtb/.test(t)) return 'cycling';
+  return undefined;
 }
