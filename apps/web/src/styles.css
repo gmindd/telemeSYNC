@@ -262,3 +262,13 @@ table.licenses td { padding: 3px 6px; border-bottom: 1px solid var(--border); }
 .services { list-style: none; padding: 0; margin: 8px 0; display: flex; flex-wrap: wrap; gap: 6px; }
 .services li { background: var(--panel2); border: 1px solid var(--border); border-radius: 14px; padding: 3px 10px; font-size: 12px; }
 .promo-actions { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; margin-top: 10px; }
+
+/* Area of the maps and profiles (step 4) */
+.segmented { display: inline-flex; flex-wrap: wrap; gap: 0; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin: 2px 0 8px; }
+.segmented button { border: 0; border-right: 1px solid var(--border); border-radius: 0; background: transparent; padding: 7px 14px; font-weight: 700; }
+.segmented button:last-child { border-right: 0; }
+.segmented button.active { background: var(--accent); color: #1a0d00; }
+.route-picker { margin-top: 8px; max-width: 900px; }
+.route-picker canvas { display: block; border-radius: 10px; border: 1px solid var(--border); cursor: crosshair; touch-action: none; }
+.route-picker-strip { margin-top: 6px; }
+.route-picker .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; vertical-align: -1px; }

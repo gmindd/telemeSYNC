@@ -3,6 +3,7 @@ import { convert, fmt } from './units.ts';
 import { tr } from '../i18n/index.ts';
 import { dot, drawText } from './draw.ts';
 import type { OverlayDefinition } from './types.ts';
+import { routeSpan } from './routeRange.ts';
 
 const W = 640;
 const H = 200;
@@ -18,18 +19,25 @@ interface Profile {
   idx: Int32Array;
   minAlt: number;
   maxAlt: number;
+  /** Distance at the start of the part shown, and its length (m). */
+  d0: number;
   totalDist: number;
+  i0: number;
+  i1: number;
 }
 
-const cache = new WeakMap<RideData, Profile>();
+const cache = new WeakMap<RideData, Map<string, Profile>>();
 
-function profileOf(ride: RideData): Profile {
-  let p = cache.get(ride);
+/** Profile of samples i0..i1 (the part of the ride shown), cached per ride and part. */
+function profileOf(ride: RideData, i0: number, i1: number): Profile {
+  const key = `${i0}|${i1}`;
+  let byRide = cache.get(ride);
+  if (!byRide) cache.set(ride, (byRide = new Map()));
+  let p = byRide.get(key);
   if (p) return p;
-  const n = ride.t.length;
   let minAlt = Infinity;
   let maxAlt = -Infinity;
-  for (let i = 0; i < n; i++) {
+  for (let i = i0; i <= i1; i++) {
     const a = ride.altitude[i];
     if (a < minAlt) minAlt = a;
     if (a > maxAlt) maxAlt = a;
@@ -43,22 +51,23 @@ function profileOf(ride: RideData): Profile {
     minAlt = mid - 10;
     maxAlt = mid + 10;
   }
-  const totalDist = Math.max(1, ride.distance[n - 1]);
+  const d0 = ride.distance[i0];
+  const totalDist = Math.max(1, ride.distance[i1] - d0);
   const xs: number[] = [];
   const ys: number[] = [];
   const idx: number[] = [];
   let lastX = -Infinity;
-  for (let i = 0; i < n; i++) {
-    const x = PAD_X + (ride.distance[i] / totalDist) * (W - PAD_X * 2);
-    if (x - lastX < 0.5 && i !== n - 1) continue;
+  for (let i = i0; i <= i1; i++) {
+    const x = PAD_X + ((ride.distance[i] - d0) / totalDist) * (W - PAD_X * 2);
+    if (x - lastX < 0.5 && i !== i1) continue;
     const a = Number.isNaN(ride.altitude[i]) ? minAlt : ride.altitude[i];
     xs.push(x);
     ys.push(H - PAD_BOTTOM - ((a - minAlt) / (maxAlt - minAlt)) * (H - PAD_TOP - PAD_BOTTOM));
     idx.push(i);
     lastX = x;
   }
-  p = { xs: Float64Array.from(xs), ys: Float64Array.from(ys), idx: Int32Array.from(idx), minAlt, maxAlt, totalDist };
-  cache.set(ride, p);
+  p = { xs: Float64Array.from(xs), ys: Float64Array.from(ys), idx: Int32Array.from(idx), minAlt, maxAlt, d0, totalDist, i0, i1 };
+  byRide.set(key, p);
   return p;
 }
 
@@ -70,11 +79,15 @@ export const elevationProfileOverlay: OverlayDefinition = {
   size: () => ({ width: W, height: H }),
   draw: (ctx, frame, style, octx) => {
     const ride = octx.ride;
-    const p = profileOf(ride);
+    const span = routeSpan(ride, style, octx);
+    const p = profileOf(ride, span.i0, span.i1);
     const s = frame.sample;
     const baseY = H - PAD_BOTTOM;
-    const curX = PAD_X + (s.distance / p.totalDist) * (W - PAD_X * 2);
-    const curY = baseY - ((s.altitude - p.minAlt) / (p.maxAlt - p.minAlt)) * (H - PAD_TOP - PAD_BOTTOM);
+    // Before the part shown: nothing travelled; after it: all of it, without the marker.
+    const inside = s.index >= p.i0 && s.index < p.i1 && !s.outside;
+    const rel = Math.max(0, Math.min(1, (s.distance - p.d0) / p.totalDist));
+    const curX = PAD_X + rel * (W - PAD_X * 2);
+    const curY = inside ? baseY - ((s.altitude - p.minAlt) / (p.maxAlt - p.minAlt)) * (H - PAD_TOP - PAD_BOTTOM) : NaN;
 
     const area = (upToX: number) => {
       ctx.beginPath();
@@ -116,7 +129,7 @@ export const elevationProfileOverlay: OverlayDefinition = {
     ctx.stroke();
 
     // Travelled part.
-    const travelledX = s.outside && s.t < ride.startTime ? -1 : curX;
+    const travelledX = (s.outside && s.t < ride.startTime) || s.index < p.i0 ? -1 : curX;
     if (travelledX > PAD_X) {
       area(travelledX);
       ctx.globalAlpha = 0.45;

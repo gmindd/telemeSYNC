@@ -2,7 +2,8 @@ import type { RideData } from '../../telemetry/ride.ts';
 import { drawText, font } from '../draw.ts';
 import { withAlpha } from '../panel/paint.ts';
 import { niceStep } from '../panel/series.ts';
-import type { Ctx2D, OverlayDefinition, OverlayStyle } from '../types.ts';
+import { routeSpan } from '../routeRange.ts';
+import type { Ctx2D, OverlayContext, OverlayDefinition, OverlayStyle } from '../types.ts';
 import { convert, fmt } from '../units.ts';
 import { tr } from '../../i18n/index.ts';
 import { dialPaint } from './common.ts';
@@ -58,22 +59,27 @@ interface Profile {
   lo: number;
   hi: number;
   step: number;
+  /** Distance at the start of the part shown, and its length (m). */
+  d0: number;
   total: number;
+  i0: number;
+  i1: number;
 }
 
 const cache = new WeakMap<RideData, Map<string, Profile>>();
 
-function profileOf(ride: RideData, style: OverlayStyle): Profile {
-  const key = style.units.system;
+function profileOf(ride: RideData, style: OverlayStyle, octx: Pick<OverlayContext, 'clipStart' | 'clipEnd'>): Profile {
+  const { i0, i1 } = routeSpan(ride, style, octx);
+  const key = `${style.units.system}|${i0}|${i1}`;
   let byRide = cache.get(ride);
   if (!byRide) cache.set(ride, (byRide = new Map()));
   const hit = byRide.get(key);
   if (hit) return hit;
-  const n = ride.t.length;
-  const total = Math.max(1, ride.distance[n - 1]);
+  const d0 = ride.distance[i0];
+  const total = Math.max(1, ride.distance[i1] - d0);
   let mn = Infinity;
   let mx = -Infinity;
-  for (let i = 0; i < n; i++) {
+  for (let i = i0; i <= i1; i++) {
     const a = convert.elevation(ride.altitude[i], style.units);
     if (a < mn) mn = a;
     if (a > mx) mx = a;
@@ -89,23 +95,23 @@ function profileOf(ride: RideData, style: OverlayStyle): Profile {
   const alt: number[] = [];
   const idx: number[] = [];
   let lastX = -Infinity;
-  for (let i = 0; i < n; i++) {
-    const x = PX0 + (ride.distance[i] / total) * (PX1 - PX0);
-    if (x - lastX < 0.7 && i !== n - 1) continue;
+  for (let i = i0; i <= i1; i++) {
+    const x = PX0 + ((ride.distance[i] - d0) / total) * (PX1 - PX0);
+    if (x - lastX < 0.7 && i !== i1) continue;
     const a = convert.elevation(ride.altitude[i], style.units);
     xs.push(x);
     alt.push(Number.isNaN(a) ? lo : a);
     idx.push(i);
     lastX = x;
   }
-  const p = { xs: Float64Array.from(xs), alt: Float64Array.from(alt), idx: Int32Array.from(idx), lo, hi, step, total };
+  const p = { xs: Float64Array.from(xs), alt: Float64Array.from(alt), idx: Int32Array.from(idx), lo, hi, step, d0, total, i0, i1 };
   byRide.set(key, p);
   return p;
 }
 
 /** Highest point of the profile in card coordinates (for a marker on the summit). */
-export function profilePeak(ride: RideData, style: OverlayStyle): { x: number; y: number } {
-  const pr = profileOf(ride, style);
+export function profilePeak(ride: RideData, style: OverlayStyle, octx: Pick<OverlayContext, 'clipStart' | 'clipEnd'>): { x: number; y: number } {
+  const pr = profileOf(ride, style, octx);
   let k = 0;
   for (let i = 1; i < pr.alt.length; i++) if (pr.alt[i] > pr.alt[k]) k = i;
   return { x: pr.xs[k], y: PY1 - ((pr.alt[k] - pr.lo) / (pr.hi - pr.lo)) * (PY1 - PY0) };
@@ -119,15 +125,17 @@ export const dialProfileOverlay: OverlayDefinition = {
   size: () => ({ width: W, height: H }),
   draw: (ctx: Ctx2D, frame, style, octx) => {
     const ride = octx.ride;
-    const pr = profileOf(ride, style);
+    const pr = profileOf(ride, style, octx);
     const pt = dialPaint(style);
     const accent = style.accentColor;
     const s = frame.sample;
     const ts = frame.textSample;
-    const before = s.outside && s.t < ride.startTime;
+    // Before the part shown nothing is travelled; after it, all of it.
+    const before = (s.outside && s.t < ride.startTime) || s.index < pr.i0;
+    const inside = !before && s.index < pr.i1 && !s.outside;
     const Y = (a: number) => PY1 - ((a - pr.lo) / (pr.hi - pr.lo)) * (PY1 - PY0);
-    const curX = before ? PX0 : PX0 + (Math.min(s.distance, pr.total) / pr.total) * (PX1 - PX0);
-    const curA = convert.elevation(s.altitude, style.units);
+    const curX = before ? PX0 : PX0 + (Math.max(0, Math.min(pr.total, s.distance - pr.d0)) / pr.total) * (PX1 - PX0);
+    const curA = inside ? convert.elevation(s.altitude, style.units) : NaN;
 
     drawCard(ctx, W, H, style);
 
@@ -155,14 +163,18 @@ export const dialProfileOverlay: OverlayDefinition = {
       ctx.stroke();
       drawText(ctx, fmt(a, 0), PX0 - 10, y + 5, pt.ts, { size: 13, weight: 600, align: 'right', color: pt.label });
     }
+    // Distances from the start of the ride (the part shown may begin anywhere).
+    const startU = convert.distance(pr.d0, style.units);
     const totalU = convert.distance(pr.total, style.units);
+    const endU = startU + totalU;
     const dStep = niceStep(totalU / 5);
     const du = convert.distanceUnit(style.units);
-    for (let d = 0; d <= totalU - dStep * 0.4; d += dStep) {
-      const xx = PX0 + (d / totalU) * (PX1 - PX0);
-      drawText(ctx, d === 0 ? `0 ${du}` : fmt(d, 0), xx, H - 20, pt.ts, { size: 13, weight: 600, align: d === 0 ? 'left' : 'center', color: pt.label });
+    const X = (d: number) => PX0 + ((d - startU) / totalU) * (PX1 - PX0);
+    drawText(ctx, `${fmt(startU, startU ? 1 : 0)} ${du}`, PX0, H - 20, pt.ts, { size: 13, weight: 600, align: 'left', color: pt.label });
+    for (let d = Math.ceil((startU + dStep * 0.6) / dStep) * dStep; d <= endU - dStep * 0.4; d += dStep) {
+      drawText(ctx, fmt(d, dStep < 1 ? 1 : 0), X(d), H - 20, pt.ts, { size: 13, weight: 600, align: 'center', color: pt.label });
     }
-    drawText(ctx, fmt(totalU, 1), PX1, H - 20, pt.ts, { size: 13, weight: 700, align: 'right', color: pt.label });
+    drawText(ctx, fmt(endU, 1), PX1, H - 20, pt.ts, { size: 13, weight: 700, align: 'right', color: pt.label });
 
     // Terrain area and ridge line.
     const area = (toX: number) => {

@@ -191,6 +191,26 @@ function loadStoredStyle(overlayLang: Lang | 'auto'): OverlayStyle {
 
 const initialOverlayLang = loadStored<Lang | 'auto'>(OVERLAY_LANG_KEY, 'auto');
 
+/** Stretch of the ride the video clips cover (first clip start to last clip end), or null without clips. */
+export function clipsSpan(sync: SyncState): { startMs: number; endMs: number } | null {
+  let a = Infinity;
+  let b = -Infinity;
+  for (const c of sync.clips) {
+    const cam = sync.cameras.find((x) => x.id === c.cameraId);
+    const start = cam ? effectiveStart(c, cam) : undefined;
+    if (start === undefined) continue;
+    a = Math.min(a, start);
+    b = Math.max(b, start + c.meta.durationMs);
+  }
+  return Number.isFinite(a) && b > a ? { startMs: a, endMs: b } : null;
+}
+
+/** The style as the gadgets draw it: with the maps on "only the clips", the stretch the clips cover. */
+export function drawStyle(style: OverlayStyle, sync: SyncState): OverlayStyle {
+  if (style.mapMode !== 'clips') return style;
+  return { ...style, mapRange: clipsSpan(sync) };
+}
+
 function rideNameFrom(ride: RideData, fileName: string): string {
   const d = new Date(ride.startTime);
   const date = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -246,9 +266,13 @@ export const useApp = create<State & Actions>((set, get) => ({
       // A PR race starting at a point of another ride starts at this one's beginning instead.
       const ghost = get().style.ghost;
       const ghostStart = ghost?.startMs != null && (ghost.startMs < ride.startTime || ghost.startMs > ride.endTime) ? null : ghost?.startMs ?? null;
+      // A stretch chosen for the maps on another ride does not fit this one.
+      const range = get().style.mapRange;
+      const mapRange = range && range.startMs >= ride.startTime && range.endMs <= ride.endTime ? range : null;
+      const mapMode = get().style.mapMode === 'custom' && !mapRange ? 'full' : get().style.mapMode;
       set({
         sport,
-        style: { ...get().style, segments, ghost: ghost ? { ...ghost, startMs: ghostStart } : null },
+        style: { ...get().style, segments, ghost: ghost ? { ...ghost, startMs: ghostStart } : null, mapRange, mapMode },
         segAnchor: undefined,
         ride,
         rideId: id,
@@ -492,7 +516,7 @@ export const useApp = create<State & Actions>((set, get) => ({
         rideName: st.rideName,
         clips,
         overlays: st.overlays,
-        style: st.style,
+        style: drawStyle(st.style, st.sync),
         format: st.format,
         maxFps: st.maxFps,
         outputDir: st.outputDir,

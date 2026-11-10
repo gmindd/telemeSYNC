@@ -36,7 +36,8 @@ import {
 } from '@telemesync/core';
 import { OverlayCanvas } from '../components/OverlayCanvas.tsx';
 import { langName, useLang, useT } from '../i18n/index.tsx';
-import { useApp } from '../lib/store.ts';
+import { clipsSpan, drawStyle, useApp } from '../lib/store.ts';
+import { RoutePicker } from '../components/RoutePicker.tsx';
 
 const THEME_KEY = 'telemesync.overlayTheme';
 
@@ -257,6 +258,54 @@ function GhostOptions({ clipStart }: { clipStart?: number }) {
   );
 }
 
+/** Gadgets that draw the route or the elevation profile (the area option applies to them). */
+const ROUTE_IDS: OverlayId[] = ['map', 'elevationProfile', 'dialMap', 'dialProfile', 'natalMap', 'natalProfile'];
+const AREA_MODES: OverlayStyle['mapMode'][] = ['full', 'clips', 'clip', 'custom'];
+
+/** What the maps and profiles show: whole ride, the clips, clip by clip, or a stretch picked on the map. */
+function AreaOptions() {
+  const { style, setStyle, ride, sync } = useApp();
+  const tr = useT();
+  if (!ride) return null;
+  const span = clipsSpan(sync);
+  const clips = sync.clips
+    .map((c) => {
+      const cam = sync.cameras.find((x) => x.id === c.cameraId);
+      const start = cam ? effectiveStart(c, cam) : undefined;
+      return start === undefined ? null : { startMs: start, endMs: start + c.meta.durationMs };
+    })
+    .filter((c): c is { startMs: number; endMs: number } => !!c);
+  const choose = (mode: OverlayStyle['mapMode']) => {
+    // Picking on the map starts from the clips' stretch (or the whole ride) when nothing is chosen yet.
+    if (mode === 'custom' && !style.mapRange) setStyle({ mapMode: mode, mapRange: span ?? { startMs: ride.startTime, endMs: ride.endTime } });
+    else setStyle({ mapMode: mode });
+  };
+  const help = style.mapMode === 'clips' ? (span ? 'ov.area.clipsHelp' : 'ov.area.noClips') : style.mapMode === 'clip' ? (clips.length ? 'ov.area.clipHelp' : 'ov.area.noClips') : style.mapMode === 'custom' ? 'ov.area.customHelp' : null;
+  return (
+    <div className="card power-options area-options">
+      <h3>{tr('ov.area.title')}</h3>
+      <p className="lead small">{tr('ov.area.lead')}</p>
+      <div className="segmented" role="radiogroup">
+        {AREA_MODES.map((m) => (
+          <button key={m} role="radio" aria-checked={style.mapMode === m} className={style.mapMode === m ? 'active' : ''} onClick={() => choose(m)}>
+            {tr(`ov.area.${m}`)}
+          </button>
+        ))}
+      </div>
+      {help ? <p className={`small${help === 'ov.area.noClips' ? ' notice' : ' muted'}`}>{tr(help)}</p> : null}
+      {style.mapMode === 'custom' ? (
+        <RoutePicker
+          ride={ride}
+          value={style.mapRange ?? { startMs: ride.startTime, endMs: ride.endTime }}
+          clips={clips}
+          units={style.units}
+          onChange={(r) => setStyle({ mapRange: r })}
+        />
+      ) : null}
+    </div>
+  );
+}
+
 /** A preview instant inside the ski runs (the second run when the playhead is not in one). */
 function snowPreviewT(ride: RideData, t: number): number {
   const runs = detectRuns(ride);
@@ -298,6 +347,9 @@ export function StepOverlays() {
   const dials = classic.filter((d) => isDialOverlay(d.id));
   const panels = classic.filter((d) => panelMetricOf(d.id));
   const sportList = sport === 'cycling' ? [] : overlaysForSport(ride, sport);
+  // Maps on "only the clips": the stretch the clips cover.
+  const viewStyle = drawStyle(style, sync);
+  const showArea = overlays.some((o) => ROUTE_IDS.includes(o));
   const byGroup = (g: ReturnType<typeof overlayGroup>) => sportList.filter((d) => overlayGroup(d.id) === g);
   const chartMetrics = PANEL_METRICS.filter((m) => ride.available.has(m));
   const distUnit = style.units.system === 'metric' ? 'km' : 'mi';
@@ -326,7 +378,7 @@ export function StepOverlays() {
       <input type="checkbox" checked={overlays.includes(d.id)} onChange={(e) => toggleOverlay(d.id, e.target.checked)} />
       <span>{overlayLabel(d.id, lang)}</span>
       <div className="checker">
-        <OverlayCanvas id={d.id} ride={ride} style={style} t={previewT(d)} clipStart={clipStart} clipEnd={clipEnd} cssScale={0.45} fitHeight={190} />
+        <OverlayCanvas id={d.id} ride={ride} style={viewStyle} t={previewT(d)} clipStart={clipStart} clipEnd={clipEnd} cssScale={0.45} fitHeight={190} />
       </div>
     </label>
   );
@@ -359,7 +411,7 @@ export function StepOverlays() {
               </label>
             </div>
             <div className="checker" onClick={() => toggleOverlay(d.id, !on)}>
-              <OverlayCanvas id={d.id} ride={ride} style={style} t={t} clipStart={clipStart} clipEnd={clipEnd} cssScale={0.45} fitHeight={220} />
+              <OverlayCanvas id={d.id} ride={ride} style={viewStyle} t={t} clipStart={clipStart} clipEnd={clipEnd} cssScale={0.45} fitHeight={220} />
             </div>
           </div>
         );
@@ -403,6 +455,7 @@ export function StepOverlays() {
 
       {showPower ? <PowerOptions /> : null}
       {showHr ? <HeartRateOptions /> : null}
+      {showArea ? <AreaOptions /> : null}
 
       {sport === 'cycling' ? (
         <>
@@ -507,13 +560,6 @@ export function StepOverlays() {
           {tr('ov.resolution')}
           <select value={style.scale} onChange={(e) => setStyle({ scale: Number(e.target.value) })}>
             {[1, 1.5, 2, 3].map((v) => <option key={v} value={v}>{v}×</option>)}
-          </select>
-        </label>
-        <label className="field">
-          {tr('ov.map')}
-          <select value={style.mapMode} onChange={(e) => setStyle({ mapMode: e.target.value as 'full' | 'clip' })}>
-            <option value="full">{tr('ov.mapFull')}</option>
-            <option value="clip">{tr('ov.mapClip')}</option>
           </select>
         </label>
         <label className="field">

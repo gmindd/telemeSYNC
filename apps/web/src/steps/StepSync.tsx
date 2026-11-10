@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   CAMERA_PROFILES,
   clipWarnings,
@@ -20,7 +20,7 @@ import { Preview } from '../components/Preview.tsx';
 import { Timeline } from '../components/Timeline.tsx';
 import { ValuesPanel } from '../components/ValuesPanel.tsx';
 import { useLang, useT } from '../i18n/index.tsx';
-import { useApp } from '../lib/store.ts';
+import { drawStyle, useApp } from '../lib/store.ts';
 import { dec, fmtOffset, parseDecimal } from '../lib/format.ts';
 
 const TIME_ZONES = ['Europe/Lisbon', 'Atlantic/Madeira', 'Atlantic/Azores', 'Europe/Madrid', 'Europe/Paris', 'Europe/London', 'UTC'];
@@ -169,6 +169,8 @@ export function StepSync() {
   const st = useApp();
   const { ride, sync, activeClipId, playhead, style, files, overlays, layout } = st;
   const t = useT();
+  // Maps on "only the clips": the stretch the clips cover.
+  const viewStyle = useMemo(() => drawStyle(style, sync), [style, sync]);
   if (!ride) return <section><p>{t('sync.needRide')}</p></section>;
   const cams = new Map(sync.cameras.map((c) => [c.id, c]));
   const clip = sync.clips.find((c) => c.id === activeClipId) ?? sync.clips[0];
@@ -195,7 +197,7 @@ export function StepSync() {
       {clip && cam ? (
         <div className="sync-bottom">
           <div className="sync-preview">
-            <Preview clip={clip} camera={cam} file={files[clip.id]} ride={ride} overlays={overlays} style={style} layout={layout} onPlacement={st.setPlacement} />
+            <Preview clip={clip} camera={cam} file={files[clip.id]} ride={ride} overlays={overlays} style={viewStyle} layout={layout} onPlacement={st.setPlacement} />
             <div className="row muted">
               {t('sync.dragHint')}
               <button className="small" onClick={st.resetLayout}>{t('sync.resetLayout')}</button>

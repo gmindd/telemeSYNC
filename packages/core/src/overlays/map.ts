@@ -2,6 +2,7 @@ import type { RideData } from '../telemetry/ride.ts';
 import { mercator } from '../util/geo.ts';
 import { dot, strokeWithOutline } from './draw.ts';
 import type { Ctx2D, OverlayContext, OverlayDefinition, OverlayStyle } from './types.ts';
+import { routeSpan } from './routeRange.ts';
 
 interface Projected {
   /** Projected x/y (unit Mercator) of every sample; NaN where no position. */
@@ -35,6 +36,9 @@ interface Frame {
   sy: (y: number) => number;
   /** Indices of samples kept after pixel decimation. */
   kept: Int32Array;
+  /** First and last sample of the part shown. */
+  i0: number;
+  i1: number;
 }
 
 const frameCache = new WeakMap<RideData, Map<string, Frame>>();
@@ -58,16 +62,8 @@ function boundsOf(p: Projected, i0: number, i1: number) {
 
 function frameFor(ride: RideData, octx: OverlayContext, style: OverlayStyle, size: number, pad: number): Frame {
   const p = project(ride);
-  const n = ride.t.length;
-  let i0 = 0;
-  let i1 = n - 1;
-  if (style.mapMode === 'clip') {
-    i0 = 0;
-    while (i0 < n - 1 && ride.t[i0] < octx.clipStart) i0++;
-    i1 = i0;
-    while (i1 < n - 1 && ride.t[i1] <= octx.clipEnd) i1++;
-  }
-  const key = `${style.mapMode}|${i0}|${i1}|${size}|${pad}`;
+  const { i0, i1 } = routeSpan(ride, style, octx);
+  const key = `${i0}|${i1}|${size}|${pad}`;
   let byRide = frameCache.get(ride);
   if (!byRide) frameCache.set(ride, (byRide = new Map()));
   const cached = byRide.get(key);
@@ -84,21 +80,21 @@ function frameFor(ride: RideData, octx: OverlayContext, style: OverlayStyle, siz
   const sx = (x: number) => size / 2 + (x - cx) * k;
   const sy = (y: number) => size / 2 + (y - cy) * k;
 
-  // Decimate to ~0.5 px resolution over the whole ride.
+  // Decimate to ~0.5 px resolution over the part shown.
   const kept: number[] = [];
   let lx = NaN;
   let ly = NaN;
-  for (let i = 0; i < n; i++) {
+  for (let i = i0; i <= i1; i++) {
     if (Number.isNaN(p.x[i])) continue;
     const X = sx(p.x[i]);
     const Y = sy(p.y[i]);
-    if (kept.length === 0 || Math.abs(X - lx) + Math.abs(Y - ly) >= 0.5 || i === n - 1) {
+    if (kept.length === 0 || Math.abs(X - lx) + Math.abs(Y - ly) >= 0.5 || i === i1) {
       kept.push(i);
       lx = X;
       ly = Y;
     }
   }
-  const f = { sx, sy, kept: Int32Array.from(kept) };
+  const f = { sx, sy, kept: Int32Array.from(kept), i0, i1 };
   byRide.set(key, f);
   return f;
 }
@@ -137,10 +133,11 @@ export const mapOverlay: OverlayDefinition = {
     }
     strokeWithOutline(ctx, style, style.mutedColor, 4);
 
-    // Travelled part up to the exact current position.
-    const hasPos = Number.isFinite(cur.lat) && !cur.outside;
+    // Travelled part up to the exact current position (the marker only inside the part shown).
+    const inside = cur.index >= f.i0 && cur.index < f.i1;
+    const hasPos = Number.isFinite(cur.lat) && !cur.outside && inside;
     const curIdx = cur.outside && cur.t > ride.endTime ? ride.t.length - 1 : cur.index;
-    if (!(cur.outside && cur.t < ride.startTime)) {
+    if (!(cur.outside && cur.t < ride.startTime) && curIdx >= f.i0) {
       ctx.beginPath();
       started = false;
       for (const i of f.kept) {

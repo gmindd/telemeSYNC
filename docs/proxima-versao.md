@@ -51,4 +51,10 @@ dela.
 - **Segmentos já não competem entre si:** só as voltas são comparadas (diferença para a melhor volta, a melhor em
   destaque). Um segmento é um troço com início e fim marcados à mão; vários segmentos no mesmo vídeo aparecem na tabela
   com as suas médias, sem comparações nem estrelas.
+- **Área dos mapas e perfis:** ao escolher um mapa ou um perfil de altimetria (mapa, mapa circular, perfil, cartão de
+  perfil e as versões de Natal) aparece a caixa "Área dos mapas e perfis", com quatro opções: **volta toda**, **só os
+  clips** (do início do primeiro clip ao fim do último), **clip a clip** (o vídeo de cada clip mostra só o troço desse
+  clip) e **escolher no mapa**, onde se arrastam os marcadores de início (verde) e fim (vermelho) ao longo do percurso,
+  no mapa ou no perfil por baixo; os troços dos clips aparecem a azul como referência. O mapa e o perfil passam a
+  mostrar só esse troço, com zoom, e o perfil indica os km a partir do início da volta.
 

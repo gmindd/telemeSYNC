@@ -171,8 +171,13 @@ export interface OverlayStyle {
   colorByZone: boolean;
   /** What speed shows inside a telemetry gap. */
   gapSpeed: 'zero' | 'dash';
-  /** Map framing: whole ride or zoom on the clip's section. */
-  mapMode: 'full' | 'clip';
+  /**
+   * Part of the ride the maps and elevation profiles show: the whole ride, each clip's own stretch,
+   * the stretch covered by all the clips, or a start and end chosen by the user (mapRange).
+   */
+  mapMode: 'full' | 'clip' | 'clips' | 'custom';
+  /** Start and end of that stretch (UTC ms): the user's choice ('custom'), or the clips' span filled in by the app ('clips'). */
+  mapRange: { startMs: number; endMs: number } | null;
   timeZone: string;
   /** Two-colour gradient used by the dashboard panels (low → high). */
   gradientFrom: string;
@@ -223,6 +228,7 @@ export const DEFAULT_STYLE: OverlayStyle = {
   colorByZone: true,
   gapSpeed: 'zero',
   mapMode: 'full',
+  mapRange: null,
   timeZone: 'Europe/Lisbon',
   gradientFrom: '#ffc400',
   gradientTo: '#ff3d00',

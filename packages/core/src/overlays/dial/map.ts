@@ -3,6 +3,7 @@ import { drawText } from '../draw.ts';
 import { withAlpha } from '../panel/paint.ts';
 import type { Ctx2D, FrameState, OverlayContext, OverlayDefinition, OverlayStyle } from '../types.ts';
 import { CX, CY, DIAL, dialPaint, drawDialBase } from './common.ts';
+import { routeSpan } from '../routeRange.ts';
 
 // Round minimap, "GTA" style: centred on the rider, rotating so the direction of travel points up.
 export const MAP_R = 128;
@@ -201,19 +202,20 @@ export function drawRoundMap(ctx: Ctx2D, frame: FrameState, style: OverlayStyle,
       }
       if (extra && pen) ctx.lineTo(sx(extra.e, extra.n), sy(extra.e, extra.n));
     };
-    const last = ride.t.length - 1;
-    const cur = Math.min(last, s.index);
+    // Only the part of the ride chosen for the maps (whole ride, clips or a stretch) is drawn.
+    const span = routeSpan(ride, style, octx);
+    const cur = Math.min(span.i1, s.index);
     ctx.lineJoin = 'round';
     ctx.lineCap = 'round';
-    path(0, last);
+    path(span.i0, span.i1);
     ctx.strokeStyle = 'rgba(0,0,0,0.45)';
     ctx.lineWidth = 8;
     ctx.stroke();
     ctx.strokeStyle = 'rgba(235,245,255,0.55)';
     ctx.lineWidth = 4.5;
     ctx.stroke();
-    if (!(s.outside && s.t < ride.startTime)) {
-      path(0, cur, pos);
+    if (!(s.outside && s.t < ride.startTime) && cur >= span.i0) {
+      path(span.i0, cur, s.index < span.i1 ? pos : undefined);
       ctx.shadowColor = withAlpha(style.accentColor, 0.8);
       ctx.shadowBlur = 10;
       ctx.strokeStyle = style.accentColor;
