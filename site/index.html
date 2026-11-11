@@ -6,6 +6,13 @@
   <title>telemeSYNC · Telemetria das suas voltas de bicicleta por cima dos seus vídeos</title>
   <meta name="description" content="telemeSYNC é um programa gratuito que sincroniza a telemetria do seu ciclocomputador (FIT/GPX) com os vídeos da action cam e gera overlays transparentes: velocidade, inclinação, mapa, altimetria, frequência cardíaca e painéis.">
   <link rel="canonical" href="https://telemesync.pereiragabriel.com/">
+  <link rel="alternate" hreflang="pt" href="https://telemesync.pereiragabriel.com/">
+  <link rel="alternate" hreflang="en" href="https://telemesync.pereiragabriel.com/en/">
+  <link rel="alternate" hreflang="fr" href="https://telemesync.pereiragabriel.com/fr/">
+  <link rel="alternate" hreflang="es" href="https://telemesync.pereiragabriel.com/es/">
+  <link rel="alternate" hreflang="de" href="https://telemesync.pereiragabriel.com/de/">
+  <link rel="alternate" hreflang="x-default" href="https://telemesync.pereiragabriel.com/en/">
+  <meta property="og:locale" content="pt_PT">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://telemesync.pereiragabriel.com/">
   <meta property="og:title" content="telemeSYNC · Telemetria das suas voltas de bicicleta por cima dos seus vídeos">
@@ -33,20 +40,27 @@
     "author": { "@type": "Person", "name": "Gabriel Pereira", "url": "https://www.pereiragabriel.com/" }
   }
   </script>
-  <link rel="icon" href="assets/images/favicon.svg" type="image/svg+xml">
-  <link rel="preload" href="assets/fonts/Inter-800.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="style.css">
+  <link rel="icon" href="/assets/images/favicon.svg" type="image/svg+xml">
+  <link rel="preload" href="/assets/fonts/Inter-800.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/style.css">
   <script>
-    // Chosen language other than Portuguese: hide the page until script.js has translated it (at most 1.5 s)
-    try {
-      var l = new URLSearchParams(location.search).get('lang') || localStorage.getItem('telemesync-lang');
-      if (l && l !== 'pt') {
-        document.documentElement.classList.add('i18n-loading');
-        setTimeout(function () { document.documentElement.classList.remove('i18n-loading'); }, 1500);
-      }
-    } catch (e) {}
+    // Language: a ?lang= link (the program uses them) or a language chosen before opens that language's page.
+    // Only the Portuguese pages redirect a remembered choice, so a link to another language always opens it.
+    (function () {
+      try {
+        var langs = ['pt', 'en', 'fr', 'es', 'de'];
+        var page = document.documentElement.lang;
+        var q = new URLSearchParams(location.search).get('lang');
+        if (q && langs.indexOf(q) >= 0) localStorage.setItem('telemesync-lang', q);
+        var want = q || (page === 'pt' ? localStorage.getItem('telemesync-lang') : null);
+        if (want && want !== page && langs.indexOf(want) >= 0) {
+          var rest = location.pathname.replace(/^\/(en|fr|es|de)(\/|$)/, '/');
+          location.replace((want === 'pt' ? '' : '/' + want) + rest + location.hash);
+        }
+      } catch (e) {}
+    })();
   </script>
-  <script src="script.js" defer></script>
+  <script src="/script.js" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#conteudo" data-i18n="nav.skip">Saltar para o conteúdo</a>
@@ -55,21 +69,21 @@
     <div class="container site-header__inner">
       <a class="brand" href="#topo" aria-label="telemeSYNC, início" data-i18n-aria-label="nav.home">tele<em>me</em>SYNC</a>
       <div class="lang-switch js-lang" role="group" aria-label="Língua · Language">
-        <button type="button" class="lang-switch__flag" data-lang="pt" lang="pt" title="Português" aria-label="Português" aria-pressed="true">
+        <a class="lang-switch__flag" href="/" hreflang="pt" data-lang="pt" lang="pt" title="Português" aria-label="Português" aria-current="true">
           <svg viewBox="0 0 30 20" aria-hidden="true"><rect width="12" height="20" fill="#006600"/><rect x="12" width="18" height="20" fill="#ff0000"/><circle cx="12" cy="10" r="4.2" fill="#ffcc00"/><circle cx="12" cy="10" r="2.6" fill="#ff0000" stroke="#fff" stroke-width=".8"/></svg>
-        </button>
-        <button type="button" class="lang-switch__flag" data-lang="en" lang="en" title="English" aria-label="English" aria-pressed="false">
+        </a>
+        <a class="lang-switch__flag" href="/en/" hreflang="en" data-lang="en" lang="en" title="English" aria-label="English">
           <svg viewBox="0 0 60 40" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><rect width="60" height="40" fill="#012169"/><path d="M0 0 60 40M60 0 0 40" stroke="#fff" stroke-width="8"/><path d="M0 0 60 40M60 0 0 40" stroke="#c8102e" stroke-width="3"/><path d="M30 0v40M0 20h60" stroke="#fff" stroke-width="12"/><path d="M30 0v40M0 20h60" stroke="#c8102e" stroke-width="7"/></svg>
-        </button>
-        <button type="button" class="lang-switch__flag" data-lang="fr" lang="fr" title="Français" aria-label="Français" aria-pressed="false">
+        </a>
+        <a class="lang-switch__flag" href="/fr/" hreflang="fr" data-lang="fr" lang="fr" title="Français" aria-label="Français">
           <svg viewBox="0 0 30 20" aria-hidden="true"><rect width="10" height="20" fill="#002654"/><rect x="10" width="10" height="20" fill="#fff"/><rect x="20" width="10" height="20" fill="#ce1126"/></svg>
-        </button>
-        <button type="button" class="lang-switch__flag" data-lang="es" lang="es" title="Español" aria-label="Español" aria-pressed="false">
+        </a>
+        <a class="lang-switch__flag" href="/es/" hreflang="es" data-lang="es" lang="es" title="Español" aria-label="Español">
           <svg viewBox="0 0 30 20" aria-hidden="true"><rect width="30" height="20" fill="#aa151b"/><rect y="5" width="30" height="10" fill="#f1bf00"/></svg>
-        </button>
-        <button type="button" class="lang-switch__flag" data-lang="de" lang="de" title="Deutsch" aria-label="Deutsch" aria-pressed="false">
+        </a>
+        <a class="lang-switch__flag" href="/de/" hreflang="de" data-lang="de" lang="de" title="Deutsch" aria-label="Deutsch">
           <svg viewBox="0 0 30 20" aria-hidden="true"><rect width="30" height="7" fill="#000"/><rect y="6.6" width="30" height="6.8" fill="#dd0000"/><rect y="13.3" width="30" height="6.7" fill="#ffce00"/></svg>
-        </button>
+        </a>
       </div>
       <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="menu" aria-label="Abrir menu">
         <span></span><span></span><span></span>
@@ -110,7 +124,7 @@
         </div>
         <figure class="hero__frame">
           <!-- Composição exportada pelo telemeSYNC (fundo transparente) por cima de uma paisagem ilustrativa -->
-          <img src="assets/images/hero-composicao.webp" width="1920" height="1080" data-i18n-alt="hero.alt" alt="Exemplo de composição do telemeSYNC: velocidade, inclinação, mapa da volta e painel de velocidade com o gráfico de altimetria dos últimos 10 km.">
+          <img src="/assets/images/hero-composicao.webp" width="1920" height="1080" data-i18n-alt="hero.alt" alt="Exemplo de composição do telemeSYNC: velocidade, inclinação, mapa da volta e painel de velocidade com o gráfico de altimetria dos últimos 10 km.">
           <figcaption data-i18n="hero.caption">Composição real exportada de uma volta, por cima de uma paisagem ilustrativa.</figcaption>
         </figure>
       </div>
@@ -194,7 +208,7 @@
         <h3 class="sponsors__title" data-i18n="sponsors.title">Patrocinadores</h3>
         <div class="sponsors">
           <article class="sponsor" aria-labelledby="patrocinador-alves">
-            <img class="sponsor__logo" src="assets/images/apoiante-alves-na-roda.webp" width="480" height="480" loading="lazy" data-i18n-alt="sponsors.alvesAlt" alt="Logótipo do Alves na Roda">
+            <img class="sponsor__logo" src="/assets/images/apoiante-alves-na-roda.webp" width="480" height="480" loading="lazy" data-i18n-alt="sponsors.alvesAlt" alt="Logótipo do Alves na Roda">
             <h4 id="patrocinador-alves">Alves na Roda</h4>
             <div class="sponsor__links">
               <a class="btn btn--small btn--ghost" href="https://www.youtube.com/channel/UCBBXkj3p9e81YS1_LJHircw" target="_blank" rel="noopener">YouTube ↗</a>
@@ -226,37 +240,37 @@
         <p class="muted" data-i18n="layers.dialsText">Novo design: gadgets redondos com aro de prato, um mapa circular que roda com a direção, o perfil de altimetria em cartão e um painel compacto com as médias.</p>
         <div class="gallery gallery--dials">
           <figure class="shot">
-            <img src="assets/images/mostrador-fc.webp" width="450" height="450" loading="lazy" data-i18n-alt="shot.mostrador-fc.alt" alt="Mostrador redondo de frequência cardíaca com aro de prato, barra de zonas e zona atual.">
+            <img src="/assets/images/mostrador-fc.webp" width="450" height="450" loading="lazy" data-i18n-alt="shot.mostrador-fc.alt" alt="Mostrador redondo de frequência cardíaca com aro de prato, barra de zonas e zona atual.">
             <figcaption data-i18n="shot.mostrador-fc">Frequência cardíaca com a zona atual</figcaption>
           </figure>
           <figure class="shot">
-            <img src="assets/images/mostrador-velocidade.webp" width="450" height="510" loading="lazy" data-i18n-alt="shot.mostrador-velocidade.alt" alt="Mostrador redondo de velocidade em km/h, com a velocidade média e máxima por baixo.">
+            <img src="/assets/images/mostrador-velocidade.webp" width="450" height="510" loading="lazy" data-i18n-alt="shot.mostrador-velocidade.alt" alt="Mostrador redondo de velocidade em km/h, com a velocidade média e máxima por baixo.">
             <figcaption data-i18n="shot.mostrador-velocidade">Velocidade, com média e máxima</figcaption>
           </figure>
           <figure class="shot">
-            <img src="assets/images/mostrador-altitude.webp" width="450" height="510" loading="lazy" data-i18n-alt="shot.mostrador-altitude.alt" alt="Mostrador redondo de altitude com o perfil do terreno recente, ganho e perda de elevação.">
+            <img src="/assets/images/mostrador-altitude.webp" width="450" height="510" loading="lazy" data-i18n-alt="shot.mostrador-altitude.alt" alt="Mostrador redondo de altitude com o perfil do terreno recente, ganho e perda de elevação.">
             <figcaption data-i18n="shot.mostrador-altitude">Altitude, com o terreno à frente e o desnível</figcaption>
           </figure>
           <figure class="shot">
-            <img src="assets/images/mostrador-inclinacao.webp" width="450" height="450" loading="lazy" data-i18n-alt="shot.mostrador-inclinacao.alt" alt="Mostrador redondo de inclinação em percentagem, com o terreno recente em laranja.">
+            <img src="/assets/images/mostrador-inclinacao.webp" width="450" height="450" loading="lazy" data-i18n-alt="shot.mostrador-inclinacao.alt" alt="Mostrador redondo de inclinação em percentagem, com o terreno recente em laranja.">
             <figcaption data-i18n="shot.mostrador-inclinacao">Inclinação</figcaption>
           </figure>
           <figure class="shot">
-            <img src="assets/images/mapa-circular.webp" width="450" height="450" loading="lazy" data-i18n-alt="shot.mapa-circular.alt" alt="Mapa circular centrado no ciclista, rodado na direção do movimento, com o norte indicado no aro.">
+            <img src="/assets/images/mapa-circular.webp" width="450" height="450" loading="lazy" data-i18n-alt="shot.mapa-circular.alt" alt="Mapa circular centrado no ciclista, rodado na direção do movimento, com o norte indicado no aro.">
             <figcaption data-i18n="shot.mapa-circular">Mapa circular que roda com a direção</figcaption>
           </figure>
           <figure class="shot">
-            <img src="assets/images/mostrador-tempo.webp" width="450" height="510" loading="lazy" data-i18n-alt="shot.mostrador-tempo.alt" alt="Mostrador redondo do tempo decorrido, com o tempo total da volta por baixo.">
+            <img src="/assets/images/mostrador-tempo.webp" width="450" height="510" loading="lazy" data-i18n-alt="shot.mostrador-tempo.alt" alt="Mostrador redondo do tempo decorrido, com o tempo total da volta por baixo.">
             <figcaption data-i18n="shot.mostrador-tempo">Tempo decorrido e total</figcaption>
           </figure>
         </div>
         <div class="gallery gallery--wide gallery--cards">
           <figure class="shot">
-            <img src="assets/images/perfil-cartao.webp" width="900" height="360" loading="lazy" data-i18n-alt="shot.perfil-cartao.alt" alt="Perfil de altimetria da volta inteira com eixos, ganho e perda de elevação e a posição atual.">
+            <img src="/assets/images/perfil-cartao.webp" width="900" height="360" loading="lazy" data-i18n-alt="shot.perfil-cartao.alt" alt="Perfil de altimetria da volta inteira com eixos, ganho e perda de elevação e a posição atual.">
             <figcaption data-i18n="shot.perfil-cartao">Perfil de altimetria com ganho e perda</figcaption>
           </figure>
           <figure class="shot">
-            <img src="assets/images/painel-compacto.webp" width="570" height="354" loading="lazy" data-i18n-alt="shot.painel-compacto.alt" alt="Painel compacto com a duração, a frequência cardíaca média, a velocidade média e a distância.">
+            <img src="/assets/images/painel-compacto.webp" width="570" height="354" loading="lazy" data-i18n-alt="shot.painel-compacto.alt" alt="Painel compacto com a duração, a frequência cardíaca média, a velocidade média e a distância.">
             <figcaption data-i18n="shot.painel-compacto">Painel compacto com as médias</figcaption>
           </figure>
         </div>
@@ -265,19 +279,19 @@
         <p class="muted" data-i18n="layers.panelsText">Mostrador, máximo, média, zona ou aceleração, e um gráfico dos últimos 10 min ou 10 km. O gráfico pode mostrar outra métrica.</p>
         <div class="gallery gallery--wide">
           <figure class="shot">
-            <img src="assets/images/painel-velocidade.webp" width="1500" height="420" loading="lazy" data-i18n-alt="shot.painel-velocidade.alt" alt="Painel de velocidade com mostrador, velocidade máxima e média, aceleração e gráfico de altimetria dos últimos 10 km.">
+            <img src="/assets/images/painel-velocidade.webp" width="1500" height="420" loading="lazy" data-i18n-alt="shot.painel-velocidade.alt" alt="Painel de velocidade com mostrador, velocidade máxima e média, aceleração e gráfico de altimetria dos últimos 10 km.">
             <figcaption data-i18n="shot.painel-velocidade">Velocidade, com o gráfico de altimetria dos últimos 10 km</figcaption>
           </figure>
           <figure class="shot">
-            <img src="assets/images/painel-fc.webp" width="1500" height="420" loading="lazy" data-i18n-alt="shot.painel-fc.alt" alt="Painel de frequência cardíaca com zona atual e gráfico dos últimos 10 minutos.">
+            <img src="/assets/images/painel-fc.webp" width="1500" height="420" loading="lazy" data-i18n-alt="shot.painel-fc.alt" alt="Painel de frequência cardíaca com zona atual e gráfico dos últimos 10 minutos.">
             <figcaption data-i18n="shot.painel-fc">Frequência cardíaca com zonas</figcaption>
           </figure>
           <figure class="shot">
-            <img src="assets/images/painel-altitude.webp" width="1500" height="420" loading="lazy" data-i18n-alt="shot.painel-altitude.alt" alt="Painel de altitude com gradiente verde e azul, máximo, mínimo e desnível acumulado.">
+            <img src="/assets/images/painel-altitude.webp" width="1500" height="420" loading="lazy" data-i18n-alt="shot.painel-altitude.alt" alt="Painel de altitude com gradiente verde e azul, máximo, mínimo e desnível acumulado.">
             <figcaption data-i18n="shot.painel-altitude">Altitude, com outro gradiente de cores</figcaption>
           </figure>
           <figure class="shot">
-            <img src="assets/images/painel-temperatura.webp" width="1500" height="420" loading="lazy" data-i18n-alt="shot.painel-temperatura.alt" alt="Painel de temperatura com mínimo, máximo e variação.">
+            <img src="/assets/images/painel-temperatura.webp" width="1500" height="420" loading="lazy" data-i18n-alt="shot.painel-temperatura.alt" alt="Painel de temperatura com mínimo, máximo e variação.">
             <figcaption data-i18n="shot.painel-temperatura">Temperatura</figcaption>
           </figure>
         </div>
@@ -285,27 +299,27 @@
         <h3 class="gallery__title" data-i18n="layers.gadgets">Gadgets</h3>
         <div class="gallery">
           <figure class="shot">
-            <img src="assets/images/mapa.webp" width="630" height="630" loading="lazy" data-i18n-alt="shot.mapa.alt" alt="Mapa do traçado da volta com a parte já percorrida destacada.">
+            <img src="/assets/images/mapa.webp" width="630" height="630" loading="lazy" data-i18n-alt="shot.mapa.alt" alt="Mapa do traçado da volta com a parte já percorrida destacada.">
             <figcaption data-i18n="shot.mapa">Mapa do traçado</figcaption>
           </figure>
           <figure class="shot">
-            <img src="assets/images/perfil.webp" width="960" height="300" loading="lazy" data-i18n-alt="shot.perfil.alt" alt="Perfil de altimetria da volta com a posição atual.">
+            <img src="/assets/images/perfil.webp" width="960" height="300" loading="lazy" data-i18n-alt="shot.perfil.alt" alt="Perfil de altimetria da volta com a posição atual.">
             <figcaption data-i18n="shot.perfil">Perfil de altimetria</figcaption>
           </figure>
           <figure class="shot">
-            <img src="assets/images/texto-speed.webp" loading="lazy" data-i18n-alt="shot.texto-speed.alt" alt="Gadget de velocidade em km/h.">
+            <img src="/assets/images/texto-speed.webp" loading="lazy" data-i18n-alt="shot.texto-speed.alt" alt="Gadget de velocidade em km/h.">
             <figcaption data-i18n="shot.texto-speed">Velocidade</figcaption>
           </figure>
           <figure class="shot">
-            <img src="assets/images/texto-grade.webp" loading="lazy" data-i18n-alt="shot.texto-grade.alt" alt="Gadget de inclinação em percentagem, com indicador por cor.">
+            <img src="/assets/images/texto-grade.webp" loading="lazy" data-i18n-alt="shot.texto-grade.alt" alt="Gadget de inclinação em percentagem, com indicador por cor.">
             <figcaption data-i18n="shot.texto-grade">Inclinação</figcaption>
           </figure>
           <figure class="shot">
-            <img src="assets/images/texto-heartRate.webp" loading="lazy" data-i18n-alt="shot.texto-heartRate.alt" alt="Gadget de frequência cardíaca colorido pela zona.">
+            <img src="/assets/images/texto-heartRate.webp" loading="lazy" data-i18n-alt="shot.texto-heartRate.alt" alt="Gadget de frequência cardíaca colorido pela zona.">
             <figcaption data-i18n="shot.texto-heartRate">Frequência cardíaca</figcaption>
           </figure>
           <figure class="shot">
-            <img src="assets/images/texto-distance.webp" loading="lazy" data-i18n-alt="shot.texto-distance.alt" alt="Gadget de distância percorrida em km.">
+            <img src="/assets/images/texto-distance.webp" loading="lazy" data-i18n-alt="shot.texto-distance.alt" alt="Gadget de distância percorrida em km.">
             <figcaption data-i18n="shot.texto-distance">Distância</figcaption>
           </figure>
         </div>
@@ -324,7 +338,7 @@
             <img class="video__poster js-video-poster" alt="" hidden>
             <button class="video__play" type="button" aria-label="Reproduzir o tutorial no YouTube" data-i18n-aria-label="demo.playTutorial">
               <span class="video__icon" aria-hidden="true"></span>
-              <span class="video__label js-video-label">Ver o tutorial</span>
+              <span class="video__label js-video-label" data-i18n="ui.tutorialWatch">Ver o tutorial</span>
             </button>
           </div>
           <p class="video-note" role="note">
@@ -338,7 +352,7 @@
             <img class="video__poster js-video-poster" alt="" hidden>
             <button class="video__play" type="button" aria-label="Reproduzir a demonstração no YouTube" data-i18n-aria-label="demo.play">
               <span class="video__icon" aria-hidden="true"></span>
-              <span class="video__label js-video-label">Ver a demonstração</span>
+              <span class="video__label js-video-label" data-i18n="ui.videoWatch">Ver a demonstração</span>
             </button>
           </div>
           <p class="video-credit" data-i18n="demo.credit">
@@ -559,7 +573,7 @@
         <span class="visits__dot" aria-hidden="true"></span>
         <span><b class="js-visits-count">—</b> <span data-i18n="footer.visits">visitas ao site</span></span>
       </p>
-      <p><a href="legal.html" data-i18n="footer.legal">Aviso legal, termos e privacidade</a></p>
+      <p><a href="/legal.html" data-i18n="footer.legal">Aviso legal, termos e privacidade</a></p>
       <p class="fine" data-i18n="footer.fine">
         GoPro, DJI, Insta360, Garmin, Bryton, iGPSPORT, DaVinci Resolve, Premiere Pro e Final Cut Pro são marcas dos respetivos titulares,
         referidas apenas para indicar compatibilidade. Estatísticas de visitas anónimas, sem cookies.
