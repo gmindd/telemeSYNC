@@ -4,7 +4,7 @@
    Uses t(), dict, currentLang and timeAgo() from script.js; redraws when the language changes.
    ========================================================================== */
 
-const STATS_URL = 'data/stats.json';
+const STATS_URL = '/data/stats.json';
 // Chart colours (checked for colour-blind separation and contrast on the dark panel)
 const STATS_COLORS = { windows: '#3a8fe0', mac: '#e8691a', visits: '#e8691a' };
 

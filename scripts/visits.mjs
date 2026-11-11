@@ -41,6 +41,11 @@ export function parseLine(line) {
   return { time, ip, method, status: Number(status), uri, ref, ua, origin, purpose };
 }
 
+/** Page counted for a path: the same page in any language counts as one ("/en/index.html" → "/"). */
+export function pagePath(uri) {
+  return PAGES[uri] ?? PAGES[uri.replace(/^\/(en|fr|es|de)(?=\/)/, '')];
+}
+
 export const isBot = (ua) => !ua || ua === '-' || ua.length < 20 || BOT_UA.test(ua);
 
 /** What a log line is for the statistics: 'page', 'asset' (script.js, proves a real browser), 'app' or null. */
@@ -49,7 +54,7 @@ export function classify(e) {
   if (e.status !== 200 && e.status !== 304) return null;
   if (e.uri === '/data/latest.json') return /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$/i.test(e.origin) ? 'app' : null;
   if (isBot(e.ua) || /prefetch|prerender/i.test(e.purpose)) return null;
-  if (PAGES[e.uri]) return 'page';
+  if (pagePath(e.uri)) return 'page';
   if (e.uri === '/script.js') return 'asset';
   return null;
 }
@@ -311,7 +316,7 @@ export function addLine(state, line, geo) {
     if (!open.assets.includes(h)) open.assets.push(h);
   } else if (kind === 'page') {
     if (open.events.length < MAX_EVENTS_PER_DAY) {
-      open.events.push({ h, p: PAGES[e.uri], r: refName(e.ref), c: countryOf(geo, e.ip), s: systemOf(e.ua), m: isMobile(e.ua) ? 1 : 0 });
+      open.events.push({ h, p: pagePath(e.uri), r: refName(e.ref), c: countryOf(geo, e.ip), s: systemOf(e.ua), m: isMobile(e.ua) ? 1 : 0 });
     }
   } else if (kind === 'app') {
     if (!open.app.includes(h)) open.app.push(h);

@@ -114,3 +114,19 @@ describe('visits from the server log', () => {
     expect(refName('https://www.btt.pt/forum')).toBe('btt.pt');
   });
 });
+
+describe('visits in every language', () => {
+  it('counts the pages in English, French, Spanish and German as the same pages', async () => {
+    // @ts-expect-error plain JavaScript module
+    const { pagePath } = await import('../visits.mjs');
+    expect(pagePath('/en/index.html')).toBe('/');
+    expect(pagePath('/de/stats.html')).toBe('/stats');
+    expect(pagePath('/index.html')).toBe('/');
+    expect(pagePath('/en/style.css')).toBeUndefined();
+    const s = emptyState();
+    addLine(s, line('2026-11-10T10:00:00+00:00', '8.8.4.4', '/fr/index.html', CHROME), GEO);
+    addLine(s, line('2026-11-10T10:00:01+00:00', '8.8.4.4', '/script.js', CHROME), GEO);
+    settle(s, '2026-11-10');
+    expect(s.days['2026-11-10'].pages).toEqual({ '/': 1 });
+  });
+});

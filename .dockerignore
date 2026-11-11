@@ -6,3 +6,4 @@
 !scripts/stats-collector.mjs
 !scripts/stats-collector.sh
 !scripts/visits.mjs
+!scripts/build-langs.mjs
