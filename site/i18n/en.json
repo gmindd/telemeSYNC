@@ -242,5 +242,7 @@
   "stats.colViews": "Pages viewed",
   "stats.colApp": "Used the program",
   "stats.colDownloads": "Downloads",
-  "stats.thisMonth": "(this month, so far)"
+  "stats.thisMonth": "(this month, so far)",
+  "stats.visitsLeadPartial": "{n} visits this month. Day-by-day detail only exists from {date}.",
+  "stats.countingNote": "The site’s own count began on {date}."
 }

@@ -242,5 +242,7 @@
   "stats.colViews": "Pages vues",
   "stats.colApp": "Ont utilisé le programme",
   "stats.colDownloads": "Téléchargements",
-  "stats.thisMonth": "(ce mois-ci, jusqu’ici)"
+  "stats.thisMonth": "(ce mois-ci, jusqu’ici)",
+  "stats.visitsLeadPartial": "{n} visites ce mois-ci. Le détail jour par jour n’existe qu’à partir du {date}.",
+  "stats.countingNote": "Le comptage du site lui-même a commencé le {date}."
 }

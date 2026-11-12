@@ -111,24 +111,54 @@ async function collectVisits(today) {
 /**
  * Counts kept from before the counter started again (e.g. a redeploy without a persistent volume),
  * written by hand in data/stats-manual.json → "before", per month:
- *   { "months": { "2026-11": { "visitors": 120, "views": 300, "app": 8, "downloads": 10 } } }
- * They are added to that month's counts made by the server. Program users are added as they are (a
- * person counted before and after the restart counts twice: write the earlier figure minus that).
+ *   { "months": { "2026-11": { "visitors": 80, "views": 300, "app": 48, "downloads": 10,
+ *                              "countries": { "PT": 47, "ES": 1 } } } }
+ * They are added to that month's counts made by the server, and the visitors also to the all-time
+ * total. Program users are added as they are (a person counted before and after the restart counts
+ * twice: write the earlier figure minus that). Visitors added without pages viewed leave the month's
+ * pages viewed unknown (null), so the page does not show fewer pages than visitors.
  */
 export function addCountsBefore(out, before) {
   const months = before && typeof before === 'object' && before.months && typeof before.months === 'object' ? before.months : null;
-  if (!months || !out.monthly) return;
+  if (!months) return;
+  const num = (v) => (Number(v) > 0 ? Number(v) : 0);
   const add = (m) => {
     const b = m && months[m.key];
     if (!b) return;
-    for (const k of ['visitors', 'views', 'app', 'downloads']) if (Number(b[k]) > 0) m[k] = (m[k] ?? 0) + Number(b[k]);
+    for (const k of ['visitors', 'views', 'app', 'downloads']) if (num(b[k])) m[k] = (m[k] ?? 0) + num(b[k]);
+    if (num(b.visitors) && !num(b.views)) m.views = null;
+    if (num(b.visitors)) m.handAdded = true;
+    const extra = b.countries && typeof b.countries === 'object' ? Object.entries(b.countries).filter(([code, n]) => /^[A-Z]{2}$/.test(code) && num(n)) : [];
+    if (extra.length && Array.isArray(m.countries)) {
+      const list = m.countries.map((c) => ({ ...c }));
+      let added = 0;
+      for (const [code, n] of extra) {
+        const c = list.find((x) => String(x.id).toUpperCase() === code);
+        if (c) c.count += num(n);
+        else {
+          list.push({ id: code, name: code, count: num(n) });
+          added++;
+        }
+      }
+      m.countries = list.sort((x, y) => y.count - x.count).slice(0, 10);
+      m.countriesCount = (m.countriesCount ?? 0) + added;
+    }
   };
-  add(out.monthly.current);
-  add(out.monthly.previous);
-  for (const m of out.monthly.history ?? []) add(m);
-  // A month that had counts only before the restart still shows as the previous month.
-  const prev = out.monthly.history?.at(-2);
-  if (!out.monthly.previous && prev && months[prev.key]) out.monthly.previous = { ...prev, countries: [], countriesCount: 0, referrers: [], systems: [], devices: { mobile: 0, computer: 0 } };
+  if (out.monthly) {
+    // A month that had counts only before the restart still shows as the previous month.
+    const prevKey = out.monthly.history?.at(-2)?.key;
+    if (!out.monthly.previous && prevKey && months[prevKey]) {
+      const h = out.monthly.history.at(-2);
+      out.monthly.previous = { key: h.key, days: h.days, visitors: h.visitors, views: h.views, app: h.app, downloads: h.downloads, downloadsSince: h.downloadsSince ?? null, countries: [], countriesCount: 0, referrers: [], systems: [], devices: { mobile: 0, computer: 0 } };
+    }
+    add(out.monthly.current);
+    add(out.monthly.previous);
+    for (const m of out.monthly.history ?? []) add(m);
+  }
+  // All-time visitors: every month written by hand counts.
+  if (out.visits && Number.isFinite(out.visits.total)) {
+    out.visits.total += Object.values(months).reduce((n, b) => n + num(b?.visitors), 0);
+  }
 }
 
 /**
@@ -221,6 +251,8 @@ export async function collect(now = new Date()) {
   }
 
   addCountsBefore(out, manual.before);
+  // The day the site's own counting began (shown on the page, e.g. "counting since 10 November").
+  if (/^\d{4}-\d{2}-\d{2}$/.test(String(manual.countingSince ?? ''))) out.countingSince = manual.countingSince;
 
   // Without a persistent volume every redeploy starts the counts again: say so where it is seen.
   if (!(await isPersistent(DATA_DIR))) status.storage = NOT_PERSISTENT(DATA_DIR);

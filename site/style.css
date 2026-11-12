@@ -344,6 +344,7 @@ p { margin: 0 0 var(--spacing-sm); }
 .stats-updated__dot { width: 8px; height: 8px; border-radius: 50%; background: var(--color-ok); box-shadow: 0 0 0 4px rgba(76, 195, 138, 0.18); }
 .kpis { display: grid; gap: var(--spacing-sm); grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: var(--spacing-md); }
 .kpis-title { margin: var(--spacing-lg) 0 0; font-size: clamp(1.3rem, 3.6vw, 1.7rem); }
+.kpis-note { margin: var(--spacing-sm) 0 0; color: var(--color-muted); font-size: 0.9rem; }
 .kpis-title--small { font-size: 1.1rem; color: var(--color-muted); }
 .kpi {
   display: flex; flex-direction: column; gap: 4px; padding: var(--spacing-md); border-radius: var(--radius-md);

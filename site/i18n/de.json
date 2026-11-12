@@ -242,5 +242,7 @@
   "stats.colViews": "Seitenaufrufe",
   "stats.colApp": "Programm genutzt",
   "stats.colDownloads": "Downloads",
-  "stats.thisMonth": "(dieser Monat, bisher)"
+  "stats.thisMonth": "(dieser Monat, bisher)",
+  "stats.visitsLeadPartial": "{n} Besuche in diesem Monat. Die Aufschlüsselung nach Tagen gibt es erst ab dem {date}.",
+  "stats.countingNote": "Die eigene Zählung der Website begann am {date}."
 }

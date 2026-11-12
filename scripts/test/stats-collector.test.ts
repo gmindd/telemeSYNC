@@ -31,6 +31,19 @@ describe('stats collector', () => {
     addCountsBefore(out, undefined);
   });
 
+  it('adds hand-written countries and visitors to the month and to the all-time total', () => {
+    const cur = { key: '2026-11', visitors: 3, views: 5, app: 1, days: 1, countries: [{ id: 'PT', name: 'PT', count: 2 }, { id: 'FR', name: 'FR', count: 1 }], countriesCount: 2, referrers: [], systems: [], devices: { mobile: 0, computer: 0 } };
+    const out = { visits: { total: 3 }, monthly: { current: cur, previous: null, history: [{ ...cur }] } };
+    addCountsBefore(out, { months: { '2026-11': { visitors: 80, app: 48, countries: { PT: 47, BE: 22, xx: 5 } } } });
+    expect(out.visits.total).toBe(83);
+    expect(out.monthly.current).toMatchObject({ visitors: 83, app: 49, views: null, handAdded: true, countriesCount: 3 });
+    expect(out.monthly.current.countries).toEqual([
+      { id: 'PT', name: 'PT', count: 49 },
+      { id: 'BE', name: 'BE', count: 22 },
+      { id: 'FR', name: 'FR', count: 1 },
+    ]);
+  });
+
   it('counts the downloads of each month from the daily snapshots', () => {
     const monthly = { current: { key: '2026-12' } as Record<string, unknown>, previous: { key: '2026-11' } as Record<string, unknown>, history: [{ key: '2026-11' }, { key: '2026-12' }] as Record<string, unknown>[] };
     const history = [

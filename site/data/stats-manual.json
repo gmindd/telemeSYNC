@@ -1,9 +1,23 @@
 {
-  "_help": "Numbers added by hand to the /stats page. audience: e.g. {\"label\": \"Instagram followers\", \"value\": 1200, \"url\": \"https://www.instagram.com/...\"}, shown as they are. before.months: counts of a month from before the counter started again (see addCountsBefore in scripts/stats-collector.mjs), added to the server's counts of that month. The collector reads this file every hour.",
+  "_help": "Numbers added by hand to the /stats page. audience: e.g. {\"label\": \"Instagram followers\", \"value\": 1200, \"url\": \"https://www.instagram.com/...\"}, shown as they are. countingSince: the day the site's own counting began (shown on the page). before.months: counts of a month from before the counter started again (visitors, views, app, downloads, countries {\"PT\": 47}; see addCountsBefore in scripts/stats-collector.mjs), added to the server's counts of that month. The collector reads this file every hour.",
   "audience": [],
+  "countingSince": "2026-11-10",
   "before": {
     "months": {
-      "2026-11": { "visitors": 4, "views": 14, "app": 8 }
+      "2026-11": {
+        "visitors": 80,
+        "app": 48,
+        "countries": {
+          "PT": 47,
+          "BE": 22,
+          "US": 6,
+          "DE": 1,
+          "CH": 1,
+          "BR": 1,
+          "IE": 1,
+          "ES": 1
+        }
+      }
     }
   }
 }
