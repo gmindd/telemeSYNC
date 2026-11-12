@@ -111,12 +111,15 @@ async function collectVisits(today) {
 /**
  * Counts kept from before the counter started again (e.g. a redeploy without a persistent volume),
  * written by hand in data/stats-manual.json → "before", per month:
- *   { "months": { "2026-11": { "visitors": 80, "views": 300, "app": 48, "downloads": 10,
- *                              "countries": { "PT": 47, "ES": 1 } } } }
+ *   { "months": { "2026-11": { "visitors": 439, "views": 900, "app": 48, "downloads": 10,
+ *                              "countries": { "PT": 265, "ES": 1 },
+ *                              "systems": { "Windows": 162, "iOS": 88 },
+ *                              "devices": { "mobile": 224, "computer": 215 } } } }
  * They are added to that month's counts made by the server, and the visitors also to the all-time
  * total. Program users are added as they are (a person counted before and after the restart counts
  * twice: write the earlier figure minus that). Visitors added without pages viewed leave the month's
- * pages viewed unknown (null), so the page does not show fewer pages than visitors.
+ * pages viewed unknown (null), so the page does not show fewer pages than visitors; without devices,
+ * phone or computer is marked unknown (devicesUnknown).
  */
 export function addCountsBefore(out, before) {
   const months = before && typeof before === 'object' && before.months && typeof before.months === 'object' ? before.months : null;
@@ -128,21 +131,30 @@ export function addCountsBefore(out, before) {
     for (const k of ['visitors', 'views', 'app', 'downloads']) if (num(b[k])) m[k] = (m[k] ?? 0) + num(b[k]);
     if (num(b.visitors) && !num(b.views)) m.views = null;
     if (num(b.visitors)) m.handAdded = true;
-    const extra = b.countries && typeof b.countries === 'object' ? Object.entries(b.countries).filter(([code, n]) => /^[A-Z]{2}$/.test(code) && num(n)) : [];
-    if (extra.length && Array.isArray(m.countries)) {
-      const list = m.countries.map((c) => ({ ...c }));
+    // Lists of the month ({id, name, count}): the hand-written counts are merged in by name.
+    const merge = (field, extra, valid, limit) => {
+      const entries = extra && typeof extra === 'object' ? Object.entries(extra).filter(([k, n]) => valid(k) && num(n)) : [];
+      if (!entries.length || !Array.isArray(m[field])) return 0;
+      const list = m[field].map((c) => ({ ...c }));
       let added = 0;
-      for (const [code, n] of extra) {
-        const c = list.find((x) => String(x.id).toUpperCase() === code);
+      for (const [k, n] of entries) {
+        const c = list.find((x) => String(x.id ?? x.name).toUpperCase() === k.toUpperCase());
         if (c) c.count += num(n);
         else {
-          list.push({ id: code, name: code, count: num(n) });
+          list.push({ id: k, name: k, count: num(n) });
           added++;
         }
       }
-      m.countries = list.sort((x, y) => y.count - x.count).slice(0, 10);
-      m.countriesCount = (m.countriesCount ?? 0) + added;
-    }
+      m[field] = list.sort((x, y) => y.count - x.count).slice(0, limit);
+      return added;
+    };
+    const newCountries = merge('countries', b.countries, (k) => /^[A-Z]{2}$/.test(k), 10);
+    if (newCountries) m.countriesCount = (m.countriesCount ?? 0) + newCountries;
+    merge('systems', b.systems, (k) => k.length > 0 && k.length < 40, 6);
+    const dev = b.devices && typeof b.devices === 'object' ? b.devices : null;
+    if (dev && (num(dev.mobile) || num(dev.computer)) && m.devices) {
+      m.devices = { mobile: (m.devices.mobile ?? 0) + num(dev.mobile), computer: (m.devices.computer ?? 0) + num(dev.computer) };
+    } else if (num(b.visitors)) m.devicesUnknown = true;
   };
   if (out.monthly) {
     // A month that had counts only before the restart still shows as the previous month.

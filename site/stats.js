@@ -147,10 +147,9 @@ function monthTiles(m, compare) {
   tiles.push({ value: fmtNum(m.app ?? 0), label: st('stats.kpiApp'), sub: vs('app') || st('stats.kpiAppSub') });
   if (m.downloads != null) tiles.push({ value: fmtNum(m.downloads), label: st('stats.kpiMonthDownloads'), sub: vs('downloads') || (m.downloadsSince ? st('stats.kpiSinceDay', { date: fmtDate(m.downloadsSince, { day: 'numeric', month: 'long' }) }) : '') });
   if (m.countriesCount) tiles.push({ value: fmtNum(m.countriesCount), label: st('stats.kpiCountries'), sub: st('stats.kpiCountriesSub') });
-  // Phone or computer is known only for the visits counted by the server: left out when part of the
-  // month was written by hand.
+  // Phone or computer: left out when part of the month was written by hand without it.
   const dev = m.devices;
-  if (!m.handAdded && dev && dev.mobile + dev.computer > 0) {
+  if (!m.devicesUnknown && dev && dev.mobile + dev.computer > 0) {
     const all = dev.mobile + dev.computer;
     tiles.push({ value: fmtPct(dev.mobile, all), label: st('stats.kpiMobile'), sub: st('stats.kpiMobileSub', { p: fmtPct(dev.computer, all) }) });
   }
