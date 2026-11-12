@@ -296,7 +296,7 @@ export function isoWeek(day) {
 }
 
 export function emptyState() {
-  return { version: 1, since: null, offset: 0, days: {}, open: {}, weeks: {}, openWeeks: {} };
+  return { version: 1, since: null, offset: 0, days: {}, open: {}, weeks: {}, openWeeks: {}, months: {}, openMonths: {} };
 }
 
 const MAX_EVENTS_PER_DAY = 100_000;
@@ -324,6 +324,11 @@ export function addLine(state, line, geo) {
     const w = (state.openWeeks[week] ??= { salt: salt(), app: [] });
     const hw = sha(`${w.salt}|${e.ip}|${e.ua}`);
     if (!w.app.includes(hw)) w.app.push(hw);
+    // And per month (people who opened the program this month), with a monthly salt.
+    state.openMonths ??= {};
+    const mo = (state.openMonths[day.slice(0, 7)] ??= { salt: salt(), app: [] });
+    const hm = sha(`${mo.salt}|${e.ip}|${e.ua}`);
+    if (!mo.app.includes(hm)) mo.app.push(hm);
   }
 }
 
@@ -364,6 +369,15 @@ export function settle(state, today) {
   }
   const thisWeek = isoWeek(today);
   const lastWeek = isoWeek(new Date(Date.parse(`${today}T00:00:00Z`) - 7 * 86_400_000).toISOString().slice(0, 10));
+  // Months: the codes of this month and the previous one are kept, older ones deleted for good.
+  state.months ??= {};
+  state.openMonths ??= {};
+  const thisMonth = today.slice(0, 7);
+  const prevMonth = previousMonth(thisMonth);
+  for (const [month, m] of Object.entries(state.openMonths)) {
+    state.months[month] = { app: m.app.length };
+    if (month !== thisMonth && month !== prevMonth) delete state.openMonths[month];
+  }
   for (const [week, w] of Object.entries(state.openWeeks)) {
     state.weeks[week] = { app: w.app.length };
     if (week !== thisWeek && week !== lastWeek) delete state.openWeeks[week];
@@ -381,6 +395,54 @@ const sumInto = (target, src) => {
   for (const [k, v] of Object.entries(src ?? {})) target[k] = (target[k] ?? 0) + v;
   return target;
 };
+
+/** "2026-11" → "2026-10". */
+export function previousMonth(month) {
+  const [y, m] = month.split('-').map(Number);
+  return m === 1 ? `${y - 1}-12` : `${y}-${String(m - 1).padStart(2, '0')}`;
+}
+
+/** This month and the five before it, oldest first. */
+export function lastMonths(today, n = 6) {
+  const out = [today.slice(0, 7)];
+  while (out.length < n) out.unshift(previousMonth(out[0]));
+  return out;
+}
+
+/** Counts of one month from the daily counts: visitors, views, countries, origins, systems, devices. */
+export function monthSummary(state, month) {
+  const countries = {};
+  const refs = {};
+  const systems = {};
+  let visitors = 0;
+  let views = 0;
+  let mobile = 0;
+  let computer = 0;
+  let days = 0;
+  for (const [day, d] of Object.entries(state.days)) {
+    if (!day.startsWith(month)) continue;
+    days++;
+    visitors += d.visitors ?? 0;
+    views += d.views ?? 0;
+    sumInto(countries, d.countries);
+    sumInto(refs, d.refs);
+    sumInto(systems, d.systems);
+    mobile += d.mobile ?? 0;
+    computer += d.computer ?? 0;
+  }
+  return {
+    key: month,
+    days,
+    visitors,
+    views,
+    app: state.months?.[month]?.app ?? 0,
+    countries: top(countries, 10),
+    countriesCount: Object.keys(countries).length,
+    referrers: top(refs, 8).map(({ name, count }) => ({ name, count })),
+    systems: top(systems, 6),
+    devices: { mobile, computer },
+  };
+}
 
 /** The "visits" and "app" parts of stats.json. */
 export function report(state, today, dailyDays = 90) {
@@ -412,7 +474,20 @@ export function report(state, today, dailyDays = 90) {
   const lastWeek = isoWeek(new Date(end - 7 * 86_400_000).toISOString().slice(0, 10));
   const complete = state.weeks[lastWeek] && state.since && state.since <= new Date(end - 7 * 86_400_000).toISOString().slice(0, 10);
   const weekKey = complete ? lastWeek : thisWeek;
+  const months = lastMonths(today);
+  const current = monthSummary(state, months[5]);
+  const previous = monthSummary(state, months[4]);
   return {
+    monthly: {
+      current,
+      previous: previous.days || previous.app ? previous : null,
+      history: months.map((m) => {
+        const x = monthSummary(state, m);
+        return { key: m, visitors: x.visitors, views: x.views, app: x.app, days: x.days };
+      }),
+      // This month's days (days without visits included).
+      daily: daily.filter((d) => d.day.startsWith(months[5])),
+    },
     visits: {
       source: 'server',
       since: state.since,

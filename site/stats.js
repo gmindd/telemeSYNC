@@ -1,6 +1,7 @@
 /* ==========================================================================
    /stats page: reads data/stats.json (written every hour by scripts/stats-collector.mjs) and draws the
-   summary numbers, the visits and downloads charts and the top countries / origins / systems.
+   this month's numbers, the previous month, the last 6 months, this month's visits per day, the
+   downloads per version and this month's top countries / origins / systems.
    Uses t(), dict, currentLang and timeAgo() from script.js; redraws when the language changes.
    ========================================================================== */
 
@@ -12,15 +13,16 @@ const STATS_COLORS = { windows: '#3a8fe0', mac: '#e8691a', visits: '#e8691a' };
 const STATS_PT = {
   'stats.updated': 'Atualizado {time}',
   'stats.unavailable': 'Estatísticas indisponíveis de momento. Volte a tentar daqui a pouco.',
+  'stats.monthTitle': 'Este mês · {month}',
+  'stats.prevLead': 'Os números de {month}, o mês completo.',
   'stats.kpiVisits': 'visitas ao site',
-  'stats.kpiVisits30': '{n} nos últimos 30 dias',
-  'stats.kpiVisitsSince': 'contadas desde {date}',
-  'stats.kpiApp': 'usaram o programa esta semana',
-  'stats.kpiAppLast': 'usaram o programa na semana passada',
-  'stats.kpiAppSub': 'pessoas diferentes que abriram o programa',
-  'stats.appLead': 'Pessoas diferentes que abriram o programa em cada dia (o programa verifica se há versão nova ao abrir).',
-  'stats.usersOn': '{n} pessoas',
-  'stats.kpiDownloads': 'downloads do programa',
+  'stats.kpiViews': '{n} páginas vistas',
+  'stats.kpiApp': 'pessoas usaram o programa',
+  'stats.kpiAppSub': 'pessoas diferentes que o abriram',
+  'stats.kpiMonthDownloads': 'downloads do programa',
+  'stats.kpiSinceDay': 'desde {date}',
+  'stats.inMonth': '{n} em {month}',
+  'stats.kpiDownloads': 'downloads no total',
   'stats.kpiDownloadsSince': 'desde {date}',
   'stats.kpiCountries': 'países',
   'stats.kpiCountriesSub': 'de onde nos visitam',
@@ -30,12 +32,16 @@ const STATS_PT = {
   'stats.kpiSupportersSub': 'pagaram um café ao projeto',
   'stats.kpiReleases': 'versões lançadas',
   'stats.kpiReleasesSub': 'a mais recente é a {v}',
-  'stats.visitsLead': '{n} visitas nos últimos 30 dias, {w} nos últimos 7.',
+  'stats.visitsLead': '{n} visitas até agora, em {d} dias.',
   'stats.visitorsOn': '{n} visitantes',
   'stats.downloadsLead': '{n} downloads no total: {w} para Windows e {m} para macOS.',
+  'stats.colMonth': 'Mês',
+  'stats.colViews': 'Páginas vistas',
+  'stats.colApp': 'Usaram o programa',
+  'stats.colDownloads': 'Downloads',
+  'stats.thisMonth': '(este mês, até agora)',
   'stats.colDay': 'Dia',
   'stats.colVisitors': 'Visitantes',
-  'stats.colUsers': 'Pessoas',
   'stats.colVersion': 'Versão',
   'stats.colDate': 'Data',
   'stats.colTotal': 'Total',
@@ -112,59 +118,81 @@ function hideTip() {
 
 // ---------------------------------------------------------------------------------------------- KPIs
 
-function renderKpis(d) {
-  const box = document.querySelector('.js-kpis');
-  const tiles = [];
-  const v = d.visits;
-  if (v?.total != null) {
-    const recent = v.since && Date.now() - Date.parse(`${v.since}T00:00:00Z`) < 30 * 86_400_000;
-    tiles.push({ value: fmtNum(v.total), label: st('stats.kpiVisits'), sub: recent ? st('stats.kpiVisitsSince', { date: fmtDate(v.since) }) : st('stats.kpiVisits30', { n: fmtNum(v.last30) }) });
-  }
-  const week = d.app?.week;
-  if (week?.n) tiles.push({ value: fmtNum(week.n), label: st(week.complete ? 'stats.kpiAppLast' : 'stats.kpiApp'), sub: st('stats.kpiAppSub') });
-  const dl = d.downloads;
-  if (dl?.total != null) tiles.push({ value: fmtNum(dl.total), label: st('stats.kpiDownloads'), sub: dl.since ? st('stats.kpiDownloadsSince', { date: fmtDate(dl.since) }) : '' });
-  if (v?.countriesCount) tiles.push({ value: fmtNum(v.countriesCount), label: st('stats.kpiCountries'), sub: st('stats.kpiCountriesSub') });
-  const dev = v?.devices;
-  if (dev && dev.mobile + dev.computer > 0) {
-    const all = dev.mobile + dev.computer;
-    tiles.push({ value: fmtPct(dev.mobile, all), label: st('stats.kpiMobile'), sub: st('stats.kpiMobileSub', { p: fmtPct(dev.computer, all) }) });
-  }
-  if (d.supporters?.count) tiles.push({ value: fmtNum(d.supporters.count), label: st('stats.kpiSupporters'), sub: st('stats.kpiSupportersSub') });
-  if (d.project?.releases) tiles.push({ value: fmtNum(d.project.releases), label: st('stats.kpiReleases'), sub: d.project.latest ? st('stats.kpiReleasesSub', { v: d.project.latest }) : '' });
-  for (const a of d.audience ?? []) {
-    const label = a.labels?.[currentLang] ?? a.label;
-    const value = el('span', { class: 'kpi__value', text: fmtNum(a.value) });
-    tiles.push({ node: value, label, url: a.url });
-  }
+/** "novembro de 2026" (capitalised: "Novembro de 2026"). */
+function monthName(key, opts = { month: 'long', year: 'numeric' }, capital = true) {
+  const text = new Date(`${key}-15T12:00:00`).toLocaleDateString(t('locale'), opts);
+  return capital ? text.charAt(0).toUpperCase() + text.slice(1) : text;
+}
+
+function kpiTiles(box, tiles) {
   box.replaceChildren(
     ...tiles.map((tile) => {
-      const value = tile.node ?? el('span', { class: 'kpi__value', text: tile.value });
-      const card = el(tile.url ? 'a' : 'div', tile.url ? { class: 'kpi kpi--link', href: tile.url, target: '_blank', rel: 'noopener' } : { class: 'kpi' }, [
+      const value = el('span', { class: 'kpi__value', text: tile.value });
+      return el(tile.url ? 'a' : 'div', tile.url ? { class: 'kpi kpi--link', href: tile.url, target: '_blank', rel: 'noopener' } : { class: 'kpi' }, [
         value,
         el('span', { class: 'kpi__label', text: tile.label }),
         tile.sub ? el('span', { class: 'kpi__sub', text: tile.sub }) : null,
       ]);
-      return card;
     }),
   );
 }
 
+/** Tiles of one month: visits, people using the program, downloads, countries, phone or computer. */
+function monthTiles(m, compare) {
+  const tiles = [];
+  const vs = (k) => (compare && compare[k] != null ? st('stats.inMonth', { n: fmtNum(compare[k]), month: monthName(compare.key, { month: 'long' }, false) }) : '');
+  tiles.push({ value: fmtNum(m.visitors ?? 0), label: st('stats.kpiVisits'), sub: vs('visitors') || (m.views ? st('stats.kpiViews', { n: fmtNum(m.views) }) : '') });
+  tiles.push({ value: fmtNum(m.app ?? 0), label: st('stats.kpiApp'), sub: vs('app') || st('stats.kpiAppSub') });
+  if (m.downloads != null) tiles.push({ value: fmtNum(m.downloads), label: st('stats.kpiMonthDownloads'), sub: vs('downloads') || (m.downloadsSince ? st('stats.kpiSinceDay', { date: fmtDate(m.downloadsSince, { day: 'numeric', month: 'long' }) }) : '') });
+  if (m.countriesCount) tiles.push({ value: fmtNum(m.countriesCount), label: st('stats.kpiCountries'), sub: st('stats.kpiCountriesSub') });
+  const dev = m.devices;
+  if (dev && dev.mobile + dev.computer > 0) {
+    const all = dev.mobile + dev.computer;
+    tiles.push({ value: fmtPct(dev.mobile, all), label: st('stats.kpiMobile'), sub: st('stats.kpiMobileSub', { p: fmtPct(dev.computer, all) }) });
+  }
+  return tiles;
+}
+
+function renderKpis(d) {
+  const mo = d.monthly;
+  const title = document.querySelector('.js-month-title');
+  title.hidden = !mo?.current;
+  if (mo?.current) {
+    title.textContent = st('stats.monthTitle', { month: monthName(mo.current.key) });
+    kpiTiles(document.querySelector('.js-kpis'), monthTiles(mo.current, mo.previous));
+  }
+  const all = [];
+  const dl = d.downloads;
+  if (dl?.total != null) all.push({ value: fmtNum(dl.total), label: st('stats.kpiDownloads'), sub: dl.since ? st('stats.kpiDownloadsSince', { date: fmtDate(dl.since) }) : '' });
+  if (d.supporters?.count) all.push({ value: fmtNum(d.supporters.count), label: st('stats.kpiSupporters'), sub: st('stats.kpiSupportersSub') });
+  if (d.project?.releases) all.push({ value: fmtNum(d.project.releases), label: st('stats.kpiReleases'), sub: d.project.latest ? st('stats.kpiReleasesSub', { v: d.project.latest }) : '' });
+  for (const a of d.audience ?? []) all.push({ value: fmtNum(a.value), label: a.labels?.[currentLang] ?? a.label, url: a.url });
+  kpiTiles(document.querySelector('.js-kpis-all'), all);
+}
+
+function renderPrevious(d) {
+  const sec = document.querySelector('.js-sec-prev');
+  const prev = d.monthly?.previous;
+  sec.hidden = !prev;
+  if (!prev) return;
+  document.querySelector('.js-prev-lead').textContent = st('stats.prevLead', { month: monthName(prev.key, undefined, false) });
+  kpiTiles(document.querySelector('.js-kpis-prev'), monthTiles(prev, null));
+}
+
 // -------------------------------------------------------------------------------------- Daily charts
 
-/** Bar chart of one value per day (single series: no legend, the section title names it). */
-function drawDaily(host, daily, color, tipKey, title) {
+/** Bar chart of one value per slot (single series: no legend, the section title names it). */
+function drawBars(host, points, { color, title, minSlots = 14, axisLabel, tip }) {
   const W = Math.max(300, host.clientWidth);
   const H = W < 560 ? 220 : 280;
   const m = { top: 12, right: 8, bottom: 28, left: 40 };
   const iw = W - m.left - m.right;
   const ih = H - m.top - m.bottom;
-  const { top, ticks } = niceScale(Math.max(...daily.map((x) => x.n)));
-  // At least 14 slots, so the first days are not drawn as a few huge bars
-  const slots = Math.max(14, daily.length);
+  const { top, ticks } = niceScale(Math.max(...points.map((x) => x.n)));
+  const slots = Math.max(minSlots, points.length);
   const slot = iw / slots;
   const gap = slot > 6 ? 2 : 1;
-  const bw = Math.max(1, Math.min(28, slot - gap));
+  const bw = Math.max(1, Math.min(minSlots > 6 ? 28 : 72, slot - gap));
   const y = (n) => m.top + ih - (n / top) * ih;
 
   const chart = svg('svg', { viewBox: `0 0 ${W} ${H}`, width: W, height: H, role: 'img', 'aria-label': title });
@@ -174,52 +202,81 @@ function drawDaily(host, daily, color, tipKey, title) {
     label.textContent = fmtNum(tv);
     chart.append(label);
   }
-  // Month labels at the first day of each month (and the first day shown)
-  let lastMonth = '';
-  daily.forEach((p, i) => {
-    const month = p.day.slice(0, 7);
-    if (month === lastMonth) return;
-    lastMonth = month;
-    if (i > daily.length - 4 && i !== 0) return;
-    const label = svg('text', { x: m.left + i * slot, y: H - 8, class: 'chart-tick' });
-    label.textContent = fmtDate(p.day, i === 0 ? { day: 'numeric', month: 'short' } : { month: 'short' });
-    chart.append(label);
-  });
-  daily.forEach((p, i) => {
+  points.forEach((p, i) => {
     const x = m.left + i * slot + (slot - bw) / 2;
-    if (p.n > 0) chart.append(svg('path', { d: barPath(x, y(p.n), bw, m.top + ih - y(p.n), Math.min(4, bw / 2)), fill: color }));
-    // Hover target: the whole column, wider than the bar
+    if (p.n > 0) chart.append(svg('path', { d: barPath(x, y(p.n), bw, m.top + ih - y(p.n), Math.min(4, bw / 2)), fill: color, opacity: p.partial ? 0.6 : 1 }));
+    const text = axisLabel(p, i);
+    if (text) {
+      const label = svg('text', { x: m.left + i * slot + slot / 2, y: H - 8, 'text-anchor': 'middle', class: 'chart-tick' });
+      label.textContent = text;
+      chart.append(label);
+    }
     const hit = svg('rect', { x: m.left + i * slot, y: m.top, width: slot, height: ih, class: 'chart-hit' });
-    hit.addEventListener('pointermove', (e) => showTip(`<b>${fmtDate(p.day, { weekday: 'short', day: 'numeric', month: 'short' })}</b><br>${st(tipKey, { n: fmtNum(p.n) })}`, e));
+    hit.addEventListener('pointermove', (e) => showTip(tip(p), e));
     hit.addEventListener('pointerleave', hideTip);
     chart.append(hit);
   });
   host.replaceChildren(chart);
 }
 
-function dailyTable(host, daily, colKey) {
-  const rows = [...daily].reverse().map((p) => el('tr', {}, [el('td', { text: fmtDate(p.day) }), el('td', { text: fmtNum(p.n) })]));
-  host.replaceChildren(el('table', {}, [el('thead', {}, el('tr', {}, [el('th', { text: st('stats.colDay') }), el('th', { text: st(colKey) })])), el('tbody', {}, rows)]));
+/** Table; `cls` gives a class per column (e.g. one hidden on phones). */
+function table(host, head, rows, cls = []) {
+  const at = (i) => (cls[i] ? { class: cls[i] } : {});
+  host.replaceChildren(
+    el('table', {}, [
+      el('thead', {}, el('tr', {}, head.map((h, i) => el('th', { ...at(i), text: h })))),
+      el('tbody', {}, rows.map((r) => el('tr', {}, r.map((c, i) => el('td', { ...at(i), text: c }))))),
+    ]),
+  );
 }
 
 function renderVisits(d) {
   const sec = document.querySelector('.js-sec-visits');
-  const daily = d.visits?.daily ?? [];
+  const daily = d.monthly?.daily ?? [];
   sec.hidden = !daily.length;
   if (sec.hidden) return;
-  document.querySelector('.js-visits-lead').textContent = st('stats.visitsLead', { n: fmtNum(d.visits.last30), w: fmtNum(d.visits.last7) });
-  drawDaily(document.querySelector('.js-chart-visits'), daily, STATS_COLORS.visits, 'stats.visitorsOn', sec.querySelector('h2').textContent);
-  dailyTable(document.querySelector('.js-table-visits'), daily, 'stats.colVisitors');
+  const cur = d.monthly.current ?? {};
+  document.querySelector('.js-visits-lead').textContent = st('stats.visitsLead', { n: fmtNum(cur.visitors ?? 0), d: fmtNum(daily.length) });
+  // Every day of the month has a slot, so the month fills up as it goes.
+  const [yy, mm] = daily[0].day.split('-').map(Number);
+  const monthDays = new Date(Date.UTC(yy, mm, 0)).getUTCDate();
+  drawBars(document.querySelector('.js-chart-visits'), daily, {
+    color: STATS_COLORS.visits,
+    title: sec.querySelector('h2').textContent,
+    minSlots: monthDays,
+    axisLabel: (p) => {
+      const day = Number(p.day.slice(8));
+      return day === 1 || day % 5 === 0 ? String(day) : '';
+    },
+    tip: (p) => `<b>${fmtDate(p.day, { weekday: 'short', day: 'numeric', month: 'short' })}</b><br>${st('stats.visitorsOn', { n: fmtNum(p.n) })}`,
+  });
+  table(document.querySelector('.js-table-visits'), [st('stats.colDay'), st('stats.colVisitors')], [...daily].reverse().map((p) => [fmtDate(p.day), fmtNum(p.n)]));
 }
 
-function renderApp(d) {
-  const sec = document.querySelector('.js-sec-app');
-  const daily = d.app?.daily ?? [];
-  sec.hidden = !daily.some((p) => p.n > 0);
+function renderMonths(d) {
+  const sec = document.querySelector('.js-sec-months');
+  const history = d.monthly?.history ?? [];
+  const first = history.findIndex((h) => h.visitors || h.app || h.downloads);
+  sec.hidden = first < 0;
   if (sec.hidden) return;
-  document.querySelector('.js-app-lead').textContent = st('stats.appLead');
-  drawDaily(document.querySelector('.js-chart-app'), daily, STATS_COLORS.windows, 'stats.usersOn', sec.querySelector('h2').textContent);
-  dailyTable(document.querySelector('.js-table-app'), daily, 'stats.colUsers');
+  const shown = history.slice(first);
+  const currentKey = d.monthly.current?.key;
+  const points = shown.map((h) => ({ ...h, n: h.visitors ?? 0, partial: h.key === currentKey }));
+  drawBars(document.querySelector('.js-chart-months'), points, {
+    color: STATS_COLORS.visits,
+    title: sec.querySelector('h2').textContent,
+    minSlots: 6,
+    axisLabel: (p) => monthName(p.key, { month: 'short' }),
+    tip: (p) =>
+      `<b>${monthName(p.key)}</b>${p.partial ? ` ${st('stats.thisMonth')}` : ''}<br>${st('stats.colVisitors')} ${fmtNum(p.visitors ?? 0)}<br>` +
+      `${st('stats.colApp')} ${fmtNum(p.app ?? 0)}<br>${st('stats.colDownloads')} ${fmtNum(p.downloads ?? 0)}`,
+  });
+  table(
+    document.querySelector('.js-table-months'),
+    [st('stats.colMonth'), st('stats.colVisitors'), st('stats.colViews'), st('stats.colApp'), st('stats.colDownloads')],
+    [...shown].reverse().map((h) => [monthName(h.key) + (h.key === currentKey ? ` ${st('stats.thisMonth')}` : ''), fmtNum(h.visitors ?? 0), fmtNum(h.views ?? 0), fmtNum(h.app ?? 0), fmtNum(h.downloads ?? 0)]),
+    ['', '', 'col-wide'],
+  );
 }
 
 // ---------------------------------------------------------------------------------- Downloads chart
@@ -339,7 +396,7 @@ function renderRank(selector, cardSelector, items, label) {
 }
 
 function renderAudience(d) {
-  const v = d.visits ?? {};
+  const v = d.monthly?.current ?? {};
   const shown = [
     renderRank('.js-list-countries', '.js-rank-countries', v.countries, (c) => `${flagEmoji(String(c.id || '').toUpperCase())} ${countryName(c)}`.trim()),
     renderRank('.js-list-referrers', '.js-rank-referrers', v.referrers, (r) => r.name),
@@ -355,8 +412,9 @@ function renderStats() {
   if (!statsData) return;
   updated.textContent = st('stats.updated', { time: timeAgo(statsData.updatedAt) });
   renderKpis(statsData);
+  renderPrevious(statsData);
+  renderMonths(statsData);
   renderVisits(statsData);
-  renderApp(statsData);
   renderDownloads(statsData);
   renderAudience(statsData);
 }
@@ -375,6 +433,6 @@ document.addEventListener('DOMContentLoaded', () => {
   let resizeTimer;
   window.addEventListener('resize', () => {
     clearTimeout(resizeTimer);
-    resizeTimer = setTimeout(() => statsData && (renderVisits(statsData), renderApp(statsData), renderDownloads(statsData)), 150);
+    resizeTimer = setTimeout(() => statsData && (renderMonths(statsData), renderVisits(statsData), renderDownloads(statsData)), 150);
   });
 });

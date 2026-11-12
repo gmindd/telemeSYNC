@@ -130,3 +130,29 @@ describe('visits in every language', () => {
     expect(s.days['2026-11-10'].pages).toEqual({ '/': 1 });
   });
 });
+
+describe('visits by month', () => {
+  it('sums the days of each month and counts program users once a month', async () => {
+    // @ts-expect-error plain JavaScript module
+    const { lastMonths, previousMonth } = await import('../visits.mjs');
+    expect(previousMonth('2026-01')).toBe('2025-12');
+    expect(lastMonths('2026-11-12')).toEqual(['2026-06', '2026-07', '2026-08', '2026-09', '2026-10', '2026-11']);
+    const s = emptyState();
+    for (const [day, ip] of [['2026-10-30', '8.8.4.4'], ['2026-11-02', '8.8.4.4'], ['2026-11-03', '89.114.0.1']]) {
+      addLine(s, line(`${day}T10:00:00+00:00`, ip, '/index.html', CHROME), GEO);
+      addLine(s, line(`${day}T10:00:01+00:00`, ip, '/script.js', CHROME), GEO);
+      // The same person opens the program on two days: one user this month.
+      addLine(s, line(`${day}T11:00:00+00:00`, '193.136.0.1', '/data/latest.json', CHROME, { origin: 'http://localhost:5174' }), GEO);
+      settle(s, day);
+    }
+    settle(s, '2026-11-12');
+    const r = report(s, '2026-11-12');
+    expect(r.monthly.current).toMatchObject({ key: '2026-11', visitors: 2, views: 2, app: 1, countriesCount: 2 });
+    expect(r.monthly.previous).toMatchObject({ key: '2026-10', visitors: 1, app: 1 });
+    expect(r.monthly.history.map((h: { visitors: number }) => h.visitors)).toEqual([0, 0, 0, 0, 1, 2]);
+    expect(r.monthly.daily[0].day).toBe('2026-11-01');
+    // Codes of months before the previous one are deleted.
+    settle(s, '2027-01-05');
+    expect(Object.keys(s.openMonths)).not.toContain('2026-10');
+  });
+});

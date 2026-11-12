@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 // @ts-expect-error plain JavaScript module run by the site container
-import { addCountsBefore, addSnapshot, assetOs, summarizeDownloads } from '../stats-collector.mjs';
+import { addCountsBefore, addMonthlyDownloads, addSnapshot, assetOs, summarizeDownloads } from '../stats-collector.mjs';
 
 describe('stats collector', () => {
   it('counts downloads per release and per system, ignoring drafts', () => {
@@ -20,22 +20,35 @@ describe('stats collector', () => {
     expect(h).toEqual([{ day: '2026-11-09', downloads: 100 }, { day: '2026-11-10', downloads: 117 }]);
   });
 
-  it('adds the counts kept from before the counter started again', () => {
-    const out = {
-      visits: { total: 4, views: 14, since: '2026-11-12' },
-      app: { week: { key: '2026-W46', n: 1, complete: false } },
-    };
-    addCountsBefore(out, { visitors: 120, views: 300, since: '2026-11-10', appWeeks: { '2026-W46': 8 } });
-    expect(out.visits).toEqual({ total: 124, views: 314, since: '2026-11-10' });
-    expect(out.app.week.n).toBe(9);
-    // Another week: nothing added.
-    const later = { visits: null, app: { week: { key: '2026-W47', n: 3, complete: false } } };
-    addCountsBefore(later, { appWeeks: { '2026-W46': 8 } });
-    expect(later.app.week.n).toBe(3);
-    // No program check since the restart: the earlier count on its own.
-    const none = { visits: null, app: { week: null } };
-    addCountsBefore(none, { appWeeks: { '2026-W46': 8 } });
-    expect(none.app.week).toEqual({ key: '2026-W46', n: 8, complete: false });
+  it('adds the counts kept from before the counter started again, per month', () => {
+    const m = (key: string, visitors: number, app: number) => ({ key, visitors, views: visitors * 3, app, days: 1, countries: [], countriesCount: 0, referrers: [], systems: [], devices: { mobile: 0, computer: 0 } });
+    const out = { monthly: { current: m('2026-11', 4, 1), previous: null as unknown, history: [m('2026-10', 0, 0), m('2026-11', 4, 1)] } };
+    addCountsBefore(out, { months: { '2026-11': { visitors: 120, views: 300, app: 8 }, '2026-10': { visitors: 50 } } });
+    expect(out.monthly.current).toMatchObject({ visitors: 124, views: 312, app: 9 });
+    expect(out.monthly.history.map((h) => h.visitors)).toEqual([50, 124]);
+    // October had counts only from before the restart: it still shows as the previous month.
+    expect(out.monthly.previous).toMatchObject({ key: '2026-10', visitors: 50 });
     addCountsBefore(out, undefined);
+  });
+
+  it('counts the downloads of each month from the daily snapshots', () => {
+    const monthly = { current: { key: '2026-12' } as Record<string, unknown>, previous: { key: '2026-11' } as Record<string, unknown>, history: [{ key: '2026-11' }, { key: '2026-12' }] as Record<string, unknown>[] };
+    const history = [
+      { day: '2026-11-13', downloads: 131 },
+      { day: '2026-11-30', downloads: 180 },
+      { day: '2026-12-05', downloads: 200 },
+    ];
+    addMonthlyDownloads(monthly, history, 210, [{ date: '2026-10-15', windows: 7, mac: 5 }]);
+    expect(monthly.current.downloads).toBe(30); // 210 now − 180 at the end of November
+    expect(monthly.previous.downloads).toBe(49); // from its first snapshot
+    expect(monthly.previous.downloadsSince).toBe('2026-11-13');
+    // This month without a snapshot before it: the older releases stand in for its start.
+    const first = { current: { key: '2026-11' } as Record<string, unknown>, previous: null, history: [] };
+    addMonthlyDownloads(first, [{ day: '2026-11-13', downloads: 131 }], 131, [
+      { date: '2026-10-15', windows: 7, mac: 5 },
+      { date: '2026-11-04', windows: 41, mac: 17 },
+    ]);
+    expect(first.current.downloads).toBe(119);
+    expect(first.current.downloadsSince).toBeNull();
   });
 });
