@@ -95,14 +95,8 @@
   "download.pdf": "Instructions (PDF, in Portuguese)",
   "download.fine": "By downloading you accept the terms of use in the LICENCA.txt file.",
   "roadmap.title": "Roadmap",
-  "roadmap.lead": "What I am working on right now.",
+  "roadmap.lead": "What is coming next.",
   "roadmap.inProgress": "In progress",
-  "roadmap.i1": "Better automatic sync",
-  "roadmap.i1text": "Fewer manual tweaks: aligning clips with the telemetry more reliably, on more cameras.",
-  "roadmap.i2": "Better export formats and smaller files",
-  "roadmap.i2text": "Lighter files that work with more video editors.",
-  "roadmap.i3": "New designs and gadgets",
-  "roadmap.i3text": "More panel styles and new gadgets to show your telemetry.",
   "news.title": "What's new",
   "news.version": "Version",
   "news.100.1": "<b>Mac version:</b> a single download for Macs with Apple Silicon (M1 to M4) and Intel, macOS 11 or later. As on Windows, nothing to install.",
@@ -235,5 +229,10 @@
   "stats.usersOn": "{n} people",
   "stats.colUsers": "People",
   "stats.method5": "<b>Program users:</b> the program checks for a new version every time it opens; we count the different people who do so each day and each week.",
-  "stats.method6": "The country comes from the IP address, using the <a href=\"https://db-ip.com\" target=\"_blank\" rel=\"noopener\">IP Geolocation by DB-IP</a> database (CC BY 4.0). Addresses are not stored."
+  "stats.method6": "The country comes from the IP address, using the <a href=\"https://db-ip.com\" target=\"_blank\" rel=\"noopener\">IP Geolocation by DB-IP</a> database (CC BY 4.0). Addresses are not stored.",
+  "roadmap.next": "Next version",
+  "roadmap.sports": "New sports: running, trail, skiing and snowboarding",
+  "roadmap.sportsText": "Gadgets of their own for each sport. For running and trail: pace per km, cadence in steps, grade adjusted pace, vertical speed, a splits table and a race against your personal record, with a ghost running beside you. For skiing and snowboarding: speed, slope in degrees, vertical drop and the day’s runs found automatically.",
+  "roadmap.conditions": "Metrics that show up only when it matters",
+  "roadmap.conditionsText": "Conditions for each gadget to appear and disappear in the video, for example showing the speed only above 30 km/h or the heart rate only above 170 bpm."
 }

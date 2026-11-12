@@ -95,14 +95,8 @@
   "download.pdf": "Anleitung (PDF, auf Portugiesisch)",
   "download.fine": "Mit dem Download akzeptierst du die Nutzungsbedingungen in der Datei LICENCA.txt.",
   "roadmap.title": "Roadmap",
-  "roadmap.lead": "Woran ich gerade arbeite.",
+  "roadmap.lead": "Was als Nächstes kommt.",
   "roadmap.inProgress": "In Arbeit",
-  "roadmap.i1": "Bessere automatische Synchronisierung",
-  "roadmap.i1text": "Weniger manuelle Korrekturen: Clips zuverlässiger mit der Telemetrie ausrichten, auf mehr Kameras.",
-  "roadmap.i2": "Bessere Exportformate und kleinere Dateien",
-  "roadmap.i2text": "Leichtere Dateien, die mit mehr Videoeditoren funktionieren.",
-  "roadmap.i3": "Neue Designs und Gadgets",
-  "roadmap.i3text": "Mehr Panel-Stile und neue Gadgets für deine Telemetrie.",
   "news.title": "Neuigkeiten",
   "news.version": "Version",
   "news.100.1": "<b>Mac-Version:</b> ein einziger Download für Macs mit Apple Silicon (M1 bis M4) und Intel, macOS 11 oder neuer. Wie unter Windows ist keine Installation nötig.",
@@ -235,5 +229,10 @@
   "stats.usersOn": "{n} Menschen",
   "stats.colUsers": "Menschen",
   "stats.method5": "<b>Nutzer des Programms:</b> das Programm prüft bei jedem Öffnen, ob es eine neue Version gibt; wir zählen die verschiedenen Menschen, die das an jedem Tag und in jeder Woche tun.",
-  "stats.method6": "Das Land ergibt sich aus der IP-Adresse, mit der Datenbank <a href=\"https://db-ip.com\" target=\"_blank\" rel=\"noopener\">IP Geolocation by DB-IP</a> (CC BY 4.0). Adressen werden nicht gespeichert."
+  "stats.method6": "Das Land ergibt sich aus der IP-Adresse, mit der Datenbank <a href=\"https://db-ip.com\" target=\"_blank\" rel=\"noopener\">IP Geolocation by DB-IP</a> (CC BY 4.0). Adressen werden nicht gespeichert.",
+  "roadmap.next": "Nächste Version",
+  "roadmap.sports": "Neue Sportarten: Laufen, Trail, Ski und Snowboard",
+  "roadmap.sportsText": "Eigene Gadgets für jede Sportart. Fürs Laufen und den Trail: Pace pro km, Schrittfrequenz, steigungsbereinigte Pace, Vertikalgeschwindigkeit, eine Zwischenzeiten-Tabelle und ein Rennen gegen deine Bestzeit, mit einem Geist, der neben dir läuft. Für Ski und Snowboard: Geschwindigkeit, Gefälle in Grad, Abfahrtshöhenmeter und die Abfahrten des Tages, automatisch erkannt.",
+  "roadmap.conditions": "Messwerte, die nur erscheinen, wenn es zählt",
+  "roadmap.conditionsText": "Bedingungen, damit jedes Gadget im Video erscheint und verschwindet, zum Beispiel die Geschwindigkeit erst über 30 km/h oder die Herzfrequenz erst über 170 bpm zeigen."
 }
