@@ -36,12 +36,21 @@ describe('stats collector', () => {
     const out = { visits: { total: 3 }, monthly: { current: cur, previous: null, history: [{ ...cur }] } };
     addCountsBefore(out, { months: { '2026-11': { visitors: 80, app: 48, countries: { PT: 47, BE: 22, xx: 5 } } } });
     expect(out.visits.total).toBe(83);
-    expect(out.monthly.current).toMatchObject({ visitors: 83, app: 49, views: null, handAdded: true, countriesCount: 3 });
+    expect(out.monthly.current).toMatchObject({ visitors: 83, app: 49, views: null, handAdded: true, devicesUnknown: true, countriesCount: 3 });
     expect(out.monthly.current.countries).toEqual([
       { id: 'PT', name: 'PT', count: 49 },
       { id: 'BE', name: 'BE', count: 22 },
       { id: 'FR', name: 'FR', count: 1 },
     ]);
+  });
+
+  it('adds hand-written systems and devices', () => {
+    const cur = { key: '2026-11', visitors: 2, views: 3, app: 0, days: 1, countries: [], countriesCount: 0, referrers: [], systems: [{ id: 'Android', name: 'Android', count: 2 }], devices: { mobile: 2, computer: 0 } };
+    const out = { monthly: { current: cur, previous: null, history: [] } };
+    addCountsBefore(out, { months: { '2026-11': { visitors: 10, systems: { Windows: 6, Android: 4 }, devices: { mobile: 4, computer: 6 } } } });
+    expect(out.monthly.current.systems.map((x: { id: string; count: number }) => `${x.id} ${x.count}`)).toEqual(['Android 6', 'Windows 6']);
+    expect(out.monthly.current.devices).toEqual({ mobile: 6, computer: 6 });
+    expect(out.monthly.current).not.toHaveProperty('devicesUnknown');
   });
 
   it('counts the downloads of each month from the daily snapshots', () => {

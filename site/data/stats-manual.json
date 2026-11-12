@@ -1,21 +1,31 @@
 {
-  "_help": "Numbers added by hand to the /stats page. audience: e.g. {\"label\": \"Instagram followers\", \"value\": 1200, \"url\": \"https://www.instagram.com/...\"}, shown as they are. countingSince: the day the site's own counting began (shown on the page). before.months: counts of a month from before the counter started again (visitors, views, app, downloads, countries {\"PT\": 47}; see addCountsBefore in scripts/stats-collector.mjs), added to the server's counts of that month. The collector reads this file every hour.",
+  "_help": "Numbers added by hand to the /stats page. audience: e.g. {\"label\": \"Instagram followers\", \"value\": 1200, \"url\": \"https://www.instagram.com/...\"}, shown as they are. countingSince: the day the site's own counting began (shown on the page). before.months: counts of a month from before the counter started again (visitors, views, app, downloads, countries {\"PT\": 265}, systems {\"Windows\": 162}, devices {\"mobile\": 224, \"computer\": 215}; see addCountsBefore in scripts/stats-collector.mjs), added to the server's counts of that month. The collector reads this file every hour.",
   "audience": [],
   "countingSince": "2026-11-10",
   "before": {
     "months": {
       "2026-11": {
-        "visitors": 80,
+        "visitors": 439,
         "app": 48,
         "countries": {
-          "PT": 47,
-          "BE": 22,
-          "US": 6,
-          "DE": 1,
-          "CH": 1,
-          "BR": 1,
+          "PT": 265,
+          "BE": 123,
+          "US": 34,
+          "DE": 6,
+          "CH": 5,
+          "BR": 4,
           "IE": 1,
           "ES": 1
+        },
+        "systems": {
+          "Windows": 162,
+          "Android": 136,
+          "iOS": 88,
+          "macOS": 53
+        },
+        "devices": {
+          "mobile": 224,
+          "computer": 215
         }
       }
     }
