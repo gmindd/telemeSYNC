@@ -47,7 +47,9 @@ describe('stats collector', () => {
   it('adds hand-written systems and devices', () => {
     const cur = { key: '2026-11', visitors: 2, views: 3, app: 0, days: 1, countries: [], countriesCount: 0, referrers: [], systems: [{ id: 'Android', name: 'Android', count: 2 }], devices: { mobile: 2, computer: 0 } };
     const out = { monthly: { current: cur, previous: null, history: [] } };
-    addCountsBefore(out, { months: { '2026-11': { visitors: 10, systems: { Windows: 6, Android: 4 }, devices: { mobile: 4, computer: 6 } } } });
+    (cur as Record<string, unknown>).referrers = [{ name: 'Instagram', count: 1 }];
+    addCountsBefore(out, { months: { '2026-11': { visitors: 10, systems: { Windows: 6, Android: 4 }, devices: { mobile: 4, computer: 6 }, referrers: { YouTube: 49, Instagram: 47 } } } });
+    expect((out.monthly.current.referrers as { name: string; count: number }[]).map((x) => `${x.name} ${x.count}`)).toEqual(['YouTube 49', 'Instagram 48']);
     expect(out.monthly.current.systems.map((x: { id: string; count: number }) => `${x.id} ${x.count}`)).toEqual(['Android 6', 'Windows 6']);
     expect(out.monthly.current.devices).toEqual({ mobile: 6, computer: 6 });
     expect(out.monthly.current).not.toHaveProperty('devicesUnknown');
