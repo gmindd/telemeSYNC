@@ -82,18 +82,40 @@
         <p class="eyebrow" data-i18n="stats.eyebrow">Para patrocinadores</p>
         <h1 data-i18n="stats.title">telemeSYNC em números</h1>
         <p class="lead" data-i18n="stats.lead">
-          Números públicos e verdadeiros, atualizados de hora a hora: quantas pessoas visitam o site, quantas descarregam o programa
-          e de onde vêm. Quem usa o telemeSYNC filma e partilha as suas voltas de bicicleta.
+          Números públicos e verdadeiros, contados por mês e atualizados de hora a hora: quantas pessoas visitam o site, quantas
+          usam e descarregam o programa e de onde vêm. Quem usa o telemeSYNC filma e partilha as suas voltas de bicicleta.
         </p>
         <p class="stats-updated" aria-live="polite"><span class="stats-updated__dot" aria-hidden="true"></span><span class="js-stats-updated" data-i18n="stats.loading">A carregar…</span></p>
 
-        <div class="kpis js-kpis" aria-label="Resumo" data-i18n-aria-label="stats.summary"></div>
+        <h2 class="kpis-title js-month-title"></h2>
+        <div class="kpis js-kpis" aria-label="Este mês" data-i18n-aria-label="stats.summary"></div>
+        <h2 class="kpis-title kpis-title--small" data-i18n="stats.allTimeTitle">Desde o início</h2>
+        <div class="kpis js-kpis-all"></div>
+      </div>
+    </section>
+
+    <section class="section section--alt js-sec-prev" hidden>
+      <div class="container">
+        <h2 data-i18n="stats.prevTitle">No mês anterior</h2>
+        <p class="section__lead js-prev-lead"></p>
+        <div class="kpis js-kpis-prev"></div>
+      </div>
+    </section>
+
+    <section class="section js-sec-months" hidden>
+      <div class="container">
+        <h2 data-i18n="stats.monthsTitle">Últimos 6 meses</h2>
+        <p class="section__lead" data-i18n="stats.monthsLead">Visitas ao site em cada mês. A tabela tem também as pessoas que usaram o programa e os downloads.</p>
+        <figure class="chart-card">
+          <div class="chart js-chart-months"></div>
+          <div class="js-table-months chart-table chart-table--open"></div>
+        </figure>
       </div>
     </section>
 
     <section class="section section--alt js-sec-visits" hidden>
       <div class="container">
-        <h2 data-i18n="stats.visitsTitle">Visitas por dia</h2>
+        <h2 data-i18n="stats.visitsTitle">Visitas por dia este mês</h2>
         <p class="section__lead js-visits-lead"></p>
         <figure class="chart-card">
           <div class="chart js-chart-visits"></div>
@@ -102,32 +124,9 @@
       </div>
     </section>
 
-    <section class="section js-sec-app" hidden>
-      <div class="container">
-        <h2 data-i18n="stats.appTitle">Utilizadores do programa por dia</h2>
-        <p class="section__lead js-app-lead"></p>
-        <figure class="chart-card">
-          <div class="chart js-chart-app"></div>
-          <details class="chart-table"><summary data-i18n="stats.showData">Ver os dados</summary><div class="js-table-app"></div></details>
-        </figure>
-      </div>
-    </section>
-
-    <section class="section section--alt js-sec-downloads" hidden>
-      <div class="container">
-        <h2 data-i18n="stats.downloadsTitle">Downloads por versão</h2>
-        <p class="section__lead js-downloads-lead"></p>
-        <figure class="chart-card">
-          <div class="chart-legend js-legend-downloads"></div>
-          <div class="chart js-chart-downloads"></div>
-          <details class="chart-table"><summary data-i18n="stats.showData">Ver os dados</summary><div class="js-table-downloads"></div></details>
-        </figure>
-      </div>
-    </section>
-
     <section class="section js-sec-audience" hidden>
       <div class="container">
-        <h2 data-i18n="stats.audienceTitle">Quem nos visita</h2>
+        <h2 data-i18n="stats.audienceTitle">Quem nos visita este mês</h2>
         <div class="rank-grid">
           <article class="rank-card js-rank-countries" hidden>
             <h3 data-i18n="stats.countries">Países</h3>
@@ -142,6 +141,18 @@
             <ol class="rank js-list-systems"></ol>
           </article>
         </div>
+      </div>
+    </section>
+
+    <section class="section section--alt js-sec-downloads" hidden>
+      <div class="container">
+        <h2 data-i18n="stats.downloadsTitle">Downloads por versão</h2>
+        <p class="section__lead js-downloads-lead"></p>
+        <figure class="chart-card">
+          <div class="chart-legend js-legend-downloads"></div>
+          <div class="chart js-chart-downloads"></div>
+          <details class="chart-table"><summary data-i18n="stats.showData">Ver os dados</summary><div class="js-table-downloads"></div></details>
+        </figure>
       </div>
     </section>
 
@@ -164,10 +175,10 @@
         <h2 data-i18n="stats.methodTitle">Como contamos</h2>
         <ul>
           <li data-i18n="stats.method1"><b>Visitas:</b> contadas pelo próprio servidor do site, sem cookies e sem serviços de terceiros, por isso os bloqueadores de anúncios não as escondem. Contamos pessoas diferentes por dia, não carregamentos de página, e deixamos de fora robôs, pré-visualizações de links e programas que só leem a página.</li>
-          <li data-i18n="stats.method5"><b>Utilizadores do programa:</b> o programa verifica se há versão nova sempre que é aberto; contamos as pessoas diferentes que o fazem em cada dia e em cada semana.</li>
+          <li data-i18n="stats.method5"><b>Utilizadores do programa:</b> o programa verifica se há versão nova sempre que é aberto; contamos as pessoas diferentes que o fazem em cada mês. <b>Downloads do mês:</b> a diferença no total do GitHub entre o início e o fim do mês.</li>
           <li data-i18n="stats.method2"><b>Downloads:</b> contados pelo GitHub, onde estão os ficheiros do programa, desde a versão 1.0.0. Inclui os downloads feitos a partir do aviso de nova versão dentro do programa.</li>
           <li data-i18n="stats.method3"><b>Apoiantes:</b> pessoas que pagaram um café no Buy Me a Coffee. Não mostramos nomes nem valores aqui.</li>
-          <li data-i18n="stats.method4">Esta página atualiza-se sozinha de hora a hora. Nenhum número é escrito à mão, exceto os seguidores nas redes sociais, quando aparecem.</li>
+          <li data-i18n="stats.method4">Os números contam-se por mês civil e a página atualiza-se sozinha de hora a hora. No dia 1, o mês que acabou passa para "No mês anterior", e guardamos o histórico dos últimos 6 meses. Nenhum número é escrito à mão, exceto os seguidores nas redes sociais, quando aparecem, e as contagens já feitas num mês quando o servidor recomeça a contar (como em novembro de 2026).</li>
           <li data-i18n="stats.method6">O país vem do endereço IP, através da base de dados <a href="https://db-ip.com" target="_blank" rel="noopener">IP Geolocation by DB-IP</a> (CC BY 4.0). Os endereços não são guardados.</li>
         </ul>
       </div>

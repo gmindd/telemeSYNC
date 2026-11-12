@@ -110,28 +110,52 @@ async function collectVisits(today) {
 
 /**
  * Counts kept from before the counter started again (e.g. a redeploy without a persistent volume),
- * written by hand in data/stats-manual.json → "before":
- *   { "visitors": 120, "views": 300, "since": "2026-11-10",          // site visits before the restart
- *     "appWeeks": { "2026-W46": 8 } }                                // people who opened the program, per week
- * They are added to the counts the server makes. A week's program users are added as they are (a
- * person counted before and after the restart counts twice, so write the week's total minus that).
+ * written by hand in data/stats-manual.json → "before", per month:
+ *   { "months": { "2026-11": { "visitors": 120, "views": 300, "app": 8, "downloads": 10 } } }
+ * They are added to that month's counts made by the server. Program users are added as they are (a
+ * person counted before and after the restart counts twice: write the earlier figure minus that).
  */
 export function addCountsBefore(out, before) {
-  if (!before || typeof before !== 'object') return;
-  const v = out.visits;
-  if (v && Number(before.visitors) > 0) {
-    v.total += Number(before.visitors);
-    v.views = (v.views ?? 0) + (Number(before.views) || 0);
-    if (typeof before.since === 'string' && (!v.since || before.since < v.since)) v.since = before.since;
-  }
-  const weeks = before.appWeeks && typeof before.appWeeks === 'object' ? before.appWeeks : {};
-  const app = out.app;
-  if (app?.week && Number(weeks[app.week.key]) > 0) {
-    app.week = { ...app.week, n: app.week.n + Number(weeks[app.week.key]) };
-  } else if (app && !app.week) {
-    // No program check since the restart yet: this week's earlier count on its own.
-    const key = Object.keys(weeks).sort().at(-1);
-    if (key && Number(weeks[key]) > 0) app.week = { key, n: Number(weeks[key]), complete: false };
+  const months = before && typeof before === 'object' && before.months && typeof before.months === 'object' ? before.months : null;
+  if (!months || !out.monthly) return;
+  const add = (m) => {
+    const b = m && months[m.key];
+    if (!b) return;
+    for (const k of ['visitors', 'views', 'app', 'downloads']) if (Number(b[k]) > 0) m[k] = (m[k] ?? 0) + Number(b[k]);
+  };
+  add(out.monthly.current);
+  add(out.monthly.previous);
+  for (const m of out.monthly.history ?? []) add(m);
+  // A month that had counts only before the restart still shows as the previous month.
+  const prev = out.monthly.history?.at(-2);
+  if (!out.monthly.previous && prev && months[prev.key]) out.monthly.previous = { ...prev, countries: [], countriesCount: 0, referrers: [], systems: [], devices: { mobile: 0, computer: 0 } };
+}
+
+/**
+ * Downloads per month from the daily snapshots of the GitHub total: the month's last snapshot (or
+ * the total now, for this month) minus the last one before the month. Without a snapshot before the
+ * month, from its first snapshot ("since" says from when).
+ */
+export function addMonthlyDownloads(monthly, history, totalNow, releases = []) {
+  const snaps = (history ?? []).filter((h) => Number.isFinite(h.downloads)).sort((a, b) => a.day.localeCompare(b.day));
+  const forMonth = (key, isCurrent) => {
+    const before = [...snaps].reverse().find((h) => h.day < `${key}-01`);
+    const inside = snaps.filter((h) => h.day.startsWith(key));
+    const end = isCurrent && Number.isFinite(totalNow) ? totalNow : inside.at(-1)?.downloads;
+    // No snapshot before the month: the releases published before it, at their counts now, stand in
+    // for the total at the start of the month (their downloads during the month are then left out).
+    const older = releases.filter((r) => r.date && r.date < `${key}-01`);
+    const estimate = older.length && isCurrent ? older.reduce((n, r) => n + r.windows + r.mac + (r.other ?? 0), 0) : undefined;
+    const start = before?.downloads ?? estimate ?? inside[0]?.downloads;
+    if (!Number.isFinite(end) || !Number.isFinite(start)) return null;
+    return { downloads: Math.max(0, end - start), since: before || estimate !== undefined ? null : inside[0]?.day ?? null };
+  };
+  const currentKey = monthly.current?.key;
+  for (const m of [monthly.current, monthly.previous, ...(monthly.history ?? [])]) {
+    if (!m) continue;
+    const d = forMonth(m.key, m.key === currentKey);
+    m.downloads = d?.downloads ?? 0;
+    m.downloadsSince = d?.since ?? null;
   }
 }
 
@@ -163,10 +187,12 @@ export async function collect(now = new Date()) {
     const v = await collectVisits(today);
     out.visits = v.visits;
     out.app = v.app;
+    out.monthly = v.monthly;
     status.visits = `ok · ${v.lines} linhas novas${v.geo ? '' : ' · sem tabela de países'}`;
   } catch (e) {
     out.visits = previous.visits ?? null;
     out.app = previous.app ?? null;
+    out.monthly = previous.monthly ?? null;
     status.visits = `erro: ${e.message}`;
   }
 
@@ -178,7 +204,6 @@ export async function collect(now = new Date()) {
 
   const manual = await readJson(MANUAL, {});
   out.audience = Array.isArray(manual.audience) ? manual.audience.filter((a) => a && a.label && Number.isFinite(Number(a.value))) : [];
-  addCountsBefore(out, manual.before);
 
   try {
     let history = (await readJson(HISTORY, { days: [] })).days ?? [];
@@ -189,10 +214,13 @@ export async function collect(now = new Date()) {
       await writeJson(HISTORY, { days: history });
     }
     out.history = history.slice(-365);
+    if (out.monthly) addMonthlyDownloads(out.monthly, history, out.downloads?.total, out.downloads?.releases ?? []);
   } catch (e) {
     out.history = previous.history ?? [];
     status.history = `erro: ${e.message}`;
   }
+
+  addCountsBefore(out, manual.before);
 
   // Without a persistent volume every redeploy starts the counts again: say so where it is seen.
   if (!(await isPersistent(DATA_DIR))) status.storage = NOT_PERSISTENT(DATA_DIR);
