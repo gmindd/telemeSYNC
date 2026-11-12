@@ -13,7 +13,8 @@
 //   <site>/data/supporters.json     public list read by the page (manual + received, newest first)
 //   <site>/data/supporters-status.json   last event and any error, to check the setup from outside
 import { createHmac, timingSafeEqual } from 'node:crypto';
-import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, rename, stat, writeFile } from 'node:fs/promises';
+import { dirname } from 'node:path';
 import { createServer } from 'node:http';
 import { join } from 'node:path';
 
@@ -43,6 +44,28 @@ async function writeJson(path, value) {
   await writeFile(tmp, JSON.stringify(value, null, 2) + '\n');
   await rename(tmp, path);
 }
+
+/**
+ * True when `dir` is its own mount (a Docker volume or bind mount), so its files survive a redeploy;
+ * false when it is part of the container, which a redeploy replaces. Read from /proc/self/mountinfo,
+ * else from the device numbers of the folder and its parent.
+ */
+export async function isPersistent(dir) {
+  try {
+    const info = await readFile('/proc/self/mountinfo', 'utf8');
+    return info.split('\n').some((line) => line.split(' ')[4] === dir);
+  } catch {
+    try {
+      return (await stat(dir)).dev !== (await stat(dirname(dir))).dev;
+    } catch {
+      return false;
+    }
+  }
+}
+
+/** Warning shown in the status files when the data folder is not on a persistent volume. */
+export const NOT_PERSISTENT = (dir) =>
+  `⚠ ${dir} não está num volume permanente: os apoiantes recebidos e as estatísticas apagam-se a cada Redeploy. No Coolify: Storages → volume com destino ${dir}.`;
 
 async function setStatus(status) {
   try {
@@ -208,6 +231,12 @@ async function main() {
     console.error(`bmc-webhook: cannot create ${DATA_DIR}:`, e.message);
   }
   const count = await publish(await loadStore());
+  if (!(await isPersistent(DATA_DIR))) {
+    console.error(`bmc-webhook: ${NOT_PERSISTENT(DATA_DIR)}`);
+    await setStatus({ ok: false, message: NOT_PERSISTENT(DATA_DIR) });
+    createReceiver().listen(PORT, '127.0.0.1', () => console.log(`bmc-webhook: listening on 127.0.0.1:${PORT}`));
+    return;
+  }
   await setStatus(
     SECRET
       ? { ok: true, message: `à espera de apoios · ${count} apoiantes na lista` }
