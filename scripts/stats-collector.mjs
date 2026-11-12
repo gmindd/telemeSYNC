@@ -16,7 +16,7 @@
 // hand, e.g. Instagram followers, shown as they are).
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { supporterList } from './bmc-webhook.mjs';
+import { isPersistent, NOT_PERSISTENT, supporterList } from './bmc-webhook.mjs';
 import { emptyState, loadGeo, readLog, report, settle } from './visits.mjs';
 
 export { refName } from './visits.mjs';
@@ -164,6 +164,8 @@ export async function collect(now = new Date()) {
     status.history = `erro: ${e.message}`;
   }
 
+  // Without a persistent volume every redeploy starts the counts again: say so where it is seen.
+  if (!(await isPersistent(DATA_DIR))) status.storage = NOT_PERSISTENT(DATA_DIR);
   out.status = status;
   await mkdir(SITE_DATA, { recursive: true });
   await writeJson(OUT, out);
