@@ -242,5 +242,7 @@
   "stats.colViews": "Páginas vistas",
   "stats.colApp": "Usaron el programa",
   "stats.colDownloads": "Descargas",
-  "stats.thisMonth": "(este mes, hasta ahora)"
+  "stats.thisMonth": "(este mes, hasta ahora)",
+  "stats.visitsLeadPartial": "{n} visitas este mes. El detalle por día solo existe a partir del {date}.",
+  "stats.countingNote": "El recuento propio del sitio empezó el {date}."
 }

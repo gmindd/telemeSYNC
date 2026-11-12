@@ -33,6 +33,8 @@ const STATS_PT = {
   'stats.kpiReleases': 'versões lançadas',
   'stats.kpiReleasesSub': 'a mais recente é a {v}',
   'stats.visitsLead': '{n} visitas até agora, em {d} dias.',
+  'stats.visitsLeadPartial': '{n} visitas este mês. O detalhe por dia só existe a partir de {date}.',
+  'stats.countingNote': 'A contagem do próprio site começou a {date}.',
   'stats.visitorsOn': '{n} visitantes',
   'stats.downloadsLead': '{n} downloads no total: {w} para Windows e {m} para macOS.',
   'stats.colMonth': 'Mês',
@@ -145,8 +147,10 @@ function monthTiles(m, compare) {
   tiles.push({ value: fmtNum(m.app ?? 0), label: st('stats.kpiApp'), sub: vs('app') || st('stats.kpiAppSub') });
   if (m.downloads != null) tiles.push({ value: fmtNum(m.downloads), label: st('stats.kpiMonthDownloads'), sub: vs('downloads') || (m.downloadsSince ? st('stats.kpiSinceDay', { date: fmtDate(m.downloadsSince, { day: 'numeric', month: 'long' }) }) : '') });
   if (m.countriesCount) tiles.push({ value: fmtNum(m.countriesCount), label: st('stats.kpiCountries'), sub: st('stats.kpiCountriesSub') });
+  // Phone or computer is known only for the visits counted by the server: left out when part of the
+  // month was written by hand.
   const dev = m.devices;
-  if (dev && dev.mobile + dev.computer > 0) {
+  if (!m.handAdded && dev && dev.mobile + dev.computer > 0) {
     const all = dev.mobile + dev.computer;
     tiles.push({ value: fmtPct(dev.mobile, all), label: st('stats.kpiMobile'), sub: st('stats.kpiMobileSub', { p: fmtPct(dev.computer, all) }) });
   }
@@ -161,7 +165,11 @@ function renderKpis(d) {
     title.textContent = st('stats.monthTitle', { month: monthName(mo.current.key) });
     kpiTiles(document.querySelector('.js-kpis'), monthTiles(mo.current, mo.previous));
   }
+  const note = document.querySelector('.js-counting-note');
+  note.hidden = !(d.countingSince && mo?.current && d.countingSince.startsWith(mo.current.key));
+  if (!note.hidden) note.textContent = st('stats.countingNote', { date: fmtDate(d.countingSince) });
   const all = [];
+  if (d.visits?.total > 0) all.push({ value: fmtNum(d.visits.total), label: st('stats.kpiVisits'), sub: d.countingSince ? st('stats.kpiDownloadsSince', { date: fmtDate(d.countingSince) }) : '' });
   const dl = d.downloads;
   if (dl?.total != null) all.push({ value: fmtNum(dl.total), label: st('stats.kpiDownloads'), sub: dl.since ? st('stats.kpiDownloadsSince', { date: fmtDate(dl.since) }) : '' });
   if (d.supporters?.count) all.push({ value: fmtNum(d.supporters.count), label: st('stats.kpiSupporters'), sub: st('stats.kpiSupportersSub') });
@@ -236,7 +244,11 @@ function renderVisits(d) {
   sec.hidden = !daily.length;
   if (sec.hidden) return;
   const cur = d.monthly.current ?? {};
-  document.querySelector('.js-visits-lead').textContent = st('stats.visitsLead', { n: fmtNum(cur.visitors ?? 0), d: fmtNum(daily.length) });
+  // Visits written by hand (from before a restart) have no day-by-day detail.
+  const firstDay = daily.find((p) => p.n > 0)?.day ?? daily.at(-1).day;
+  document.querySelector('.js-visits-lead').textContent = cur.handAdded
+    ? st('stats.visitsLeadPartial', { n: fmtNum(cur.visitors ?? 0), date: fmtDate(firstDay, { day: 'numeric', month: 'long' }) })
+    : st('stats.visitsLead', { n: fmtNum(cur.visitors ?? 0), d: fmtNum(daily.length) });
   // Every day of the month has a slot, so the month fills up as it goes.
   const [yy, mm] = daily[0].day.split('-').map(Number);
   const monthDays = new Date(Date.UTC(yy, mm, 0)).getUTCDate();
@@ -274,7 +286,7 @@ function renderMonths(d) {
   table(
     document.querySelector('.js-table-months'),
     [st('stats.colMonth'), st('stats.colVisitors'), st('stats.colViews'), st('stats.colApp'), st('stats.colDownloads')],
-    [...shown].reverse().map((h) => [monthName(h.key) + (h.key === currentKey ? ` ${st('stats.thisMonth')}` : ''), fmtNum(h.visitors ?? 0), fmtNum(h.views ?? 0), fmtNum(h.app ?? 0), fmtNum(h.downloads ?? 0)]),
+    [...shown].reverse().map((h) => [monthName(h.key) + (h.key === currentKey ? ` ${st('stats.thisMonth')}` : ''), fmtNum(h.visitors ?? 0), h.views == null ? '—' : fmtNum(h.views), fmtNum(h.app ?? 0), fmtNum(h.downloads ?? 0)]),
     ['', '', 'col-wide'],
   );
 }
@@ -372,7 +384,7 @@ function countryName(item) {
     try {
       return new Intl.DisplayNames([t('locale')], { type: 'region' }).of(code) ?? item.name;
     } catch {
-      /* old browser: GoatCounter's English name */
+      /* old browser: the country code */
     }
   }
   return item.name;
