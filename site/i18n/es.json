@@ -95,14 +95,8 @@
   "download.pdf": "Instrucciones (PDF, en portugués)",
   "download.fine": "Al descargar aceptas los términos de uso incluidos en el archivo LICENCA.txt.",
   "roadmap.title": "Hoja de ruta",
-  "roadmap.lead": "En qué estoy trabajando ahora mismo.",
+  "roadmap.lead": "Lo que viene a continuación.",
   "roadmap.inProgress": "En curso",
-  "roadmap.i1": "Mejor sincronización automática",
-  "roadmap.i1text": "Menos ajustes manuales: alinear los clips con la telemetría de forma más fiable, en más cámaras.",
-  "roadmap.i2": "Mejores formatos de exportación y archivos más pequeños",
-  "roadmap.i2text": "Archivos más ligeros y compatibles con más editores de vídeo.",
-  "roadmap.i3": "Nuevos diseños y gadgets",
-  "roadmap.i3text": "Más estilos de paneles y nuevos gadgets para mostrar la telemetría.",
   "news.title": "Novedades",
   "news.version": "Versión",
   "news.100.1": "<b>Versión para Mac:</b> una sola descarga para Mac con Apple Silicon (M1 a M4) e Intel, macOS 11 o posterior. Como en Windows, no hay que instalar nada.",
@@ -235,5 +229,10 @@
   "stats.usersOn": "{n} personas",
   "stats.colUsers": "Personas",
   "stats.method5": "<b>Usuarios del programa:</b> el programa comprueba si hay una versión nueva cada vez que se abre; contamos las personas distintas que lo hacen cada día y cada semana.",
-  "stats.method6": "El país se obtiene de la dirección IP, con la base de datos <a href=\"https://db-ip.com\" target=\"_blank\" rel=\"noopener\">IP Geolocation by DB-IP</a> (CC BY 4.0). Las direcciones no se guardan."
+  "stats.method6": "El país se obtiene de la dirección IP, con la base de datos <a href=\"https://db-ip.com\" target=\"_blank\" rel=\"noopener\">IP Geolocation by DB-IP</a> (CC BY 4.0). Las direcciones no se guardan.",
+  "roadmap.next": "Próxima versión",
+  "roadmap.sports": "Nuevos deportes: running, trail, esquí y snowboard",
+  "roadmap.sportsText": "Gadgets propios para cada deporte. En running y trail: ritmo por km, cadencia en pasos, ritmo ajustado a la pendiente, velocidad vertical, una tabla de parciales y una carrera contra tu mejor marca, con un fantasma corriendo a tu lado. En esquí y snowboard: velocidad, pendiente en grados, desnivel bajado y las bajadas del día detectadas automáticamente.",
+  "roadmap.conditions": "Métricas que aparecen solo cuando importa",
+  "roadmap.conditionsText": "Condiciones para que cada gadget aparezca y desaparezca en el vídeo, por ejemplo mostrar la velocidad solo por encima de 30 km/h o la frecuencia cardíaca solo por encima de 170 ppm."
 }

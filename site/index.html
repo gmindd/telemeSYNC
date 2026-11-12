@@ -405,22 +405,17 @@
     <section class="section section--alt" id="roadmap" aria-labelledby="roadmap-titulo">
       <div class="container container--narrow">
         <h2 id="roadmap-titulo" data-i18n="roadmap.title">Roadmap</h2>
-        <p class="section__lead" data-i18n="roadmap.lead">Em que estou a trabalhar neste momento.</p>
+        <p class="section__lead" data-i18n="roadmap.lead">O que vem a seguir.</p>
         <ul class="roadmap">
           <li class="roadmap__item">
-            <span class="tag tag--progress" data-i18n="roadmap.inProgress">Em curso</span>
-            <h3 data-i18n="roadmap.i1">Melhoria do algoritmo de sincronização automática</h3>
-            <p data-i18n="roadmap.i1text">Menos ajustes manuais: alinhar os clips com a telemetria de forma mais fiável, em mais câmaras.</p>
+            <span class="tag tag--next" data-i18n="roadmap.next">Próxima versão</span>
+            <h3 data-i18n="roadmap.sports">Novos desportos: corrida, trail, ski e snowboard</h3>
+            <p data-i18n="roadmap.sportsText">Gadgets próprios para cada desporto. Na corrida e no trail: ritmo por km, cadência em passos, ritmo ajustado à inclinação, velocidade vertical, tabela de parciais e uma corrida contra o seu recorde pessoal, com um fantasma a correr ao lado. No ski e no snowboard: velocidade, declive em graus, desnível descido e as descidas do dia detetadas sozinhas.</p>
           </li>
           <li class="roadmap__item">
             <span class="tag tag--progress" data-i18n="roadmap.inProgress">Em curso</span>
-            <h3 data-i18n="roadmap.i2">Melhoria dos formatos de exportação e do tamanho dos ficheiros</h3>
-            <p data-i18n="roadmap.i2text">Ficheiros mais leves e compatíveis com mais editores de vídeo.</p>
-          </li>
-          <li class="roadmap__item">
-            <span class="tag tag--progress" data-i18n="roadmap.inProgress">Em curso</span>
-            <h3 data-i18n="roadmap.i3">Novos designs e gadgets</h3>
-            <p data-i18n="roadmap.i3text">Mais estilos de painéis e novos gadgets para mostrar a telemetria.</p>
+            <h3 data-i18n="roadmap.conditions">Métricas que aparecem só quando interessa</h3>
+            <p data-i18n="roadmap.conditionsText">Condições para cada gadget aparecer e desaparecer no vídeo, por exemplo mostrar a velocidade só acima de 30 km/h ou a frequência cardíaca só acima de 170 bpm.</p>
           </li>
         </ul>
       </div>
@@ -467,33 +462,33 @@
               <li data-i18n="news.102.3"><b>Registos repetidos juntos:</b> quando o ficheiro tem dois registos com a mesma hora (ex.: GPS num, FC no outro), os dois são juntos em vez de se perder o segundo.</li>
             </ul>
           </article>
-          <article class="release">
-            <header class="release__head">
-              <h3><span data-i18n="news.version">Versão</span> 1.0.1</h3>
-              <time class="js-date" datetime="2026-10-20">20 de outubro de 2026</time>
-            </header>
-            <ul>
-              <li data-i18n="news.101.1"><b>Mostradores:</b> novo design de gadgets redondos com aro de prato — frequência cardíaca com zona, cadência, velocidade com média e máxima, inclinação e altitude com o terreno à frente, potência com zona, distância, tempo e temperatura.</li>
-              <li data-i18n="news.101.2"><b>Mapa circular:</b> centrado em si e a rodar com a direção do movimento, com o norte sempre indicado no aro.</li>
-              <li data-i18n="news.101.3"><b>Perfil de altimetria em cartão</b>, com o ganho e a perda de elevação, e um <b>painel compacto</b> com as médias da volta.</li>
-              <li data-i18n="news.101.4"><b>Lista de clips na sincronização:</b> cada clip com a hora de início usada, o momento da volta, de onde veio a hora e o ajuste só desse clip. Avisa quando dois clips da mesma câmara se sobrepõem no tempo, sinal de uma hora errada.</li>
-              <li data-i18n="news.101.5"><b>Relatório de sincronização:</b> cada exportação grava um <i>sincronizacao.txt</i> com a hora de início de cada clip e os ajustes aplicados, para confirmar na edição que cada overlay vai para o clip certo.</li>
-            </ul>
-          </article>
-          <article class="release">
-            <header class="release__head">
-              <h3><span data-i18n="news.version">Versão</span> 1.0.0</h3>
-              <time class="js-date" datetime="2026-10-15">15 de outubro de 2026</time>
-            </header>
-            <ul>
-              <li data-i18n="news.100.1"><b>Versão para Mac:</b> um só download para Macs com Apple Silicon (M1 a M4) e Intel, macOS 11 ou mais recente. Como no Windows, não é preciso instalar nada.</li>
-              <li data-i18n="news.100.2"><b>Primeira versão estável:</b> Windows e Mac com as mesmas funcionalidades — telemetria, sincronização, gadgets, painéis e exportação com transparência.</li>
-              <li data-i18n="news.100.3">O aviso de atualizações e o site levam ao download certo para o seu sistema.</li>
-            </ul>
-          </article>
           <details class="changelog-older">
             <summary class="btn btn--ghost" data-i18n="news.older">Ver mais antigas</summary>
             <div class="changelog">
+            <article class="release">
+              <header class="release__head">
+                <h3><span data-i18n="news.version">Versão</span> 1.0.1</h3>
+                <time class="js-date" datetime="2026-10-20">20 de outubro de 2026</time>
+              </header>
+              <ul>
+                <li data-i18n="news.101.1"><b>Mostradores:</b> novo design de gadgets redondos com aro de prato — frequência cardíaca com zona, cadência, velocidade com média e máxima, inclinação e altitude com o terreno à frente, potência com zona, distância, tempo e temperatura.</li>
+                <li data-i18n="news.101.2"><b>Mapa circular:</b> centrado em si e a rodar com a direção do movimento, com o norte sempre indicado no aro.</li>
+                <li data-i18n="news.101.3"><b>Perfil de altimetria em cartão</b>, com o ganho e a perda de elevação, e um <b>painel compacto</b> com as médias da volta.</li>
+                <li data-i18n="news.101.4"><b>Lista de clips na sincronização:</b> cada clip com a hora de início usada, o momento da volta, de onde veio a hora e o ajuste só desse clip. Avisa quando dois clips da mesma câmara se sobrepõem no tempo, sinal de uma hora errada.</li>
+                <li data-i18n="news.101.5"><b>Relatório de sincronização:</b> cada exportação grava um <i>sincronizacao.txt</i> com a hora de início de cada clip e os ajustes aplicados, para confirmar na edição que cada overlay vai para o clip certo.</li>
+              </ul>
+            </article>
+            <article class="release">
+              <header class="release__head">
+                <h3><span data-i18n="news.version">Versão</span> 1.0.0</h3>
+                <time class="js-date" datetime="2026-10-15">15 de outubro de 2026</time>
+              </header>
+              <ul>
+                <li data-i18n="news.100.1"><b>Versão para Mac:</b> um só download para Macs com Apple Silicon (M1 a M4) e Intel, macOS 11 ou mais recente. Como no Windows, não é preciso instalar nada.</li>
+                <li data-i18n="news.100.2"><b>Primeira versão estável:</b> Windows e Mac com as mesmas funcionalidades — telemetria, sincronização, gadgets, painéis e exportação com transparência.</li>
+                <li data-i18n="news.100.3">O aviso de atualizações e o site levam ao download certo para o seu sistema.</li>
+              </ul>
+            </article>
               <article class="release">
                 <header class="release__head">
                   <h3><span data-i18n="news.version">Versão</span> 0.3.2</h3>

@@ -215,6 +215,7 @@ p { margin: 0 0 var(--spacing-sm); }
 .roadmap__item p { color: var(--color-muted); margin: 0; }
 .tag { display: inline-block; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; padding: 3px 10px; border-radius: 999px; margin-bottom: var(--spacing-xs); }
 .tag--progress { background: rgba(255, 122, 26, 0.15); color: var(--color-accent); }
+.tag--next { background: rgba(76, 195, 138, 0.15); color: var(--color-ok); }
 
 /* Changelog */
 .changelog { display: grid; gap: var(--spacing-md); }
