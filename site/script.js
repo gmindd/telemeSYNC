@@ -56,6 +56,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initVideo();
   loadSupporters();
   initVisitCounter();
+  initLayerTabs();
   initReveal();
 });
 
@@ -313,6 +314,42 @@ function initVisitCounter() {
     .catch(() => {
       /* statistics unavailable: keep it hidden */
     });
+}
+
+// Layers section: one panel per tab (dials, panels, laps, numbers, Christmas). Without JavaScript the
+// tabs stay hidden and every panel is shown, one after the other.
+function initLayerTabs() {
+  const list = document.querySelector('.layer-tabs');
+  if (!list) return;
+  const tabs = [...list.querySelectorAll('[role="tab"]')];
+  const select = (tab, focus = false) => {
+    for (const t of tabs) {
+      const on = t === tab;
+      t.setAttribute('aria-selected', String(on));
+      t.tabIndex = on ? 0 : -1;
+      document.getElementById(t.getAttribute('aria-controls')).hidden = !on;
+    }
+    if (focus) tab.focus();
+    // Keep the chosen tab in view inside the tab bar (it scrolls sideways on phones), not the page.
+    const box = list.getBoundingClientRect();
+    const r = tab.getBoundingClientRect();
+    if (r.left < box.left || r.right > box.right) list.scrollLeft += r.left - box.left - 8;
+  };
+  list.hidden = false;
+  list.closest('.layers')?.classList.add('has-tabs');
+  tabs.forEach((tab, i) => {
+    tab.addEventListener('click', () => select(tab));
+    tab.addEventListener('keydown', (e) => {
+      const step = { ArrowRight: 1, ArrowLeft: -1 }[e.key];
+      if (e.key === 'Home') select(tabs[0], true);
+      else if (e.key === 'End') select(tabs.at(-1), true);
+      else if (step) select(tabs[(i + step + tabs.length) % tabs.length], true);
+      else return;
+      e.preventDefault();
+    });
+  });
+  for (const t of tabs) document.getElementById(t.getAttribute('aria-controls')).hidden = true;
+  select(tabs[0]);
 }
 
 // Fades sections in as they scroll into view

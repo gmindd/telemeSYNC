@@ -17,7 +17,7 @@
   <meta property="og:url" content="https://telemesync.pereiragabriel.com/">
   <meta property="og:title" content="telemeSYNC · Telemetria das suas voltas de bicicleta por cima dos seus vídeos">
   <meta property="og:description" content="Gratuito. Sincroniza o FIT/GPX com os clips da GoPro, DJI ou Insta360 e gera overlays transparentes prontos para o editor de vídeo.">
-  <meta property="og:image" content="https://telemesync.pereiragabriel.com/assets/images/hero-composicao.webp">
+  <meta property="og:image" content="https://telemesync.pereiragabriel.com/assets/images/hero-road.webp">
   <meta property="og:image:width" content="1920">
   <meta property="og:image:height" content="1080">
   <meta name="twitter:card" content="summary_large_image">
@@ -30,7 +30,7 @@
     "name": "telemeSYNC",
     "url": "https://telemesync.pereiragabriel.com/",
     "description": "Programa gratuito que sincroniza a telemetria do ciclocomputador (FIT/GPX) com os vídeos da action cam (GoPro, DJI, Insta360) e gera overlays transparentes: velocidade, inclinação, mapa, altimetria, frequência cardíaca e painéis.",
-    "image": "https://telemesync.pereiragabriel.com/assets/images/hero-composicao.webp",
+    "image": "https://telemesync.pereiragabriel.com/assets/images/hero-road.webp",
     "applicationCategory": "MultimediaApplication",
     "operatingSystem": "Windows, macOS",
     "downloadUrl": "https://telemesync.pereiragabriel.com/#download",
@@ -123,9 +123,13 @@
           </ul>
         </div>
         <figure class="hero__frame">
-          <!-- Composição exportada pelo telemeSYNC (fundo transparente) por cima de uma paisagem ilustrativa -->
-          <img src="/assets/images/hero-composicao.webp" width="1920" height="1080" data-i18n-alt="hero.alt" alt="Exemplo de composição do telemeSYNC: velocidade, inclinação, mapa da volta e painel de velocidade com o gráfico de altimetria dos últimos 10 km.">
-          <figcaption data-i18n="hero.caption">Composição real exportada de uma volta, por cima de uma paisagem ilustrativa.</figcaption>
+          <!-- Composições exportadas pelo telemeSYNC (fundo transparente) por cima de imagens ilustrativas; vão alternando -->
+          <div class="hero-slides">
+            <img src="/assets/images/hero-road.webp" width="1600" height="900" fetchpriority="high" data-i18n-alt="hero.alt" alt="Composição do telemeSYNC por cima de um vídeo de estrada: mostradores de velocidade e inclinação, mapa circular, perfil de altimetria e painel com as médias.">
+            <img src="/assets/images/hero-mtb.webp" width="1600" height="900" loading="lazy" data-i18n-alt="hero.alt2" alt="Composição de BTT: velocidade e frequência cardíaca em texto, mapa do traçado e painel de velocidade com o gráfico dos últimos 10 minutos.">
+            <img src="/assets/images/hero-gravel.webp" width="1600" height="900" loading="lazy" data-i18n-alt="hero.alt3" alt="Composição de gravel: volta em curso com o tempo e as médias, mostradores de potência e frequência cardíaca, distância e inclinação.">
+          </div>
+          <figcaption data-i18n="hero.caption">Composições reais exportadas de uma volta, por cima de imagens ilustrativas.</figcaption>
         </figure>
       </div>
     </section>
@@ -228,24 +232,48 @@
     </section>
 
     <!-- Layers -->
-    <section class="section" id="layers" aria-labelledby="layers-titulo">
+    <section class="section layers" id="layers" aria-labelledby="layers-titulo">
       <div class="container">
         <h2 id="layers-titulo" data-i18n="layers.title">Os layers</h2>
         <p class="section__lead" data-i18n="layers.lead">
           Cada gadget é exportado como um vídeo com fundo transparente. Escolha as métricas, as cores e o gradiente,
           e posicione-os no editor ou deixe o telemeSYNC fazer a composição.
         </p>
+        <ul class="layer-facts">
+          <li><b>53</b> <span data-i18n="layers.factGadgets">gadgets, num tema normal e num de Natal</span></li>
+          <li><b>9</b> <span data-i18n="layers.factMetrics">métricas: velocidade, potência, FC, cadência, altitude, inclinação, distância, tempo e temperatura</span></li>
+          <li><b>5</b> <span data-i18n="layers.factAlpha">formatos com transparência: ProRes 4444, QuickTime Animation, FFV1, WebM ou imagens PNG</span></li>
+        </ul>
 
-        <h3 class="gallery__title" data-i18n="layers.dials">Mostradores</h3>
-        <p class="muted" data-i18n="layers.dialsText">Novo design: gadgets redondos com aro de prato, um mapa circular que roda com a direção, o perfil de altimetria em cartão e um painel compacto com as médias.</p>
+        <!-- Tabs (script.js shows them and hides the other panels; without JavaScript every panel is shown) -->
+        <div class="layer-tabs" role="tablist" aria-label="Tipos de layers" data-i18n-aria-label="layers.tabsLabel" hidden>
+          <button class="layer-tab" type="button" role="tab" id="tab-mostradores" aria-controls="painel-mostradores" aria-selected="false"><span data-i18n="layers.dials">Mostradores</span> <span class="layer-tab__n">12</span></button>
+          <button class="layer-tab" type="button" role="tab" id="tab-paineis" aria-controls="painel-paineis" aria-selected="false"><span data-i18n="layers.panels">Painéis</span> <span class="layer-tab__n">7</span></button>
+          <button class="layer-tab" type="button" role="tab" id="tab-voltas" aria-controls="painel-voltas" aria-selected="false"><span data-i18n="layers.laps">Voltas e segmentos</span> <span class="layer-tab__n">2</span></button>
+          <button class="layer-tab" type="button" role="tab" id="tab-numeros" aria-controls="painel-numeros" aria-selected="false"><span data-i18n="layers.gadgets">Números e mapas</span> <span class="layer-tab__n">11</span></button>
+          <button class="layer-tab" type="button" role="tab" id="tab-natal" aria-controls="painel-natal" aria-selected="false"><span data-i18n="layers.natal">Natal</span> <span class="layer-tab__n">10</span></button>
+        </div>
+        <p class="layer-note" data-i18n="layers.bgNote">Aqui por cima de imagens ilustrativas; no vídeo exportado o fundo é transparente.</p>
+
+        <div class="layer-panel" role="tabpanel" id="painel-mostradores" aria-labelledby="tab-mostradores">
+          <h3 class="gallery__title" data-i18n="layers.dials">Mostradores</h3>
+          <p class="muted" data-i18n="layers.dialsText">Gadgets redondos com aro de prato, um mapa circular que roda com a direção, o perfil de altimetria em cartão e um painel compacto com as médias.</p>
         <div class="gallery gallery--dials">
+          <figure class="shot">
+            <img src="/assets/images/mostrador-velocidade.webp" width="450" height="510" loading="lazy" data-i18n-alt="shot.mostrador-velocidade.alt" alt="Mostrador redondo de velocidade em km/h, com a velocidade média e máxima por baixo.">
+            <figcaption data-i18n="shot.mostrador-velocidade">Velocidade, com média e máxima</figcaption>
+          </figure>
           <figure class="shot">
             <img src="/assets/images/mostrador-fc.webp" width="450" height="450" loading="lazy" data-i18n-alt="shot.mostrador-fc.alt" alt="Mostrador redondo de frequência cardíaca com aro de prato, barra de zonas e zona atual.">
             <figcaption data-i18n="shot.mostrador-fc">Frequência cardíaca com a zona atual</figcaption>
           </figure>
           <figure class="shot">
-            <img src="/assets/images/mostrador-velocidade.webp" width="450" height="510" loading="lazy" data-i18n-alt="shot.mostrador-velocidade.alt" alt="Mostrador redondo de velocidade em km/h, com a velocidade média e máxima por baixo.">
-            <figcaption data-i18n="shot.mostrador-velocidade">Velocidade, com média e máxima</figcaption>
+            <img src="/assets/images/mostrador-potencia.webp" width="450" height="510" loading="lazy" data-i18n-alt="shot.mostrador-potencia" alt="Potência com a zona, a média e o pico">
+            <figcaption data-i18n="shot.mostrador-potencia">Potência com a zona, a média e o pico</figcaption>
+          </figure>
+          <figure class="shot">
+            <img src="/assets/images/mostrador-cadencia.webp" width="450" height="450" loading="lazy" data-i18n-alt="shot.mostrador-cadencia" alt="Cadência">
+            <figcaption data-i18n="shot.mostrador-cadencia">Cadência</figcaption>
           </figure>
           <figure class="shot">
             <img src="/assets/images/mostrador-altitude.webp" width="450" height="510" loading="lazy" data-i18n-alt="shot.mostrador-altitude.alt" alt="Mostrador redondo de altitude com o perfil do terreno recente, ganho e perda de elevação.">
@@ -260,8 +288,16 @@
             <figcaption data-i18n="shot.mapa-circular">Mapa circular que roda com a direção</figcaption>
           </figure>
           <figure class="shot">
+            <img src="/assets/images/mostrador-distancia.webp" width="450" height="510" loading="lazy" data-i18n-alt="shot.mostrador-distancia" alt="Distância percorrida e total">
+            <figcaption data-i18n="shot.mostrador-distancia">Distância percorrida e total</figcaption>
+          </figure>
+          <figure class="shot">
             <img src="/assets/images/mostrador-tempo.webp" width="450" height="510" loading="lazy" data-i18n-alt="shot.mostrador-tempo.alt" alt="Mostrador redondo do tempo decorrido, com o tempo total da volta por baixo.">
             <figcaption data-i18n="shot.mostrador-tempo">Tempo decorrido e total</figcaption>
+          </figure>
+          <figure class="shot">
+            <img src="/assets/images/mostrador-temperatura.webp" width="450" height="450" loading="lazy" data-i18n-alt="shot.mostrador-temperatura" alt="Temperatura">
+            <figcaption data-i18n="shot.mostrador-temperatura">Temperatura</figcaption>
           </figure>
         </div>
         <div class="gallery gallery--wide gallery--cards">
@@ -274,30 +310,62 @@
             <figcaption data-i18n="shot.painel-compacto">Painel compacto com as médias</figcaption>
           </figure>
         </div>
+        </div>
 
-        <h3 class="gallery__title" data-i18n="layers.panels">Painéis</h3>
-        <p class="muted" data-i18n="layers.panelsText">Mostrador, máximo, média, zona ou aceleração, e um gráfico dos últimos 10 min ou 10 km. O gráfico pode mostrar outra métrica.</p>
+        <div class="layer-panel" role="tabpanel" id="painel-paineis" aria-labelledby="tab-paineis">
+          <h3 class="gallery__title" data-i18n="layers.panels">Painéis</h3>
+          <p class="muted" data-i18n="layers.panelsText">Mostrador, máximo, média, zona ou aceleração, e um gráfico dos últimos 10 min ou 10 km. O gráfico pode mostrar outra métrica.</p>
         <div class="gallery gallery--wide">
           <figure class="shot">
-            <img src="/assets/images/painel-velocidade.webp" width="1500" height="420" loading="lazy" data-i18n-alt="shot.painel-velocidade.alt" alt="Painel de velocidade com mostrador, velocidade máxima e média, aceleração e gráfico de altimetria dos últimos 10 km.">
-            <figcaption data-i18n="shot.painel-velocidade">Velocidade, com o gráfico de altimetria dos últimos 10 km</figcaption>
+            <img src="/assets/images/painel-velocidade.webp" width="1500" height="420" loading="lazy" data-i18n-alt="shot.painel-velocidade.alt" alt="Painel de velocidade com mostrador, velocidade máxima e média, aceleração e gráfico dos últimos 10 minutos.">
+            <figcaption data-i18n="shot.painel-velocidade">Velocidade, com máxima, média e aceleração</figcaption>
+          </figure>
+          <figure class="shot">
+            <img src="/assets/images/painel-potencia.webp" width="1500" height="420" loading="lazy" data-i18n-alt="shot.painel-potencia" alt="Potência, com o pico, a média e a zona">
+            <figcaption data-i18n="shot.painel-potencia">Potência, com o pico, a média e a zona</figcaption>
           </figure>
           <figure class="shot">
             <img src="/assets/images/painel-fc.webp" width="1500" height="420" loading="lazy" data-i18n-alt="shot.painel-fc.alt" alt="Painel de frequência cardíaca com zona atual e gráfico dos últimos 10 minutos.">
             <figcaption data-i18n="shot.painel-fc">Frequência cardíaca com zonas</figcaption>
           </figure>
           <figure class="shot">
-            <img src="/assets/images/painel-altitude.webp" width="1500" height="420" loading="lazy" data-i18n-alt="shot.painel-altitude.alt" alt="Painel de altitude com gradiente verde e azul, máximo, mínimo e desnível acumulado.">
-            <figcaption data-i18n="shot.painel-altitude">Altitude, com outro gradiente de cores</figcaption>
+            <img src="/assets/images/painel-cadencia.webp" width="1500" height="420" loading="lazy" data-i18n-alt="shot.painel-cadencia" alt="Cadência, com a máxima, a média e a variação">
+            <figcaption data-i18n="shot.painel-cadencia">Cadência, com a máxima, a média e a variação</figcaption>
+          </figure>
+          <figure class="shot">
+            <img src="/assets/images/painel-altitude.webp" width="1500" height="420" loading="lazy" data-i18n-alt="shot.painel-altitude.alt" alt="Painel de altitude com máximo, mínimo, desnível acumulado e gráfico dos últimos 10 minutos.">
+            <figcaption data-i18n="shot.painel-altitude">Altitude, com máximo, mínimo e desnível</figcaption>
+          </figure>
+          <figure class="shot">
+            <img src="/assets/images/painel-inclinacao.webp" width="1500" height="420" loading="lazy" data-i18n-alt="shot.painel-inclinacao" alt="Inclinação, com a máxima, a mínima e o desnível">
+            <figcaption data-i18n="shot.painel-inclinacao">Inclinação, com a máxima, a mínima e o desnível</figcaption>
           </figure>
           <figure class="shot">
             <img src="/assets/images/painel-temperatura.webp" width="1500" height="420" loading="lazy" data-i18n-alt="shot.painel-temperatura.alt" alt="Painel de temperatura com mínimo, máximo e variação.">
             <figcaption data-i18n="shot.painel-temperatura">Temperatura</figcaption>
           </figure>
         </div>
+        </div>
 
-        <h3 class="gallery__title" data-i18n="layers.gadgets">Gadgets</h3>
-        <div class="gallery">
+        <div class="layer-panel" role="tabpanel" id="painel-voltas" aria-labelledby="tab-voltas">
+          <h3 class="gallery__title" data-i18n="layers.laps">Voltas e segmentos</h3>
+          <p class="muted" data-i18n="layers.lapsText">Marque voltas ou segmentos na linha do tempo (ou use as voltas do ficheiro FIT): um gadget mostra a volta em curso e a diferença para a melhor, outro vai preenchendo a tabela.</p>
+        <div class="gallery gallery--wide gallery--laps">
+          <figure class="shot">
+            <img src="/assets/images/voltas-direto.webp" width="690" height="450" loading="lazy" data-i18n-alt="shot.voltas-direto" alt="Volta em curso: tempo, melhor volta e médias">
+            <figcaption data-i18n="shot.voltas-direto">Volta em curso: tempo, melhor volta e médias</figcaption>
+          </figure>
+          <figure class="shot">
+            <img src="/assets/images/voltas-tabela.webp" width="930" height="562" loading="lazy" data-i18n-alt="shot.voltas-tabela" alt="Tabela das voltas, preenchida à medida que avançam">
+            <figcaption data-i18n="shot.voltas-tabela">Tabela das voltas, preenchida à medida que avançam</figcaption>
+          </figure>
+        </div>
+        </div>
+
+        <div class="layer-panel" role="tabpanel" id="painel-numeros" aria-labelledby="tab-numeros">
+          <h3 class="gallery__title" data-i18n="layers.gadgets">Números e mapas</h3>
+          <p class="muted" data-i18n="layers.gadgetsText">Os gadgets mais simples: só o número, o traçado ou o perfil, para quem quer o vídeo limpo.</p>
+        <div class="gallery gallery--numbers">
           <figure class="shot">
             <img src="/assets/images/mapa.webp" width="630" height="630" loading="lazy" data-i18n-alt="shot.mapa.alt" alt="Mapa do traçado da volta com a parte já percorrida destacada.">
             <figcaption data-i18n="shot.mapa">Mapa do traçado</figcaption>
@@ -307,21 +375,91 @@
             <figcaption data-i18n="shot.perfil">Perfil de altimetria</figcaption>
           </figure>
           <figure class="shot">
-            <img src="/assets/images/texto-speed.webp" loading="lazy" data-i18n-alt="shot.texto-speed.alt" alt="Gadget de velocidade em km/h.">
+            <img src="/assets/images/texto-speed.webp" width="434" height="192" loading="lazy" data-i18n-alt="shot.texto-speed.alt" alt="Gadget de velocidade em km/h.">
             <figcaption data-i18n="shot.texto-speed">Velocidade</figcaption>
           </figure>
           <figure class="shot">
-            <img src="/assets/images/texto-grade.webp" loading="lazy" data-i18n-alt="shot.texto-grade.alt" alt="Gadget de inclinação em percentagem, com indicador por cor.">
-            <figcaption data-i18n="shot.texto-grade">Inclinação</figcaption>
-          </figure>
-          <figure class="shot">
-            <img src="/assets/images/texto-heartRate.webp" loading="lazy" data-i18n-alt="shot.texto-heartRate.alt" alt="Gadget de frequência cardíaca colorido pela zona.">
+            <img src="/assets/images/texto-heartRate.webp" width="370" height="192" loading="lazy" data-i18n-alt="shot.texto-heartRate.alt" alt="Gadget de frequência cardíaca colorido pela zona.">
             <figcaption data-i18n="shot.texto-heartRate">Frequência cardíaca</figcaption>
           </figure>
           <figure class="shot">
-            <img src="/assets/images/texto-distance.webp" loading="lazy" data-i18n-alt="shot.texto-distance.alt" alt="Gadget de distância percorrida em km.">
+            <img src="/assets/images/texto-power.webp" width="396" height="192" loading="lazy" data-i18n-alt="shot.texto-power" alt="Potência">
+            <figcaption data-i18n="shot.texto-power">Potência</figcaption>
+          </figure>
+          <figure class="shot">
+            <img src="/assets/images/texto-cadence.webp" width="370" height="192" loading="lazy" data-i18n-alt="shot.texto-cadence" alt="Cadência">
+            <figcaption data-i18n="shot.texto-cadence">Cadência</figcaption>
+          </figure>
+          <figure class="shot">
+            <img src="/assets/images/texto-grade.webp" width="374" height="192" loading="lazy" data-i18n-alt="shot.texto-grade.alt" alt="Gadget de inclinação em percentagem, com indicador por cor.">
+            <figcaption data-i18n="shot.texto-grade">Inclinação</figcaption>
+          </figure>
+          <figure class="shot">
+            <img src="/assets/images/texto-distance.webp" width="538" height="192" loading="lazy" data-i18n-alt="shot.texto-distance.alt" alt="Gadget de distância percorrida em km.">
             <figcaption data-i18n="shot.texto-distance">Distância</figcaption>
           </figure>
+          <figure class="shot">
+            <img src="/assets/images/texto-elevationGain.webp" width="396" height="192" loading="lazy" data-i18n-alt="shot.texto-elevationGain" alt="Desnível acumulado">
+            <figcaption data-i18n="shot.texto-elevationGain">Desnível acumulado</figcaption>
+          </figure>
+          <figure class="shot">
+            <img src="/assets/images/texto-localTime.webp" width="588" height="192" loading="lazy" data-i18n-alt="shot.texto-localTime" alt="Hora do dia">
+            <figcaption data-i18n="shot.texto-localTime">Hora do dia</figcaption>
+          </figure>
+          <figure class="shot">
+            <img src="/assets/images/texto-temperature.webp" width="306" height="192" loading="lazy" data-i18n-alt="shot.texto-temperature" alt="Temperatura">
+            <figcaption data-i18n="shot.texto-temperature">Temperatura</figcaption>
+          </figure>
+        </div>
+        </div>
+
+        <div class="layer-panel" role="tabpanel" id="painel-natal" aria-labelledby="tab-natal">
+          <h3 class="gallery__title" data-i18n="layers.natal">Natal</h3>
+          <p class="muted" data-i18n="layers.natalText">Um tema de Natal completo, com neve, luzes, renas e chocolate quente, para as voltas de dezembro.</p>
+        <div class="gallery gallery--dials gallery--natal">
+          <figure class="shot">
+            <img src="/assets/images/natal-velocidade.webp" width="510" height="546" loading="lazy" data-i18n-alt="shot.natal-velocidade" alt="Velocidade com neve">
+            <figcaption data-i18n="shot.natal-velocidade">Velocidade com neve</figcaption>
+          </figure>
+          <figure class="shot">
+            <img src="/assets/images/natal-fc-rena.webp" width="510" height="546" loading="lazy" data-i18n-alt="shot.natal-fc-rena" alt="Frequência cardíaca com hastes de rena">
+            <figcaption data-i18n="shot.natal-fc-rena">Frequência cardíaca com hastes de rena</figcaption>
+          </figure>
+          <figure class="shot">
+            <img src="/assets/images/natal-potencia.webp" width="510" height="546" loading="lazy" data-i18n-alt="shot.natal-potencia" alt="Potência numa coroa de Natal">
+            <figcaption data-i18n="shot.natal-potencia">Potência numa coroa de Natal</figcaption>
+          </figure>
+          <figure class="shot">
+            <img src="/assets/images/natal-altitude-cabana.webp" width="496" height="496" loading="lazy" data-i18n-alt="shot.natal-altitude-cabana" alt="Altitude numa cabana com luzes">
+            <figcaption data-i18n="shot.natal-altitude-cabana">Altitude numa cabana com luzes</figcaption>
+          </figure>
+          <figure class="shot">
+            <img src="/assets/images/natal-inclinacao.webp" width="450" height="496" loading="lazy" data-i18n-alt="shot.natal-inclinacao" alt="Inclinação num sinal de aviso">
+            <figcaption data-i18n="shot.natal-inclinacao">Inclinação num sinal de aviso</figcaption>
+          </figure>
+          <figure class="shot">
+            <img src="/assets/images/natal-distancia-globo.webp" width="450" height="510" loading="lazy" data-i18n-alt="shot.natal-distancia-globo" alt="Distância num globo de neve">
+            <figcaption data-i18n="shot.natal-distancia-globo">Distância num globo de neve</figcaption>
+          </figure>
+          <figure class="shot">
+            <img src="/assets/images/natal-tempo-caneca.webp" width="540" height="496" loading="lazy" data-i18n-alt="shot.natal-tempo-caneca" alt="Tempo numa caneca de chocolate quente">
+            <figcaption data-i18n="shot.natal-tempo-caneca">Tempo numa caneca de chocolate quente</figcaption>
+          </figure>
+          <figure class="shot">
+            <img src="/assets/images/natal-mapa.webp" width="510" height="562" loading="lazy" data-i18n-alt="shot.natal-mapa" alt="Mapa circular com coroa">
+            <figcaption data-i18n="shot.natal-mapa">Mapa circular com coroa</figcaption>
+          </figure>
+        </div>
+        <div class="gallery gallery--wide gallery--cards">
+          <figure class="shot">
+            <img src="/assets/images/natal-perfil.webp" width="936" height="418" loading="lazy" data-i18n-alt="shot.natal-perfil" alt="Perfil de altimetria com moldura de bengala de doce">
+            <figcaption data-i18n="shot.natal-perfil">Perfil de altimetria com moldura de bengala de doce</figcaption>
+          </figure>
+          <figure class="shot">
+            <img src="/assets/images/natal-resumo.webp" width="648" height="508" loading="lazy" data-i18n-alt="shot.natal-resumo" alt="Painel de dados numa placa de madeira">
+            <figcaption data-i18n="shot.natal-resumo">Painel de dados numa placa de madeira</figcaption>
+          </figure>
+        </div>
         </div>
       </div>
     </section>
