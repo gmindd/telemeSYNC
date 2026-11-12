@@ -106,6 +106,35 @@ async function collectVisits(today) {
   return { ...report(state, today), lines, geo: !!geo };
 }
 
+// ------------------------------------------------------------------------------------- Counts before
+
+/**
+ * Counts kept from before the counter started again (e.g. a redeploy without a persistent volume),
+ * written by hand in data/stats-manual.json → "before":
+ *   { "visitors": 120, "views": 300, "since": "2026-11-10",          // site visits before the restart
+ *     "appWeeks": { "2026-W46": 8 } }                                // people who opened the program, per week
+ * They are added to the counts the server makes. A week's program users are added as they are (a
+ * person counted before and after the restart counts twice, so write the week's total minus that).
+ */
+export function addCountsBefore(out, before) {
+  if (!before || typeof before !== 'object') return;
+  const v = out.visits;
+  if (v && Number(before.visitors) > 0) {
+    v.total += Number(before.visitors);
+    v.views = (v.views ?? 0) + (Number(before.views) || 0);
+    if (typeof before.since === 'string' && (!v.since || before.since < v.since)) v.since = before.since;
+  }
+  const weeks = before.appWeeks && typeof before.appWeeks === 'object' ? before.appWeeks : {};
+  const app = out.app;
+  if (app?.week && Number(weeks[app.week.key]) > 0) {
+    app.week = { ...app.week, n: app.week.n + Number(weeks[app.week.key]) };
+  } else if (app && !app.week) {
+    // No program check since the restart yet: this week's earlier count on its own.
+    const key = Object.keys(weeks).sort().at(-1);
+    if (key && Number(weeks[key]) > 0) app.week = { key, n: Number(weeks[key]), complete: false };
+  }
+}
+
 // ---------------------------------------------------------------------------------------------- History
 
 /** Adds (or replaces) today's snapshot; keeps the newest MAX_HISTORY days. */
@@ -149,6 +178,7 @@ export async function collect(now = new Date()) {
 
   const manual = await readJson(MANUAL, {});
   out.audience = Array.isArray(manual.audience) ? manual.audience.filter((a) => a && a.label && Number.isFinite(Number(a.value))) : [];
+  addCountsBefore(out, manual.before);
 
   try {
     let history = (await readJson(HISTORY, { days: [] })).days ?? [];

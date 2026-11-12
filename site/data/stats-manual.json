@@ -1,4 +1,7 @@
 {
-  "_help": "Numbers added by hand to the /stats page, e.g. {\"label\": \"Instagram followers\", \"value\": 1200, \"url\": \"https://www.instagram.com/...\"}. Shown as they are; the collector reads this file every hour.",
-  "audience": []
+  "_help": "Numbers added by hand to the /stats page. audience: e.g. {\"label\": \"Instagram followers\", \"value\": 1200, \"url\": \"https://www.instagram.com/...\"}, shown as they are. before: counts from before the counter started again (see addCountsBefore in scripts/stats-collector.mjs), added to the server's counts. The collector reads this file every hour.",
+  "audience": [],
+  "before": {
+    "appWeeks": { "2026-W46": 8 }
+  }
 }
