@@ -114,6 +114,7 @@ async function collectVisits(today) {
  *   { "months": { "2026-11": { "visitors": 439, "views": 900, "app": 48, "downloads": 10,
  *                              "countries": { "PT": 265, "ES": 1 },
  *                              "systems": { "Windows": 162, "iOS": 88 },
+ *                              "referrers": { "YouTube": 49, "Instagram": 47 },
  *                              "devices": { "mobile": 224, "computer": 215 } } } }
  * They are added to that month's counts made by the server, and the visitors also to the all-time
  * total. Program users are added as they are (a person counted before and after the restart counts
@@ -151,10 +152,11 @@ export function addCountsBefore(out, before) {
     const newCountries = merge('countries', b.countries, (k) => /^[A-Z]{2}$/.test(k), 10);
     if (newCountries) m.countriesCount = (m.countriesCount ?? 0) + newCountries;
     merge('systems', b.systems, (k) => k.length > 0 && k.length < 40, 6);
+    merge('referrers', b.referrers, (k) => k.length > 0 && k.length < 80, 8);
     const dev = b.devices && typeof b.devices === 'object' ? b.devices : null;
     if (dev && (num(dev.mobile) || num(dev.computer)) && m.devices) {
       m.devices = { mobile: (m.devices.mobile ?? 0) + num(dev.mobile), computer: (m.devices.computer ?? 0) + num(dev.computer) };
-    } else if (num(b.visitors)) m.devicesUnknown = true;
+    } else if (num(b.visitors) && m.devices) m.devicesUnknown = true;
   };
   if (out.monthly) {
     // A month that had counts only before the restart still shows as the previous month.
