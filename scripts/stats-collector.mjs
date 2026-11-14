@@ -66,10 +66,13 @@ export function assetOs(name) {
   return 'other';
 }
 
-/** Downloads per release and in total, from GitHub's releases list. Drafts are ignored. */
+/**
+ * Downloads per release and in total, from GitHub's releases list. Drafts are ignored, and so are the Android app's
+ * test releases ("mobile-v…"), so the desktop figures and its latest version stay the desktop's.
+ */
 export function summarizeDownloads(releases) {
   const list = releases
-    .filter((r) => !r.draft)
+    .filter((r) => !r.draft && !/^mobile-/i.test(String(r.tag_name ?? '')))
     .map((r) => {
       const row = { version: String(r.tag_name ?? '').replace(/^v/i, ''), date: String(r.published_at ?? '').slice(0, 10), windows: 0, mac: 0, other: 0 };
       for (const a of r.assets ?? []) row[assetOs(a.name)] += Number(a.download_count) || 0;

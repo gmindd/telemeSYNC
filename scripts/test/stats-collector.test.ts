@@ -3,8 +3,9 @@ import { describe, expect, it } from 'vitest';
 import { addCountsBefore, addMonthlyDownloads, addSnapshot, assetOs, summarizeDownloads } from '../stats-collector.mjs';
 
 describe('stats collector', () => {
-  it('counts downloads per release and per system, ignoring drafts', () => {
+  it('counts downloads per release and per system, ignoring drafts and the Android test releases', () => {
     const s = summarizeDownloads([
+      { tag_name: 'mobile-v0.4.0', prerelease: true, published_at: '2026-11-15T10:00:00Z', assets: [{ name: 'telemesync-0.4.0.apk', download_count: 9 }] },
       { tag_name: 'v1.1.0', published_at: '2026-11-04T10:00:00Z', assets: [{ name: 'telemeSYNC-1.1.0-windows.zip', download_count: 37 }, { name: 'telemeSYNC-1.1.0-macos.zip', download_count: 14 }] },
       { tag_name: 'V1.0.0', published_at: '2026-10-15T10:00:00Z', assets: [{ name: 'telemeSYNC-1.0.0-windows.zip', download_count: 7 }, { name: 'telemeSYNC-1.0.0-macos.zip', download_count: 5 }] },
       { tag_name: 'v1.2.0', draft: true, published_at: null, assets: [{ name: 'x-windows.zip', download_count: 99 }] },

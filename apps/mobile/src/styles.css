@@ -97,6 +97,10 @@ input[type='range'] { width: 100%; accent-color: var(--accent); height: 28px; ma
 .pickcard .pick span { width: 100%; }
 .demo { display: grid; gap: 8px; padding: 12px; border: 1px dashed var(--border); border-radius: 16px; }
 .version { text-align: center; color: var(--border); font-size: 0.75rem; margin: auto 0 0; }
+.update { display: grid; gap: 10px; padding: 14px 16px; border: 1px solid var(--accent); border-radius: 16px; background: rgba(255, 122, 26, 0.1); }
+.update p { margin: 0; font-weight: 700; }
+.update .row { align-items: center; }
+.update .primary { min-height: 44px; }
 
 /* Editor */
 .editor { height: 100%; display: flex; flex-direction: column; background: var(--bg); }
