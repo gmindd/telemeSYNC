@@ -7,6 +7,8 @@ on:
   push:
     paths:
       - 'apps/**'
+      # The mobile app has its own build; changing it alone doesn't rebuild the desktop package
+      - '!apps/mobile/**'
       - 'packages/**'
       - 'scripts/package-mac.sh'
       - 'scripts/zip-unix.py'
