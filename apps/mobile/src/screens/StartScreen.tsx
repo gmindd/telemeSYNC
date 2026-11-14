@@ -6,6 +6,7 @@ import { clock, mmss, num, t } from '../i18n.ts';
 import { loadClip, loadRide } from '../lib/project.ts';
 import { probeVideo } from '../lib/render.ts';
 import { finishSignIn, loadSession, onSignInReturn, signOut, startSignIn, type StravaSession } from '../lib/strava.ts';
+import { checkForUpdate, dismissUpdate, downloadUpdate, type MobileRelease } from '../lib/updates.ts';
 import { clipStart, useProject } from '../state.ts';
 
 export function StartScreen() {
@@ -14,6 +15,15 @@ export function StartScreen() {
   const [error, setError] = useState('');
   const [strava, setStrava] = useState<StravaSession | null>(() => loadSession());
   const [sheet, setSheet] = useState(false);
+  const [update, setUpdate] = useState<MobileRelease | null>(null);
+
+  useEffect(() => {
+    let alive = true;
+    void checkForUpdate(__APP_VERSION__).then((r) => alive && setUpdate(r));
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   // Back from Strava's authorization: claim the tokens and show the activities
   useEffect(
@@ -87,6 +97,20 @@ export function StartScreen() {
         </h1>
         <p>{t('app.tagline')}</p>
       </header>
+
+      {update && (
+        <section className="update" role="status">
+          <p>{t('update.available', { version: update.version })}</p>
+          <div className="row">
+            <button type="button" className="primary" onClick={() => downloadUpdate(update)}>
+              {t('update.download')}
+            </button>
+            <button type="button" className="link" onClick={() => (dismissUpdate(update.version), setUpdate(null))}>
+              {t('update.later')}
+            </button>
+          </div>
+        </section>
+      )}
 
       <section className={`pickcard${s.clip ? ' is-done' : ''}`}>
         <span className="pickcard__n">1</span>

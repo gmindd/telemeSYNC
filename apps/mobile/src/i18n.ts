@@ -94,6 +94,9 @@ const pt = {
   'strava.rate': 'O Strava pediu uma pausa: tente daqui a alguns minutos.',
   'strava.scope': 'Para ler as atividades, autorize o acesso a "Ver dados das suas atividades".',
   'strava.powered': 'Dados do Strava',
+  'update.available': 'Nova versão {version} disponível.',
+  'update.download': 'Descarregar',
+  'update.later': 'Agora não',
 };
 
 type Key = keyof typeof pt;
@@ -190,6 +193,9 @@ const en: Record<Key, string> = {
   'strava.rate': 'Strava asked for a break: try again in a few minutes.',
   'strava.scope': 'To read your activities, allow "View data about your activities".',
   'strava.powered': 'Data from Strava',
+  'update.available': 'New version {version} available.',
+  'update.download': 'Download',
+  'update.later': 'Not now',
 };
 
 export const LANG: Lang = (navigator.language || 'en').toLowerCase().startsWith('pt') ? 'pt' : 'en';

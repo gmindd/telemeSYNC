@@ -66,6 +66,23 @@ npm run android -w @telemesync/mobile    # abre o projeto no Android Studio
 
 Instalar no telemóvel ligado por USB (com a depuração USB ativa): `adb install -r android/app/build/outputs/apk/debug/app-debug.apk`.
 
+### Versão para distribuir (APK assinado)
+
+```bash
+npm run apk:release -w @telemesync/mobile   # gera android/app/build/outputs/apk/release/app-release.apk
+```
+
+- A versão vem do `version` deste `package.json` (`0.4.0` → versionCode 400). Suba-a a cada versão nova, senão o
+  Android não instala por cima.
+- A chave de assinatura fica fora do repositório, em `~/.telemesync/` (`telemesync-release.jks` +
+  `keystore.properties`), ou no ficheiro indicado por `TELEMESYNC_KEYSTORE_PROPS`. **Guarde uma cópia desta pasta:**
+  sem ela, as atualizações já não instalam por cima da app (cada pessoa teria de desinstalar e perder as preferências).
+  Sem o ficheiro, o APK de release sai sem assinatura.
+- Publicar: GitHub → Releases → nova release com a tag `mobile-v<versão>` (ex. `mobile-v0.4.0`), marcada como
+  **pre-release** (para a release mais recente do GitHub continuar a ser a do desktop), com o APK anexado como
+  `telemesync-<versão>.apk`. As apps já instaladas veem a versão nova no ecrã inicial e oferecem o download; as
+  estatísticas do site ignoram estas releases.
+
 Se o Gradle falhar no Windows com `Unable to establish loopback connection`, o Java não conseguiu criar o socket
 local na pasta temporária; aponte-a para dentro do projeto antes de compilar:
 

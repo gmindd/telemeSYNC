@@ -1,13 +1,14 @@
 {
   "name": "@telemesync/mobile",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "android": "vite build && cap sync android && cap open android",
-    "apk": "vite build && cap sync android && cd android && gradlew assembleDebug"
+    "apk": "vite build && cap sync android && cd android && gradlew assembleDebug",
+    "apk:release": "vite build && cap sync android && cd android && gradlew assembleRelease"
   },
   "dependencies": {
     "@capacitor/android": "^8.6.2",
