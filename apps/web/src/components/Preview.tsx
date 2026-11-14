@@ -2,7 +2,9 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   effectiveStart,
   formatDuration,
+  gadgetZones,
   resolveLayout,
+  zonesPath,
   type GadgetLayout,
   type GadgetPlacement,
   getOverlay,
@@ -18,27 +20,6 @@ import {
 } from '@telemesync/core';
 import { useLang, useT, type T } from '../i18n/index.tsx';
 import { useApp } from '../lib/store.ts';
-import { zoneHit, zonesPath, type SocialPlatform } from '../lib/safeZones.ts';
-
-/** Which gadgets touch a social app's covered areas (by their box in the frame). */
-export function gadgetZones(
-  overlays: OverlayId[],
-  placements: Record<OverlayId, GadgetPlacement>,
-  aspect: number,
-  style: OverlayStyle,
-  platforms: SocialPlatform[],
-): Partial<Record<OverlayId, 'ui' | 'maybe'>> {
-  const out: Partial<Record<OverlayId, 'ui' | 'maybe'>> = {};
-  if (!platforms.length) return out;
-  for (const id of overlays) {
-    const p = placements[id];
-    if (!p) continue;
-    const s = overlayPixelSize(getOverlay(id), style);
-    const hit = zoneHit({ x: p.x, y: p.y, w: p.w, h: p.w * (s.height / s.width) * aspect }, platforms);
-    if (hit) out[id] = hit;
-  }
-  return out;
-}
 import { currentPlatform } from '../lib/updates.ts';
 
 type PlayState = 'loading' | 'ok' | 'error' | 'nofile' | 'unsupported';

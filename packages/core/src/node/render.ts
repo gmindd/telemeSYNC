@@ -86,8 +86,10 @@ async function renderFrames(src: FrameSource, o: SinkOptions): Promise<{ frames:
     }
     await sink?.finish();
   } catch (e) {
-    sink?.abort();
-    if (format !== 'png') await rm(o.outPath, { force: true });
+    await sink?.abort();
+    // The partial file goes; retried because Windows (or an antivirus scan) may still hold it for a moment.
+    // A failure here must not hide why the render stopped.
+    if (format !== 'png') await rm(o.outPath, { force: true, maxRetries: 10, retryDelay: 100 }).catch(() => undefined);
     throw e;
   }
   return { frames: total, width, height };
