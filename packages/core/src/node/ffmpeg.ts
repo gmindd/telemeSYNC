@@ -102,8 +102,10 @@ export class FfmpegSink {
     await this.exited;
   }
 
-  abort(): void {
+  /** Stops FFmpeg and resolves once it has exited (on Windows its file stays locked until then). */
+  async abort(): Promise<void> {
     this.proc.stdin.destroy();
     this.proc.kill('SIGKILL');
+    await this.exited.catch(() => undefined);
   }
 }

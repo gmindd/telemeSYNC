@@ -35,7 +35,7 @@ import {
 } from '@telemesync/core';
 import { currentLang, t, t as tr, useLang } from '../i18n/index.tsx';
 import { api, type JobSnapshot } from './api.ts';
-import { SOCIAL_PLATFORMS, type SocialPlatform } from './safeZones.ts';
+import { SOCIAL_PLATFORMS, type SocialPlatform } from '@telemesync/core';
 
 export type Step = 'welcome' | 'telemetry' | 'clips' | 'sync' | 'overlays' | 'render';
 

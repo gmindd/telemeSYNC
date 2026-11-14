@@ -1,3 +1,7 @@
+import type { GadgetPlacement } from './layout.ts';
+import { getOverlay, overlayPixelSize } from './registry.ts';
+import type { OverlayId, OverlayStyle } from './types.ts';
+
 // Areas of a vertical 9:16 video that TikTok, Instagram Reels and YouTube Shorts cover with their own
 // interface (name, description, like/comment/share buttons), in pixels of a 1080 × 1920 frame.
 //
@@ -85,4 +89,56 @@ export function zonesPath(platforms: SocialPlatform[], level: Zone['level']): st
     .flatMap((p) => SAFE_ZONES[p].filter((zone) => zone.level === level))
     .map((r) => `M${r.x} ${r.y}h${r.w}v${r.h}h${-r.w}Z`)
     .join('');
+}
+
+/** Box of a placed gadget, in fractions of a frame of the given aspect (width / height). */
+export function gadgetBox(id: OverlayId, p: GadgetPlacement, aspect: number, style: OverlayStyle): Box {
+  const s = overlayPixelSize(getOverlay(id), style);
+  return { x: p.x, y: p.y, w: p.w, h: p.w * (s.height / s.width) * aspect };
+}
+
+/** Which gadgets touch a social app's covered areas (by their box in a frame of the given aspect, width / height). */
+export function gadgetZones(
+  overlays: OverlayId[],
+  placements: Partial<Record<OverlayId, GadgetPlacement>>,
+  aspect: number,
+  style: OverlayStyle,
+  platforms: SocialPlatform[],
+): Partial<Record<OverlayId, Zone['level']>> {
+  const out: Partial<Record<OverlayId, Zone['level']>> = {};
+  if (!platforms.length) return out;
+  for (const id of overlays) {
+    const p = placements[id];
+    if (!p) continue;
+    const hit = zoneHit(gadgetBox(id, p, aspect, style), platforms);
+    if (hit) out[id] = hit;
+  }
+  return out;
+}
+
+/**
+ * Nearest top-left corner for a box (fractions of the frame) where it touches none of the areas the chosen apps
+ * cover ('ui' zones) and stays inside the frame. The box's own corner when it is already clear, or when no clear
+ * spot exists (a box too big to fit between the zones).
+ */
+export function avoidZones(box: Box, platforms: SocialPlatform[]): { x: number; y: number } {
+  const zones = platforms.flatMap((p) => SAFE_ZONES[p].filter((zone) => zone.level === 'ui'));
+  const clear = (b: Box) => !zones.some((zone) => overlaps(b, zone));
+  if (clear(box)) return { x: box.x, y: box.y };
+  const clamp = (v: number, max: number) => Math.min(Math.max(v, 0), Math.max(0, max));
+  // Candidates: the box's own coordinate and every zone edge, on either side of it.
+  const xs = new Set([box.x, ...zones.flatMap((zone) => [zone.x - box.w, zone.x + zone.w])].map((v) => clamp(v, 1 - box.w)));
+  const ys = new Set([box.y, ...zones.flatMap((zone) => [zone.y - box.h, zone.y + zone.h])].map((v) => clamp(v, 1 - box.h)));
+  let best = { x: box.x, y: box.y };
+  let bestDist = Infinity;
+  for (const x of xs) {
+    for (const y of ys) {
+      const d = (x - box.x) ** 2 + (y - box.y) ** 2;
+      if (d < bestDist && clear({ ...box, x, y })) {
+        best = { x, y };
+        bestDist = d;
+      }
+    }
+  }
+  return best;
 }
