@@ -67,8 +67,11 @@ export function detectProfile(meta: ClipMetadata): CameraProfileId {
   if (/\.insv$/i.test(name) || /insta360/i.test(tagText)) return 'insta360';
   if (GOPRO_NAME.test(name) || /gopro/i.test(tagText) || meta.hasGpmf) return 'gopro';
   if (DJI_NAME.test(name) || /\bdji\b/i.test(tagText)) return 'dji';
-  // Android writes "com.android.version" (and the capture fps) among the file's metadata keys.
-  if (Object.keys(meta.tags).some((k) => /^com\.android\./i.test(k)) || PHONE_NAME.test(name)) return 'phone';
+  // Android's recorder (MPEG4Writer) names its tracks "VideoHandle"/"SoundHandle"/"MetaHandle" (ffmpeg writes
+  // "VideoHandler") and some phones add "com.android.version" to the metadata keys. The file name alone is not
+  // enough: Android's file picker may hand the clip over as "1000012345.mp4" (seen with a Pixel, 2026-10).
+  const androidRecorder = meta.handlerNames.some((n) => /^(Video|Sound|Meta)Handle$/.test(n));
+  if (androidRecorder || Object.keys(meta.tags).some((k) => /^com\.android\./i.test(k)) || PHONE_NAME.test(name)) return 'phone';
   if (INSTA_NAME.test(name)) return 'insta360';
   return 'generic';
 }
