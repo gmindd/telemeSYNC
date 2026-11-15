@@ -22,11 +22,11 @@ const RESOLVERS: Record<ResolverId, Resolver> = {
       ? { resolver: 'manual', startUtcMs: ctx.manualStartUtcMs }
       : undefined,
 
-  // Phase 3: GPMF GPSU gives true UTC. The extractor is not implemented yet; the resolver slot is ready.
-  gpmf: (m, ctx) =>
-    m.hasGpmf && ctx.gpmfStartUtcMs !== undefined
-      ? { resolver: 'gpmf', startUtcMs: ctx.gpmfStartUtcMs }
-      : undefined,
+  // GoPro GPS time (media/gpmf.ts): true UTC, whatever the camera's clock and time zone say.
+  gpmf: (m, ctx) => {
+    const t = m.gpmfStartUtcMs ?? ctx.gpmfStartUtcMs;
+    return m.hasGpmf && t !== undefined ? { resolver: 'gpmf', startUtcMs: t } : undefined;
+  },
 
   creationTime: (m, ctx) => {
     const raw = m.creationTimeRawMs;
