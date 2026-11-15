@@ -1,5 +1,6 @@
 import type { ClipMetadata, Fps } from './types.ts';
 import { LocalizedError } from '../i18n/index.ts';
+import { gpmfStartUtcMs, type GpmfSample } from './gpmf.ts';
 
 /** Random-access byte source: a browser File (via slice) or a Node file handle. */
 export interface ByteSource {
@@ -114,13 +115,56 @@ interface TrackInfo {
   sampleCount?: number;
   sampleDurationSum?: number;
   tmcd?: { timescale: number; frameDuration: number; numberOfFrames: number; firstChunkOffset?: number };
+  /** Sample table boxes, to find where a metadata track's samples are (GoPro GPMF). */
+  table: Partial<Record<'stts' | 'stsc' | 'stsz' | 'stco' | 'co64', Box>>;
+}
+
+/** Where the first `limit` samples of a track are in the file, and when they play. */
+function trackSamples(r: Reader, t: TrackInfo, limit: number): GpmfSample[] {
+  const { stts, stsc, stsz } = t.table;
+  const chunks = t.table.stco ?? t.table.co64;
+  if (!stts || !stsc || !stsz || !chunks || !t.timescale) return [];
+  const body = (b: Box) => b.start + b.headerSize;
+  const end = (b: Box) => b.start + b.size;
+  const count = Math.min(limit, r.u32(body(stsz) + 8));
+  const fixedSize = r.u32(body(stsz) + 4);
+  const sizeOf = (i: number) => (fixedSize ? fixedSize : body(stsz) + 12 + i * 4 + 4 <= end(stsz) ? r.u32(body(stsz) + 12 + i * 4) : 0);
+  const chunkCount = r.u32(body(chunks) + 4);
+  const is64 = chunks.type === 'co64';
+  const chunkOffset = (c: number) => (is64 ? r.u64(body(chunks) + 8 + c * 8) : r.u32(body(chunks) + 8 + c * 4));
+  const stscEntries: { first: number; perChunk: number }[] = [];
+  for (let i = 0, n = r.u32(body(stsc) + 4); i < n && body(stsc) + 8 + i * 12 + 12 <= end(stsc); i++) {
+    stscEntries.push({ first: r.u32(body(stsc) + 8 + i * 12), perChunk: r.u32(body(stsc) + 12 + i * 12) });
+  }
+  const deltas: number[] = [];
+  for (let i = 0, n = r.u32(body(stts) + 4); i < n && deltas.length < count && body(stts) + 8 + i * 8 + 8 <= end(stts); i++) {
+    const c = r.u32(body(stts) + 8 + i * 8);
+    const d = r.u32(body(stts) + 12 + i * 8);
+    for (let k = 0; k < c && deltas.length < count; k++) deltas.push(d);
+  }
+  const out: GpmfSample[] = [];
+  let sample = 0;
+  let time = 0;
+  for (let c = 0; c < chunkCount && sample < count; c++) {
+    const entry = [...stscEntries].reverse().find((e) => e.first <= c + 1);
+    let offset = chunkOffset(c);
+    for (let k = 0; k < (entry?.perChunk ?? 1) && sample < count; k++, sample++) {
+      const size = sizeOf(sample);
+      const d = deltas[sample] ?? 0;
+      out.push({ offset, size, startS: time / t.timescale, durationS: d / t.timescale });
+      offset += size;
+      time += d;
+    }
+  }
+  return out;
 }
 
 function parseTrak(r: Reader, trak: Box): TrackInfo {
-  const info: TrackInfo = {};
+  const info: TrackInfo = { table: {} };
   const walk = (box: Box) => {
     const p = box.start + box.headerSize;
     const end = box.start + box.size;
+    if (box.type === 'stts' || box.type === 'stsc' || box.type === 'stsz' || box.type === 'stco' || box.type === 'co64') info.table[box.type] = box;
     switch (box.type) {
       case 'mdia':
       case 'minf':
@@ -325,6 +369,17 @@ export async function readClipMetadata(src: ByteSource, fileName: string, lastMo
     timecodeStartSec = frames / Math.round(tcFps);
   }
 
+  // GoPro with GPS: the start in UTC from the satellites (first minute of samples, enough to get a fix).
+  let gpmfStart: number | undefined;
+  const gpmd = tracks.find((t) => t.codec === 'gpmd');
+  if (gpmd) {
+    try {
+      gpmfStart = await gpmfStartUtcMs((o, l) => src.read(o, l), trackSamples(r, gpmd, 90));
+    } catch {
+      gpmfStart = undefined;
+    }
+  }
+
   return {
     fileName,
     sizeBytes: src.size,
@@ -341,7 +396,8 @@ export async function readClipMetadata(src: ByteSource, fileName: string, lastMo
     timecodeStartSec,
     handlers: tracks.map((t) => t.handler ?? '?'),
     handlerNames: tracks.map((t) => t.handlerName ?? '').filter(Boolean),
-    hasGpmf: tracks.some((t) => t.codec === 'gpmd'),
+    hasGpmf: !!gpmd,
+    gpmfStartUtcMs: gpmfStart,
     tags,
   };
 }

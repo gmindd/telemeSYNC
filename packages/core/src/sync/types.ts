@@ -1,6 +1,6 @@
 import type { ClipMetadata } from '../media/types.ts';
 
-export type CameraProfileId = 'dji' | 'gopro' | 'insta360' | 'generic';
+export type CameraProfileId = 'dji' | 'gopro' | 'insta360' | 'phone' | 'generic';
 export type ResolverId = 'gpmf' | 'creationTime' | 'filename' | 'timecode' | 'manual';
 
 export interface CameraProfile {

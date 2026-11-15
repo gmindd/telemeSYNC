@@ -65,6 +65,35 @@ describe('camera profile detection', () => {
     expect(detectProfile(meta({ fileName: 'clip.mp4', handlerNames: ['GoPro AVC'] }))).toBe('gopro');
     expect(detectProfile(meta({ fileName: 'clip.mp4' }))).toBe('generic');
   });
+
+  it('Android phone clips, by metadata key or camera-app name (not Insta360)', () => {
+    expect(detectProfile(meta({ fileName: '1000012345.mp4', tags: { 'com.android.version': '14' } }))).toBe('phone');
+    expect(detectProfile(meta({ fileName: 'PXL_20261115_103045123.mp4' }))).toBe('phone');
+    expect(detectProfile(meta({ fileName: 'VID_20261115_103045.mp4' }))).toBe('phone');
+    expect(detectProfile(meta({ fileName: 'VID20261115103045.mp4' }))).toBe('phone');
+    expect(detectProfile(meta({ fileName: '20261115_103045.mp4' }))).toBe('phone');
+    expect(detectProfile(meta({ fileName: 'VID_20261115_103045_00_001.mp4' }))).toBe('insta360');
+  });
+});
+
+describe('Android phone start time', () => {
+  const tz = 'Europe/Lisbon';
+  // Filmed 15 Nov 2026 10:30:45 local (= UTC in winter) for 40 s: creation_time is written at the stop, 10:31:25.
+  const stop = Date.UTC(2026, 10, 15, 10, 31, 25);
+  const start = Date.UTC(2026, 10, 15, 10, 30, 45);
+
+  it('creation_time marks the end of the recording', () => {
+    const m = meta({ fileName: '1000012345.mp4', durationMs: 40_000, creationTimeRawMs: stop, tags: { 'com.android.version': '14' } });
+    const state = addClips({ cameras: [], clips: [] }, [m], undefined, tz);
+    expect(effectiveStart(state.clips[0], state.cameras[0])).toBe(start);
+  });
+
+  it('the file name (local start time) agrees and comes first', () => {
+    const m = meta({ fileName: 'VID_20261115_103045.mp4', durationMs: 40_000, creationTimeRawMs: stop });
+    const r = resolveStart(m, { profile: CAMERA_PROFILES.phone, timeZone: tz });
+    expect(r.source).toBe('filename');
+    expect(r.candidates.map((c) => c.startUtcMs)).toEqual([start, start]);
+  });
 });
 
 describe('timestamp resolvers', () => {

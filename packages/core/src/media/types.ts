@@ -31,6 +31,8 @@ export interface ClipMetadata {
   handlerNames: string[];
   /** True if a GoPro GPMF metadata track ('gpmd') exists. */
   hasGpmf: boolean;
+  /** UTC time of the first frame from the GoPro's GPS (GPMF), when it had a fix. */
+  gpmfStartUtcMs?: number;
   /** Text tags from udta and meta/keys (e.g. ©mak, ©mod, FIRM, com.apple.quicktime.creationdate). */
   tags: Record<string, string>;
 }
