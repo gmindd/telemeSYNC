@@ -73,6 +73,25 @@ describe('camera profile detection', () => {
     expect(detectProfile(meta({ fileName: 'VID20261115103045.mp4' }))).toBe('phone');
     expect(detectProfile(meta({ fileName: '20261115_103045.mp4' }))).toBe('phone');
     expect(detectProfile(meta({ fileName: 'VID_20261115_103045_00_001.mp4' }))).toBe('insta360');
+    // ffmpeg's own handler name is "VideoHandler": not a phone
+    expect(detectProfile(meta({ fileName: 'clip.mp4', handlerNames: ['VideoHandler', 'SoundHandler'] }))).toBe('generic');
+  });
+
+  it('a Pixel clip renamed by the file picker (real metadata, 2026-10-25): still a phone, start = end − duration', () => {
+    // PXL_20261025_170454745.mp4 as "1000012345.mp4": 48.1 s, creation_time 17:05:46 UTC written at the stop.
+    const m = meta({
+      fileName: '1000012345.mp4',
+      durationMs: 48095.455555555556,
+      creationTimeRawMs: Date.UTC(2026, 9, 25, 17, 5, 46),
+      handlers: ['vide', 'soun', 'meta'],
+      handlerNames: ['VideoHandle', 'SoundHandle', 'MetaHandle'],
+      tags: { '©xyz': '+41.6327-8.8113/' },
+    });
+    expect(detectProfile(m)).toBe('phone');
+    const state = addClips({ cameras: [], clips: [] }, [m], undefined, 'Europe/Lisbon');
+    // 17:04:58: within 4 s of the file-name start (17:04:54) and of where the ride's GPS passes the clip's recorded
+    // location (17:04:52-53); creation_time has whole seconds and is written as the file is closed. Was 17:05:46.
+    expect(Math.round(effectiveStart(state.clips[0], state.cameras[0])! / 1000) * 1000).toBe(Date.UTC(2026, 9, 25, 17, 4, 58));
   });
 });
 
