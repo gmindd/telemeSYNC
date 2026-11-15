@@ -6,7 +6,7 @@ import { clock, mmss, num, t } from '../i18n.ts';
 import { loadClip, loadRide } from '../lib/project.ts';
 import { probeVideo } from '../lib/render.ts';
 import { finishSignIn, loadSession, onSignInReturn, signOut, startSignIn, type StravaSession } from '../lib/strava.ts';
-import { checkForUpdate, dismissUpdate, downloadUpdate, type MobileRelease } from '../lib/updates.ts';
+import { checkForUpdate, dismissUpdate, installUpdate, openUpdateInBrowser, type MobileRelease, type UpdateStep } from '../lib/updates.ts';
 import { clipStart, useProject } from '../state.ts';
 
 export function StartScreen() {
@@ -16,6 +16,17 @@ export function StartScreen() {
   const [strava, setStrava] = useState<StravaSession | null>(() => loadSession());
   const [sheet, setSheet] = useState(false);
   const [update, setUpdate] = useState<MobileRelease | null>(null);
+  const [updateStep, setUpdateStep] = useState<UpdateStep | { kind: 'error'; message: string } | null>(null);
+
+  async function runUpdate(r: MobileRelease) {
+    try {
+      await installUpdate(r, setUpdateStep);
+      setUpdateStep(null); // Android's installer is open
+    } catch (e) {
+      const m = (e as Error).message;
+      setUpdateStep({ kind: 'error', message: m === 'permission' ? t('update.denied') : t('update.failed', { msg: m }) });
+    }
+  }
 
   useEffect(() => {
     let alive = true;
@@ -101,14 +112,32 @@ export function StartScreen() {
       {update && (
         <section className="update" role="status">
           <p>{t('update.available', { version: update.version })}</p>
-          <div className="row">
-            <button type="button" className="primary" onClick={() => downloadUpdate(update)}>
-              {t('update.download')}
-            </button>
-            <button type="button" className="link" onClick={() => (dismissUpdate(update.version), setUpdate(null))}>
-              {t('update.later')}
-            </button>
-          </div>
+          {updateStep?.kind === 'downloading' ? (
+            <>
+              <p className="fine">{updateStep.fraction >= 0 ? t('update.downloading', { pct: Math.round(updateStep.fraction * 100) }) : t('update.downloadingNoPct')}</p>
+              <progress className="update__bar" max={1} value={Math.max(0, updateStep.fraction)} />
+            </>
+          ) : updateStep?.kind === 'permission' ? (
+            <p className="fine">{t('update.allow')}</p>
+          ) : (
+            <>
+              {updateStep?.kind === 'error' && <p className="error">{updateStep.message}</p>}
+              <div className="row">
+                <button type="button" className="primary" onClick={() => void runUpdate(update)}>
+                  {updateStep?.kind === 'error' ? t('update.retry') : t('update.install')}
+                </button>
+                {updateStep?.kind === 'error' ? (
+                  <button type="button" className="link" onClick={() => openUpdateInBrowser(update)}>
+                    {t('update.browser')}
+                  </button>
+                ) : (
+                  <button type="button" className="link" onClick={() => (dismissUpdate(update.version), setUpdate(null))}>
+                    {t('update.later')}
+                  </button>
+                )}
+              </div>
+            </>
+          )}
         </section>
       )}
 
