@@ -32,6 +32,8 @@ interface Prefs {
   platforms: SocialPlatform[];
   blockZones: boolean;
   shortSide: number;
+  /** Radius of the round map around the rider (m): the Sync tab's map and the map gadget. */
+  mapZoomM: number;
 }
 
 function loadPrefs(): Partial<Prefs> {
@@ -43,6 +45,11 @@ function loadPrefs(): Partial<Prefs> {
 }
 
 export const STYLE: OverlayStyle = { ...DEFAULT_STYLE, language: LANG };
+
+/** The gadgets' style for this project: the shared one with the chosen map zoom. */
+export function styleOf(s: Pick<State, 'mapZoomM'>): OverlayStyle {
+  return { ...STYLE, mapRadiusM: s.mapZoomM };
+}
 
 /** Which saved layout a format uses: the clip's own shape counts as vertical or horizontal. */
 function layoutKey(format: FormatId, info?: VideoInfo): string {
@@ -86,6 +93,7 @@ interface State extends Prefs {
   togglePlatform(p: SocialPlatform): void;
   setBlockZones(b: boolean): void;
   setShortSide(s: number): void;
+  setMapZoom(m: number): void;
 }
 
 const saved = loadPrefs();
@@ -108,6 +116,7 @@ export const useProject = create<State>((set, get) => {
     platforms: saved.platforms ?? ['instagram'],
     blockZones: saved.blockZones ?? true,
     shortSide: saved.shortSide ?? 1080,
+    mapZoomM: saved.mapZoomM ?? 200,
 
     setScreen: (screen) => set({ screen }),
     setTab: (tab) => set({ tab }),
@@ -165,12 +174,13 @@ export const useProject = create<State>((set, get) => {
       if (blockZones) get().settleAll();
     },
     setShortSide: (shortSide) => set({ shortSide }),
+    setMapZoom: (mapZoomM) => set({ mapZoomM }),
   };
 });
 
 // Remember the choices for the next video
 useProject.subscribe((s) => {
-  const prefs: Prefs = { overlays: s.overlays, layouts: s.layouts, format: s.format, platforms: s.platforms, blockZones: s.blockZones, shortSide: s.shortSide };
+  const prefs: Prefs = { overlays: s.overlays, layouts: s.layouts, format: s.format, platforms: s.platforms, blockZones: s.blockZones, shortSide: s.shortSide, mapZoomM: s.mapZoomM };
   try {
     localStorage.setItem(PREFS_KEY, JSON.stringify(prefs));
   } catch {

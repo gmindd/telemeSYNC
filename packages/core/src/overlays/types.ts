@@ -143,6 +143,8 @@ export interface OverlayStyle {
   gapSpeed: 'zero' | 'dash';
   /** Map framing: whole ride or zoom on the clip's section. */
   mapMode: 'full' | 'clip';
+  /** Round map: radius of the view around the rider (m). Missing = from the size of the ride (300 m–2.5 km). */
+  mapRadiusM?: number;
   timeZone: string;
   /** Two-colour gradient used by the dashboard panels (low → high). */
   gradientFrom: string;

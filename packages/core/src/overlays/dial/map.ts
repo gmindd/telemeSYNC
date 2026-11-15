@@ -99,7 +99,8 @@ export function drawRoundMap(ctx: Ctx2D, frame: FrameState, style: OverlayStyle,
   const theta = pos ? headingAt(ride, l, s, pos) : 0;
   const cos = Math.cos(theta);
   const sin = Math.sin(theta);
-  const k = (MAP_R * 1.1) / l.viewM;
+  const viewM = style.mapRadiusM && style.mapRadiusM > 0 ? style.mapRadiusM : l.viewM;
+  const k = (MAP_R * 1.1) / viewM;
   const sx = (e: number, n: number) => CX + ((e - (pos?.e ?? 0)) * cos - (n - (pos?.n ?? 0)) * sin) * k;
   const sy = (e: number, n: number) => RIDER_Y - ((e - (pos?.e ?? 0)) * sin + (n - (pos?.n ?? 0)) * cos) * k;
 
@@ -115,8 +116,8 @@ export function drawRoundMap(ctx: Ctx2D, frame: FrameState, style: OverlayStyle,
 
   if (pos) {
     // World-aligned grid: shows the map turning and moving.
-    const step = l.viewM / 3;
-    const reach = l.viewM * 2;
+    const step = viewM / 3;
+    const reach = viewM * 2;
     ctx.strokeStyle = 'rgba(160,220,210,0.07)';
     ctx.lineWidth = 1;
     const g0e = Math.floor((pos.e - reach) / step) * step;
@@ -135,7 +136,7 @@ export function drawRoundMap(ctx: Ctx2D, frame: FrameState, style: OverlayStyle,
     }
 
     // Route: only points near the view, decimated to ~1.5 px.
-    const near = (l.viewM * 1.8) ** 2;
+    const near = (viewM * 1.8) ** 2;
     const minStep = 1.5 / k;
     const path = (from: number, to: number, extra?: { e: number; n: number }) => {
       ctx.beginPath();
