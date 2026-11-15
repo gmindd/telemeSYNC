@@ -1,7 +1,7 @@
 // Sync: the clip's start found in its metadata, a fine adjustment, and the ride's numbers at the playhead to compare
 // with what the video shows, plus a zoomed round map to line a bend of the road up with the video.
 import { useEffect, useRef } from 'react';
-import { getOverlay, overlayPixelSize, renderOverlayFrame, sampleAt, type Ctx2D, type RideData } from '@telemesync/core';
+import { getOverlay, overlayPixelSize, renderOverlayFrame, sampleAt, STREETS_ATTRIBUTION, type Ctx2D, type RideData, type Streets } from '@telemesync/core';
 import { clock, LANG, num, t } from '../i18n.ts';
 import { startSource } from '../lib/project.ts';
 import { clipStart, styleOf, useProject } from '../state.ts';
@@ -10,14 +10,15 @@ import { clipStart, styleOf, useProject } from '../state.ts';
 const ZOOMS = [50, 100, 200, 400, 800, 1600, 3200];
 
 /** The round map (the same as the gadget, heading up) at a moment of the ride, with its zoom. */
-function SyncMap({ ride, at, zoomM, onZoom }: { ride: RideData; at: number; zoomM: number; onZoom: (m: number) => void }) {
+function SyncMap(props: { ride: RideData; at: number; zoomM: number; streets?: Streets; streetsState: string; onZoom: (m: number) => void; onRetry: () => void }) {
+  const { ride, at, zoomM, streets, onZoom } = props;
   const ref = useRef<HTMLCanvasElement>(null);
   const def = getOverlay('dialMap');
   const style = styleOf({ mapZoomM: zoomM });
   const { width, height } = overlayPixelSize(def, style);
   useEffect(() => {
     const ctx = ref.current?.getContext('2d');
-    if (ctx) renderOverlayFrame(ctx as unknown as Ctx2D, def, at, style, { ride, clipStart: at, clipEnd: at + 60_000 });
+    if (ctx) renderOverlayFrame(ctx as unknown as Ctx2D, def, at, style, { ride, clipStart: at, clipEnd: at + 60_000, streets });
   });
   const i = ZOOMS.indexOf(zoomM);
   const step = (d: number) => onZoom(ZOOMS[Math.max(0, Math.min(ZOOMS.length - 1, (i < 0 ? 2 : i) + d))]!);
@@ -34,6 +35,20 @@ function SyncMap({ ride, at, zoomM, onZoom }: { ride: RideData; at: number; zoom
           −
         </button>
       </div>
+      <p className="fine">
+        {props.streetsState === 'loading' ? (
+          t('sync.streetsLoading')
+        ) : props.streetsState === 'failed' ? (
+          <>
+            {t('sync.streetsFailed')}{' '}
+            <button type="button" className="link" onClick={props.onRetry}>
+              {t('sync.streetsRetry')}
+            </button>
+          </>
+        ) : streets ? (
+          `${t('sync.streets')} ${STREETS_ATTRIBUTION}`
+        ) : null}
+      </p>
       <p className="fine">{t('sync.mapHint')}</p>
     </div>
   );
@@ -81,7 +96,7 @@ export function SyncPanel() {
           <b>{clock(at)}</b> {sample.outside ? <span className="warn">· {t('sync.outside')}</span> : `· ${values.join(' · ')}`}
         </dd>
       </dl>
-      {s.ride.available.has('map') && <SyncMap ride={s.ride} at={at} zoomM={s.mapZoomM} onZoom={s.setMapZoom} />}
+      {s.ride.available.has('map') && <SyncMap ride={s.ride} at={at} zoomM={s.mapZoomM} streets={s.streets} streetsState={s.streetsState} onZoom={s.setMapZoom} onRetry={s.retryStreets} />}
       <div className="offset">
         <div className="offset__head">
           <span>{t('sync.offset')}</span>

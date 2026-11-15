@@ -87,10 +87,10 @@ export function Stage() {
       c.height = ch;
     }
     const start = clipStart(s);
-    drawComposite(ctx as unknown as Ctx2D, s.overlays, pl, start + sec * 1000, styleOf(s), { ride: s.ride, clipStart: start, clipEnd: start + s.trim.end * 1000 }, cw, ch);
+    drawComposite(ctx as unknown as Ctx2D, s.overlays, pl, start + sec * 1000, styleOf(s), { ride: s.ride, clipStart: start, clipEnd: start + s.trim.end * 1000, streets: s.streets }, cw, ch);
   };
   const currentTime = () => (useFrames ? framePlayer.current?.time : video.current?.currentTime) ?? s.playheadS;
-  useEffect(() => draw.current(currentTime()), [s.overlays, s.layout, s.offsetS, s.autoStart, s.ride, s.format, s.mapZoomM, size.w, size.h]);
+  useEffect(() => draw.current(currentTime()), [s.overlays, s.layout, s.offsetS, s.autoStart, s.ride, s.format, s.mapZoomM, s.streets, size.w, size.h]);
   useEffect(() => void (lastFrame.current && drawBg.current(lastFrame.current)), [s.format, s.cropPos, size.w, size.h]);
 
   // Frame player, when the <video> failed

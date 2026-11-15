@@ -1,3 +1,4 @@
+import type { Streets } from '../map/streets.ts';
 import type { MetricKey, RideData, RideSample } from '../telemetry/ride.ts';
 import type { Lang } from '../i18n/index.ts';
 import type { Segment } from '../segments/segments.ts';
@@ -221,6 +222,8 @@ export interface OverlayContext {
   /** UTC ms of the clip's first frame. */
   clipStart: number;
   clipEnd: number;
+  /** Streets and paths around the clip (OpenStreetMap), drawn under the route in the round map when present. */
+  streets?: Streets;
 }
 
 export interface FrameState {

@@ -12,6 +12,7 @@ import {
   type OverlayStyle,
   type RideData,
   type SocialPlatform,
+  type Streets,
 } from '@telemesync/core';
 import { LANG } from './i18n.ts';
 import { cropFor, formatAspect, isVertical, type Crop, type FormatId } from './lib/formats.ts';
@@ -72,6 +73,11 @@ interface State extends Prefs {
   playing: boolean;
   selected?: OverlayId;
   cropPos: number;
+  /** Streets and paths around the clip (OpenStreetMap) for the round map, see lib/streets.ts. */
+  streets?: Streets;
+  streetsState: 'idle' | 'loading' | 'ok' | 'failed';
+  /** Bumped by "try again" to ask for the streets once more. */
+  streetsRetry: number;
 
   setScreen(s: Screen): void;
   setTab(t: Tab): void;
@@ -94,6 +100,8 @@ interface State extends Prefs {
   setBlockZones(b: boolean): void;
   setShortSide(s: number): void;
   setMapZoom(m: number): void;
+  setStreets(s: Streets | undefined, state: 'loading' | 'ok' | 'failed'): void;
+  retryStreets(): void;
 }
 
 const saved = loadPrefs();
@@ -128,7 +136,7 @@ export const useProject = create<State>((set, get) => {
       const offered = offeredOverlays(ride);
       const kept = get().overlays.filter((id) => offered.includes(id));
       const clip = get().clip;
-      set({ ride, overlays: kept.length ? kept : defaultSelection(ride), autoStart: clip ? detectedStart(clip, ride) : undefined });
+      set({ ride, streets: undefined, streetsState: 'idle', overlays: kept.length ? kept : defaultSelection(ride), autoStart: clip ? detectedStart(clip, ride) : undefined });
     },
     toggleOverlay: (id) => {
       const on = get().overlays.includes(id);
@@ -175,6 +183,10 @@ export const useProject = create<State>((set, get) => {
     },
     setShortSide: (shortSide) => set({ shortSide }),
     setMapZoom: (mapZoomM) => set({ mapZoomM }),
+    streetsState: 'idle',
+    streetsRetry: 0,
+    setStreets: (streets, streetsState) => set({ streets, streetsState }),
+    retryStreets: () => set({ streetsRetry: get().streetsRetry + 1 }),
   };
 });
 

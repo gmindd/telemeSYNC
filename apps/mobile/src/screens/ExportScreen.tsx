@@ -29,7 +29,7 @@ export function ExportScreen() {
     try {
       const r = await renderVideo(
         s.clip.file,
-        { ride: s.ride, clipStartUtcMs: clipStart(s), overlays: s.overlays, layout: s.layout, style: styleOf(s), crop, trim: s.trim, shortSide: s.shortSide, formatAspect: social },
+        { ride: s.ride, clipStartUtcMs: clipStart(s), overlays: s.overlays, layout: s.layout, style: styleOf(s), streets: s.streets, crop, trim: s.trim, shortSide: s.shortSide, formatAspect: social },
         (p) => setStatus({ kind: 'working', p }),
         abort.current.signal,
       );
