@@ -1,8 +1,9 @@
-// Export: summary and quality, progress (with a time estimate), then the finished video to share.
+// Export: summary, quality and file name, progress (with a time estimate), then the finished video to save where
+// the user picks or to share.
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { mmss, num, t } from '../i18n.ts';
 import { outputSizeFor, renderVideo, type RenderProgress, type RenderResult } from '../lib/render.ts';
-import { shareVideo } from '../lib/save.ts';
+import { defaultName, fileNameFor, saveVideoAs, shareVideo } from '../lib/save.ts';
 import { clipStart, frameAspect, frameCrop, STYLE, useProject } from '../state.ts';
 
 type Status = { kind: 'idle' } | { kind: 'working'; p?: RenderProgress } | { kind: 'done'; r: RenderResult } | { kind: 'error'; message: string };
@@ -11,6 +12,10 @@ export function ExportScreen() {
   const s = useProject();
   const [status, setStatus] = useState<Status>({ kind: 'idle' });
   const abort = useRef<AbortController | null>(null);
+  const [name, setName] = useState(() => (s.clip ? defaultName(clipStart(s) + s.trim.start * 1000, s.format) : 'telemesync'));
+  const [saved, setSaved] = useState<{ name: string; folder?: string | null } | null>(null);
+  const [handing, setHanding] = useState<'save' | 'share' | null>(null);
+  const [handError, setHandError] = useState('');
   const crop = frameCrop(s);
   const len = s.trim.end - s.trim.start;
   const social = s.format !== 'original' ? frameAspect(s) : undefined;
@@ -20,6 +25,7 @@ export function ExportScreen() {
     if (!s.clip || !s.ride) return;
     abort.current = new AbortController();
     setStatus({ kind: 'working' });
+    setSaved(null);
     try {
       const r = await renderVideo(
         s.clip.file,
@@ -36,6 +42,34 @@ export function ExportScreen() {
   const url = useMemo(() => (status.kind === 'done' ? URL.createObjectURL(new Blob([status.r.data as BlobPart], { type: 'video/mp4' })) : ''), [status]);
   useEffect(() => () => void (url && URL.revokeObjectURL(url)), [url]);
   const working = status.kind === 'working';
+  const fileName = fileNameFor(name);
+
+  async function handOver(how: 'save' | 'share', data: Uint8Array) {
+    setHanding(how);
+    setHandError('');
+    try {
+      if (how === 'share') await shareVideo(data, fileName);
+      else {
+        const r = await saveVideoAs(data, fileName);
+        if (r) setSaved(r);
+      }
+    } catch (e) {
+      // The video stays on screen, so it can be saved or shared another way.
+      setHandError(t('export.handError', { msg: (e as Error).message }));
+    } finally {
+      setHanding(null);
+    }
+  }
+
+  const nameField = (
+    <label className="field">
+      <span>{t('export.fileName')}</span>
+      <span className="filename">
+        <input type="text" value={name} maxLength={80} autoCapitalize="none" autoCorrect="off" spellCheck={false} onChange={(e) => (setName(e.target.value), setSaved(null))} />
+        <span className="filename__ext">.mp4</span>
+      </span>
+    </label>
+  );
 
   return (
     <main className="export">
@@ -59,8 +93,18 @@ export function ExportScreen() {
               size: `${num(status.r.data.byteLength / 1048576)} MB`,
             })}
           </p>
-          <button type="button" className="primary big" onClick={() => void shareVideo(status.r.data, `telemesync-${Date.now()}.mp4`).catch((e) => setStatus({ kind: 'error', message: (e as Error).message }))}>
-            {t('export.share')}
+          {nameField}
+          {saved && (
+            <p className="saved" role="status">
+              {saved.folder != null ? t('export.savedIn', { folder: saved.folder || t('export.storage'), name: saved.name }) : t('export.saved', { name: saved.name })}
+            </p>
+          )}
+          {handError && <p className="error">{handError}</p>}
+          <button type="button" className="primary big" disabled={!!handing} onClick={() => void handOver('save', status.r.data)}>
+            {handing === 'save' ? t('export.saving') : t('export.save')}
+          </button>
+          <button type="button" className="ghost big" disabled={!!handing} onClick={() => void handOver('share', status.r.data)}>
+            {handing === 'share' ? t('export.preparing') : t('export.share')}
           </button>
           <button type="button" className="ghost big" onClick={() => s.setScreen('editor')}>
             {t('export.again')}
@@ -98,6 +142,7 @@ export function ExportScreen() {
               ))}
             </div>
           </div>
+          {nameField}
           {status.kind === 'error' && <p className="error">{t('export.error', { msg: status.message })}</p>}
           {!s.overlays.length && <p className="warn">{t('export.noGadgets')}</p>}
           <button type="button" className="primary big" disabled={!s.overlays.length} onClick={() => void run()}>
