@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
   addClips,
+  buildRide,
+  goproModel,
   CAMERA_PROFILES,
   chainChapters,
   detectProfile,
@@ -217,5 +219,42 @@ describe('sync session and sanity checks', () => {
   it('missing timestamp asks for manual input', () => {
     const s = addClips({ cameras: [], clips: [] }, [meta({ fileName: 'clip.mp4' })]);
     expect(clipWarnings(s.clips[0], s.cameras[0], rideStart, rideEnd)[0].code).toBe('noTimestamp');
+  });
+});
+
+describe('GoPro creation_time: local time up to the HERO10, UTC from the HERO11', () => {
+  const tz = 'Europe/Lisbon';
+  // 20 Jun 2026 (summer, UTC+1): creation_time 10:33:27 as written by the camera
+  const raw = Date.UTC(2026, 5, 20, 10, 33, 27);
+  const asLocal = Date.UTC(2026, 5, 20, 9, 33, 27);
+  const gopro = (o: Partial<ClipMetadata>) => meta({ fileName: 'GX014988.MP4', durationMs: 250_000, creationTimeRawMs: raw, ...o });
+
+  it('model from the firmware tag', () => {
+    expect(goproModel(gopro({ tags: { FIRM: 'HD8.01.02.51.00' } }))).toBe(8);
+    expect(goproModel(gopro({ tags: { FIRM: 'H21.01.01.62.00' } }))).toBe(10);
+    expect(goproModel(gopro({ tags: { FIRM: 'H22.01.02.32.00' } }))).toBe(11);
+    expect(goproModel(gopro({ tags: { FIRM: 'H24.01.02.02.00' } }))).toBe(13);
+    expect(goproModel(gopro({}))).toBeUndefined();
+  });
+
+  it('HERO10 reads as local time, HERO11+ as UTC', () => {
+    expect(resolveStart(gopro({ tags: { FIRM: 'H21.01.01.62.00' } }), { profile: CAMERA_PROFILES.gopro, timeZone: tz }).startUtcMs).toBe(asLocal);
+    expect(resolveStart(gopro({ tags: { FIRM: 'H23.01.01.10.00' } }), { profile: CAMERA_PROFILES.gopro, timeZone: tz }).startUtcMs).toBe(raw);
+  });
+
+  it('no model (file re-encoded by an editor): the reading where the ride is moving', () => {
+    // Real case, 2026-06-20: stopped (0-4 km/h) around 09:33 UTC, riding around 10:33 UTC
+    const samples = [];
+    for (let t = Date.UTC(2026, 5, 20, 9, 0); t <= Date.UTC(2026, 5, 20, 11, 0); t += 1000) {
+      samples.push({ t, speed: t < Date.UTC(2026, 5, 20, 10, 0) ? 1 : 7 });
+    }
+    const ride = buildRide({ source: 'gpx', samples });
+    const m = gopro({ handlerNames: ['VideoHandler', 'SoundHandler'], tags: { '©too': 'Lavf61.7.100' } });
+    const withRide = addClips({ cameras: [], clips: [] }, [m], ride.startTime, tz, undefined, ride);
+    expect(effectiveStart(withRide.clips[0], withRide.cameras[0])).toBe(raw);
+    expect(withRide.clips[0].resolved.candidates.map((c) => c.clock)).toEqual(['utc', 'local']);
+    // Without the ride: local time first, as before
+    const without = addClips({ cameras: [], clips: [] }, [m], undefined, tz);
+    expect(effectiveStart(without.clips[0], without.cameras[0])).toBe(asLocal);
   });
 });
