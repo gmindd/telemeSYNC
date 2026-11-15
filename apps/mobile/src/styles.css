@@ -215,6 +215,11 @@ input[type='range'] { width: 100%; accent-color: var(--accent); height: 28px; ma
 .ring__bar { fill: none; stroke-width: 10; stroke-linecap: round; transition: stroke-dashoffset 0.3s; }
 .ring b { position: absolute; font-size: 1.8rem; font-variant-numeric: tabular-nums; }
 .done h2 { font-size: 1.5rem; }
+.filename { display: flex; align-items: center; min-height: 48px; border: 1px solid var(--border); border-radius: 14px; background: var(--panel); padding: 0 14px; }
+.filename:focus-within { border-color: var(--accent); }
+.filename input { flex: 1; min-width: 0; border: 0; background: none; color: var(--text); font: inherit; font-size: 1rem; padding: 12px 0; outline: none; }
+.filename__ext { color: var(--muted); }
+.saved { margin: 0; color: var(--ok, #4ade80); font-size: 0.9rem; word-break: break-word; }
 .done__video { width: 100%; max-height: 52dvh; border-radius: 16px; background: #000; }
 .frame__bg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
 
