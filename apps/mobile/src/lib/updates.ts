@@ -1,7 +1,7 @@
 // New versions: the app is installed from an APK link, so it looks for a newer one itself. Android releases are
 // GitHub pre-releases tagged "mobile-v<version>" with the APK attached (pre-releases, so the desktop's "latest"
 // release stays the desktop's). Publishing one is enough: nothing on the site changes.
-import { Capacitor } from '@capacitor/core';
+import { Capacitor, registerPlugin, type PluginListenerHandle } from '@capacitor/core';
 import { Browser } from '@capacitor/browser';
 
 const RELEASES = 'https://api.github.com/repos/gmindd/telemeSYNC/releases?per_page=30';
@@ -62,7 +62,30 @@ export function dismissUpdate(version: string) {
   }
 }
 
-/** Opens the APK link: the browser downloads it and Android offers to install it over this version. */
-export function downloadUpdate(r: MobileRelease) {
+const Updater = registerPlugin<{
+  install(o: { url: string }): Promise<void>;
+  addListener(event: 'progress', cb: (p: { fraction: number }) => void): Promise<PluginListenerHandle>;
+  addListener(event: 'permission', cb: () => void): Promise<PluginListenerHandle>;
+}>('Updater');
+
+export type UpdateStep = { kind: 'downloading'; fraction: number } | { kind: 'permission' };
+
+/**
+ * Downloads the APK inside the app and opens Android's installer over this version (android/…/UpdaterPlugin.java).
+ * Rejects with "permission" when the user doesn't allow installing apps from telemeSYNC. Apps up to 0.4.1 opened the
+ * link in the browser instead, which left the download for the user to open.
+ */
+export async function installUpdate(r: MobileRelease, onStep: (s: UpdateStep) => void): Promise<void> {
+  const handles = [await Updater.addListener('progress', (p) => onStep({ kind: 'downloading', fraction: p.fraction })), await Updater.addListener('permission', () => onStep({ kind: 'permission' }))];
+  try {
+    onStep({ kind: 'downloading', fraction: 0 });
+    await Updater.install({ url: r.apkUrl });
+  } finally {
+    for (const h of handles) void h.remove();
+  }
+}
+
+/** Last resort: the link in the browser (the APK then shows up in the downloads, to open from there). */
+export function openUpdateInBrowser(r: MobileRelease) {
   void Browser.open({ url: r.apkUrl });
 }

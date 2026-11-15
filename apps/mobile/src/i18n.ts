@@ -103,7 +103,14 @@ const pt = {
   'strava.scope': 'Para ler as atividades, autorize o acesso a "Ver dados das suas atividades".',
   'strava.powered': 'Dados do Strava',
   'update.available': 'Nova versão {version} disponível.',
-  'update.download': 'Descarregar',
+  'update.install': 'Atualizar',
+  'update.downloading': 'A transferir… {pct} %',
+  'update.downloadingNoPct': 'A transferir…',
+  'update.allow': 'Ative "Permitir desta origem" para o telemeSYNC e volte atrás: a instalação abre a seguir.',
+  'update.denied': 'Sem autorização para instalar. Toque em Atualizar e ative "Permitir desta origem".',
+  'update.failed': 'A atualização falhou: {msg}',
+  'update.retry': 'Tentar de novo',
+  'update.browser': 'Abrir no browser',
   'update.later': 'Agora não',
 };
 
@@ -210,7 +217,14 @@ const en: Record<Key, string> = {
   'strava.scope': 'To read your activities, allow "View data about your activities".',
   'strava.powered': 'Data from Strava',
   'update.available': 'New version {version} available.',
-  'update.download': 'Download',
+  'update.install': 'Update',
+  'update.downloading': 'Downloading… {pct} %',
+  'update.downloadingNoPct': 'Downloading…',
+  'update.allow': 'Turn on "Allow from this source" for telemeSYNC and go back: the installer opens next.',
+  'update.denied': 'Not allowed to install. Tap Update and turn on "Allow from this source".',
+  'update.failed': 'The update failed: {msg}',
+  'update.retry': 'Try again',
+  'update.browser': 'Open in browser',
   'update.later': 'Not now',
 };
 
