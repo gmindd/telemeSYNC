@@ -141,6 +141,7 @@ export const CORE_MESSAGES = {
 
   // Camera profiles.
   'profile.generic': ['Generic', 'Genérico', 'Générique', 'Genérico', 'Generisch'],
+  'profile.phone': ['Android phone', 'Telemóvel Android', 'Téléphone Android', 'Teléfono Android', 'Android-Handy'],
 
   // Where a clip's start time comes from.
   'source.filename': ['file name', 'nome do ficheiro', 'nom du fichier', 'nombre del archivo', 'Dateiname'],

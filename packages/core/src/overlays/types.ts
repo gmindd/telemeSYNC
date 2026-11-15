@@ -1,3 +1,4 @@
+import type { Streets } from '../map/streets.ts';
 import type { MetricKey, RideData, RideSample } from '../telemetry/ride.ts';
 import type { Lang } from '../i18n/index.ts';
 import type { Segment } from '../segments/segments.ts';
@@ -178,6 +179,8 @@ export interface OverlayStyle {
   mapMode: 'full' | 'clip' | 'clips' | 'custom';
   /** Start and end of that stretch (UTC ms): the user's choice ('custom'), or the clips' span filled in by the app ('clips'). */
   mapRange: { startMs: number; endMs: number } | null;
+  /** Round map: radius of the view around the rider (m). Missing = from the size of the ride (300 m–2.5 km). */
+  mapRadiusM?: number;
   timeZone: string;
   /** Two-colour gradient used by the dashboard panels (low → high). */
   gradientFrom: string;
@@ -258,6 +261,8 @@ export interface OverlayContext {
   /** UTC ms of the clip's first frame. */
   clipStart: number;
   clipEnd: number;
+  /** Streets and paths around the clip (OpenStreetMap), drawn under the route in the round map when present. */
+  streets?: Streets;
 }
 
 export interface FrameState {

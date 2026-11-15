@@ -7,3 +7,5 @@
 !scripts/stats-collector.sh
 !scripts/visits.mjs
 !scripts/build-langs.mjs
+!scripts/strava-auth.mjs
+!scripts/strava-auth.sh

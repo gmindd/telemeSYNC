@@ -14,8 +14,7 @@ import {
 } from '@telemesync/core';
 import { ClipList } from '../components/ClipList.tsx';
 import { SegmentsPanel } from '../components/SegmentsPanel.tsx';
-import { gadgetZones } from '../components/Preview.tsx';
-import { PLATFORM_NAMES, SOCIAL_PLATFORMS } from '../lib/safeZones.ts';
+import { gadgetZones, PLATFORM_NAMES, SOCIAL_PLATFORMS } from '@telemesync/core';
 import { Preview } from '../components/Preview.tsx';
 import { Timeline } from '../components/Timeline.tsx';
 import { ValuesPanel } from '../components/ValuesPanel.tsx';

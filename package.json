@@ -16,7 +16,7 @@
     "dev": "node scripts/dev.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
-    "typecheck": "tsc -p packages/core && tsc -p apps/server && tsc -p apps/web",
+    "typecheck": "tsc -p packages/core && tsc -p apps/server && tsc -p apps/web && tsc -p apps/mobile",
     "poc": "tsx packages/core/src/cli/poc.ts",
     "inspect": "tsx packages/core/src/cli/inspect.ts",
     "contact-sheet": "tsx packages/core/src/cli/contactSheet.ts",

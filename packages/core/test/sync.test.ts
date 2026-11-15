@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
   addClips,
+  buildRide,
+  goproModel,
   CAMERA_PROFILES,
   chainChapters,
   detectProfile,
@@ -64,6 +66,54 @@ describe('camera profile detection', () => {
     expect(detectProfile(meta({ fileName: 'VID_20240615_093005_00_001.insv' }))).toBe('insta360');
     expect(detectProfile(meta({ fileName: 'clip.mp4', handlerNames: ['GoPro AVC'] }))).toBe('gopro');
     expect(detectProfile(meta({ fileName: 'clip.mp4' }))).toBe('generic');
+  });
+
+  it('Android phone clips, by metadata key or camera-app name (not Insta360)', () => {
+    expect(detectProfile(meta({ fileName: '1000012345.mp4', tags: { 'com.android.version': '14' } }))).toBe('phone');
+    expect(detectProfile(meta({ fileName: 'PXL_20261115_103045123.mp4' }))).toBe('phone');
+    expect(detectProfile(meta({ fileName: 'VID_20261115_103045.mp4' }))).toBe('phone');
+    expect(detectProfile(meta({ fileName: 'VID20261115103045.mp4' }))).toBe('phone');
+    expect(detectProfile(meta({ fileName: '20261115_103045.mp4' }))).toBe('phone');
+    expect(detectProfile(meta({ fileName: 'VID_20261115_103045_00_001.mp4' }))).toBe('insta360');
+    // ffmpeg's own handler name is "VideoHandler": not a phone
+    expect(detectProfile(meta({ fileName: 'clip.mp4', handlerNames: ['VideoHandler', 'SoundHandler'] }))).toBe('generic');
+  });
+
+  it('a Pixel clip renamed by the file picker (real metadata, 2026-10-25): still a phone, start = end − duration', () => {
+    // PXL_20261025_170454745.mp4 as "1000012345.mp4": 48.1 s, creation_time 17:05:46 UTC written at the stop.
+    const m = meta({
+      fileName: '1000012345.mp4',
+      durationMs: 48095.455555555556,
+      creationTimeRawMs: Date.UTC(2026, 9, 25, 17, 5, 46),
+      handlers: ['vide', 'soun', 'meta'],
+      handlerNames: ['VideoHandle', 'SoundHandle', 'MetaHandle'],
+      tags: { '©xyz': '+41.6327-8.8113/' },
+    });
+    expect(detectProfile(m)).toBe('phone');
+    const state = addClips({ cameras: [], clips: [] }, [m], undefined, 'Europe/Lisbon');
+    // 17:04:58: within 4 s of the file-name start (17:04:54) and of where the ride's GPS passes the clip's recorded
+    // location (17:04:52-53); creation_time has whole seconds and is written as the file is closed. Was 17:05:46.
+    expect(Math.round(effectiveStart(state.clips[0], state.cameras[0])! / 1000) * 1000).toBe(Date.UTC(2026, 9, 25, 17, 4, 58));
+  });
+});
+
+describe('Android phone start time', () => {
+  const tz = 'Europe/Lisbon';
+  // Filmed 15 Nov 2026 10:30:45 local (= UTC in winter) for 40 s: creation_time is written at the stop, 10:31:25.
+  const stop = Date.UTC(2026, 10, 15, 10, 31, 25);
+  const start = Date.UTC(2026, 10, 15, 10, 30, 45);
+
+  it('creation_time marks the end of the recording', () => {
+    const m = meta({ fileName: '1000012345.mp4', durationMs: 40_000, creationTimeRawMs: stop, tags: { 'com.android.version': '14' } });
+    const state = addClips({ cameras: [], clips: [] }, [m], undefined, tz);
+    expect(effectiveStart(state.clips[0], state.cameras[0])).toBe(start);
+  });
+
+  it('the file name (local start time) agrees and comes first', () => {
+    const m = meta({ fileName: 'VID_20261115_103045.mp4', durationMs: 40_000, creationTimeRawMs: stop });
+    const r = resolveStart(m, { profile: CAMERA_PROFILES.phone, timeZone: tz });
+    expect(r.source).toBe('filename');
+    expect(r.candidates.map((c) => c.startUtcMs)).toEqual([start, start]);
   });
 });
 
@@ -169,5 +219,42 @@ describe('sync session and sanity checks', () => {
   it('missing timestamp asks for manual input', () => {
     const s = addClips({ cameras: [], clips: [] }, [meta({ fileName: 'clip.mp4' })]);
     expect(clipWarnings(s.clips[0], s.cameras[0], rideStart, rideEnd)[0].code).toBe('noTimestamp');
+  });
+});
+
+describe('GoPro creation_time: local time up to the HERO10, UTC from the HERO11', () => {
+  const tz = 'Europe/Lisbon';
+  // 20 Jun 2026 (summer, UTC+1): creation_time 10:33:27 as written by the camera
+  const raw = Date.UTC(2026, 5, 20, 10, 33, 27);
+  const asLocal = Date.UTC(2026, 5, 20, 9, 33, 27);
+  const gopro = (o: Partial<ClipMetadata>) => meta({ fileName: 'GX014988.MP4', durationMs: 250_000, creationTimeRawMs: raw, ...o });
+
+  it('model from the firmware tag', () => {
+    expect(goproModel(gopro({ tags: { FIRM: 'HD8.01.02.51.00' } }))).toBe(8);
+    expect(goproModel(gopro({ tags: { FIRM: 'H21.01.01.62.00' } }))).toBe(10);
+    expect(goproModel(gopro({ tags: { FIRM: 'H22.01.02.32.00' } }))).toBe(11);
+    expect(goproModel(gopro({ tags: { FIRM: 'H24.01.02.02.00' } }))).toBe(13);
+    expect(goproModel(gopro({}))).toBeUndefined();
+  });
+
+  it('HERO10 reads as local time, HERO11+ as UTC', () => {
+    expect(resolveStart(gopro({ tags: { FIRM: 'H21.01.01.62.00' } }), { profile: CAMERA_PROFILES.gopro, timeZone: tz }).startUtcMs).toBe(asLocal);
+    expect(resolveStart(gopro({ tags: { FIRM: 'H23.01.01.10.00' } }), { profile: CAMERA_PROFILES.gopro, timeZone: tz }).startUtcMs).toBe(raw);
+  });
+
+  it('no model (file re-encoded by an editor): the reading where the ride is moving', () => {
+    // Real case, 2026-06-20: stopped (0-4 km/h) around 09:33 UTC, riding around 10:33 UTC
+    const samples = [];
+    for (let t = Date.UTC(2026, 5, 20, 9, 0); t <= Date.UTC(2026, 5, 20, 11, 0); t += 1000) {
+      samples.push({ t, speed: t < Date.UTC(2026, 5, 20, 10, 0) ? 1 : 7 });
+    }
+    const ride = buildRide({ source: 'gpx', samples });
+    const m = gopro({ handlerNames: ['VideoHandler', 'SoundHandler'], tags: { '©too': 'Lavf61.7.100' } });
+    const withRide = addClips({ cameras: [], clips: [] }, [m], ride.startTime, tz, undefined, ride);
+    expect(effectiveStart(withRide.clips[0], withRide.cameras[0])).toBe(raw);
+    expect(withRide.clips[0].resolved.candidates.map((c) => c.clock)).toEqual(['utc', 'local']);
+    // Without the ride: local time first, as before
+    const without = addClips({ cameras: [], clips: [] }, [m], undefined, tz);
+    expect(effectiveStart(without.clips[0], without.cameras[0])).toBe(asLocal);
   });
 });

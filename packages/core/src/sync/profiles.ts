@@ -33,6 +33,16 @@ export const CAMERA_PROFILES: Record<CameraProfileId, CameraProfile> = {
     verified: false,
     color: '#fdd835',
   },
+  phone: {
+    id: 'phone',
+    label: 'Android phone',
+    // Android's recorder writes creation_time when the file is closed, i.e. when recording STOPS (real UTC). The
+    // file name (VID_20261115_103045, PXL_…, 20261115_103045) is the local time it started, so it goes first.
+    resolvers: ['manual', 'filename', 'creationTime'],
+    creationTime: { clock: 'utc', marks: 'end' },
+    verified: false,
+    color: '#43a047',
+  },
   generic: {
     id: 'generic',
     label: 'Generic',
@@ -46,18 +56,27 @@ export const CAMERA_PROFILES: Record<CameraProfileId, CameraProfile> = {
 const GOPRO_NAME = /^(G[HXLS]\d{6}|GOPR\d{4}|GP\d{6})\.(MP4|LRV|360)$/i;
 const DJI_NAME = /^DJI_\d{4}/i;
 const INSTA_NAME = /^(VID|LRV|PRO_VID|IMG)_\d{8}_\d{6}/i;
+// Android camera apps: Pixel PXL_20261115_103045123, Xiaomi/Huawei/Motorola VID_20261115_103045, OnePlus
+// VID20261115103045, Samsung 20261115_103045. Insta360 names carry a "_00_001" suffix after the time.
+const PHONE_NAME = /^(PXL_\d{8}_\d{6}|VID_?\d{8}_?\d{6}(?!_\d{2}_\d{3})|\d{8}_\d{6}(?:\(\d+\))?\.(mp4|3gp)$)/i;
 
 /** Guesses the camera profile from file name and container tags. */
 export function detectProfile(meta: ClipMetadata): CameraProfileId {
   const name = meta.fileName;
   const tagText = Object.values(meta.tags).join(' ') + ' ' + meta.handlerNames.join(' ');
-  if (/\.insv$/i.test(name) || INSTA_NAME.test(name) || /insta360/i.test(tagText)) return 'insta360';
+  if (/\.insv$/i.test(name) || /insta360/i.test(tagText)) return 'insta360';
   if (GOPRO_NAME.test(name) || /gopro/i.test(tagText) || meta.hasGpmf) return 'gopro';
   if (DJI_NAME.test(name) || /\bdji\b/i.test(tagText)) return 'dji';
+  // Android's recorder (MPEG4Writer) names its tracks "VideoHandle"/"SoundHandle"/"MetaHandle" (ffmpeg writes
+  // "VideoHandler") and some phones add "com.android.version" to the metadata keys. The file name alone is not
+  // enough: Android's file picker may hand the clip over as "1000012345.mp4" (seen with a Pixel, 2026-10).
+  const androidRecorder = meta.handlerNames.some((n) => /^(Video|Sound|Meta)Handle$/.test(n));
+  if (androidRecorder || Object.keys(meta.tags).some((k) => /^com\.android\./i.test(k)) || PHONE_NAME.test(name)) return 'phone';
+  if (INSTA_NAME.test(name)) return 'insta360';
   return 'generic';
 }
 
-/** Profile name in `lang` (only "Generic" is translated; the others are brands). */
+/** Profile name in `lang` (only "Generic" and "Android phone" are translated; the others are brands). */
 export function profileLabel(id: CameraProfileId, lang: Lang | undefined): string {
-  return id === 'generic' ? tr(lang, 'profile.generic') : CAMERA_PROFILES[id].label;
+  return id === 'generic' || id === 'phone' ? tr(lang, `profile.${id}`) : CAMERA_PROFILES[id].label;
 }

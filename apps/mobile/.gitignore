@@ -1,0 +1,5 @@
+# Test clips and ride for ?demo (generated locally, see README.md)
+.dev-fixtures/
+
+# Debug APK copied here to send to the phone
+*.apk

@@ -29,7 +29,7 @@ export interface RawSample {
 }
 
 export interface RawTelemetry {
-  source: 'fit' | 'gpx';
+  source: 'fit' | 'gpx' | 'strava';
   /** Human-friendly name (file name, GPX track name, …). */
   name?: string;
   /** Device / creator description if the file provides one. */
