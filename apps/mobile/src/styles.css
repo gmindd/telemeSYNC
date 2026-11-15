@@ -181,6 +181,11 @@ input[type='range'] { width: 100%; accent-color: var(--accent); height: 28px; ma
 .thumb.is-on .thumb__label { color: var(--text); }
 
 /* Sync panel */
+.syncmap { display: grid; grid-template-columns: auto auto; justify-content: center; align-items: center; gap: 8px 14px; }
+.syncmap__map { width: min(44vw, 180px); height: auto; aspect-ratio: 1; }
+.syncmap__zoom { display: grid; justify-items: center; gap: 8px; }
+.syncmap__zoom .chip-btn { width: 48px; height: 40px; padding: 0; font-size: 1.3rem; }
+.syncmap > .fine { grid-column: 1 / -1; text-align: center; margin: 0; }
 .offset { display: grid; gap: 10px; padding: 12px; border-radius: 16px; background: var(--panel); border: 1px solid var(--border); }
 .offset__head { display: flex; align-items: baseline; gap: 10px; color: var(--muted); font-size: 0.88rem; }
 .offset__value { margin-left: auto; color: var(--text); font-size: 1.4rem; font-variant-numeric: tabular-nums; }

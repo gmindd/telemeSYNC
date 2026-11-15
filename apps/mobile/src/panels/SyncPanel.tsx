@@ -1,9 +1,58 @@
 // Sync: the clip's start found in its metadata, a fine adjustment, and the ride's numbers at the playhead to compare
-// with what the video shows.
-import { sampleAt } from '@telemesync/core';
+// with what the video shows, plus a zoomed round map to line a bend of the road up with the video.
+import { useEffect, useRef } from 'react';
+import { getOverlay, overlayPixelSize, renderOverlayFrame, sampleAt, STREETS_ATTRIBUTION, type Ctx2D, type RideData, type Streets } from '@telemesync/core';
 import { clock, LANG, num, t } from '../i18n.ts';
 import { startSource } from '../lib/project.ts';
-import { clipStart, useProject } from '../state.ts';
+import { clipStart, styleOf, useProject } from '../state.ts';
+
+/** Map radius around the rider (m), from a few bends to a whole valley. */
+const ZOOMS = [50, 100, 200, 400, 800, 1600, 3200];
+
+/** The round map (the same as the gadget, heading up) at a moment of the ride, with its zoom. */
+function SyncMap(props: { ride: RideData; at: number; zoomM: number; streets?: Streets; streetsState: string; onZoom: (m: number) => void; onRetry: () => void }) {
+  const { ride, at, zoomM, streets, onZoom } = props;
+  const ref = useRef<HTMLCanvasElement>(null);
+  const def = getOverlay('dialMap');
+  const style = styleOf({ mapZoomM: zoomM });
+  const { width, height } = overlayPixelSize(def, style);
+  useEffect(() => {
+    const ctx = ref.current?.getContext('2d');
+    if (ctx) renderOverlayFrame(ctx as unknown as Ctx2D, def, at, style, { ride, clipStart: at, clipEnd: at + 60_000, streets });
+  });
+  const i = ZOOMS.indexOf(zoomM);
+  const step = (d: number) => onZoom(ZOOMS[Math.max(0, Math.min(ZOOMS.length - 1, (i < 0 ? 2 : i) + d))]!);
+  const radius = zoomM >= 1000 ? `${num(zoomM / 1000)} km` : `${zoomM} m`;
+  return (
+    <div className="syncmap">
+      <canvas ref={ref} width={width} height={height} className="syncmap__map" />
+      <div className="syncmap__zoom">
+        <button type="button" className="chip-btn" aria-label={t('sync.zoomIn')} disabled={i === 0} onClick={() => step(-1)}>
+          +
+        </button>
+        <span className="fine">{t('sync.radius', { r: radius })}</span>
+        <button type="button" className="chip-btn" aria-label={t('sync.zoomOut')} disabled={i === ZOOMS.length - 1} onClick={() => step(1)}>
+          −
+        </button>
+      </div>
+      <p className="fine">
+        {props.streetsState === 'loading' ? (
+          t('sync.streetsLoading')
+        ) : props.streetsState === 'failed' ? (
+          <>
+            {t('sync.streetsFailed')}{' '}
+            <button type="button" className="link" onClick={props.onRetry}>
+              {t('sync.streetsRetry')}
+            </button>
+          </>
+        ) : streets ? (
+          `${t('sync.streets')} ${STREETS_ATTRIBUTION}`
+        ) : null}
+      </p>
+      <p className="fine">{t('sync.mapHint')}</p>
+    </div>
+  );
+}
 
 // ±1 h: a camera clock in the wrong time zone (or never set after a battery change) is off by whole hours.
 const STEPS = [-3600, -10, -1, -0.1, 0.1, 1, 10, 3600];
@@ -47,6 +96,7 @@ export function SyncPanel() {
           <b>{clock(at)}</b> {sample.outside ? <span className="warn">· {t('sync.outside')}</span> : `· ${values.join(' · ')}`}
         </dd>
       </dl>
+      {s.ride.available.has('map') && <SyncMap ride={s.ride} at={at} zoomM={s.mapZoomM} streets={s.streets} streetsState={s.streetsState} onZoom={s.setMapZoom} onRetry={s.retryStreets} />}
       <div className="offset">
         <div className="offset__head">
           <span>{t('sync.offset')}</span>

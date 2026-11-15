@@ -1,4 +1,5 @@
 import type { RideData, RideSample } from '../../telemetry/ride.ts';
+import { STREETS_ATTRIBUTION, type StreetKind, type Streets } from '../../map/streets.ts';
 import { drawText } from '../draw.ts';
 import { withAlpha } from '../panel/paint.ts';
 import type { Ctx2D, FrameState, OverlayContext, OverlayDefinition, OverlayStyle } from '../types.ts';
@@ -17,6 +18,10 @@ interface Local {
   n: Float64Array;
   /** View radius in metres (from the size of the ride). */
   viewM: number;
+  /** Origin and east metres per degree of longitude, to place other things (streets) in the same frame. */
+  lat0: number;
+  lon0: number;
+  k: number;
 }
 
 const localCache = new WeakMap<RideData, Local>();
@@ -50,10 +55,54 @@ function localOf(ride: RideData): Local {
     maxN = Math.max(maxN, n[i]);
   }
   const extent = Number.isFinite(minE) ? Math.max(maxE - minE, maxN - minN) : 1000;
-  l = { e, n, viewM: Math.max(300, Math.min(2500, extent * 0.3)) };
+  l = { e, n, viewM: Math.max(300, Math.min(2500, extent * 0.3)), lat0, lon0, k };
   localCache.set(ride, l);
   return l;
 }
+
+interface LocalStreet {
+  kind: StreetKind;
+  e: Float64Array;
+  n: Float64Array;
+  /** Bounds (local metres), to skip streets out of view. */
+  minE: number;
+  maxE: number;
+  minN: number;
+  maxN: number;
+}
+
+const streetsCache = new WeakMap<Streets, { ride: RideData; ways: LocalStreet[] }>();
+
+/** Streets in the ride's local metres (computed once per streets and ride). */
+function localStreets(streets: Streets, ride: RideData, l: Local): LocalStreet[] {
+  const hit = streetsCache.get(streets);
+  if (hit && hit.ride === ride) return hit.ways;
+  const ways = streets.ways.map((w) => {
+    const e = Float64Array.from(w.lon, (lon) => (lon - l.lon0) * l.k);
+    const n = Float64Array.from(w.lat, (lat) => (lat - l.lat0) * M_PER_DEG_LAT);
+    let minE = Infinity;
+    let maxE = -Infinity;
+    let minN = Infinity;
+    let maxN = -Infinity;
+    for (let i = 0; i < e.length; i++) {
+      minE = Math.min(minE, e[i]);
+      maxE = Math.max(maxE, e[i]);
+      minN = Math.min(minN, n[i]);
+      maxN = Math.max(maxN, n[i]);
+    }
+    return { kind: w.kind, e, n, minE, maxE, minN, maxN };
+  });
+  streetsCache.set(streets, { ride, ways });
+  return ways;
+}
+
+/** Street widths and colours (gadget units): paths and tracks thin, main roads wide. */
+const STREET_LOOK: { kind: StreetKind; width: number; color: string }[] = [
+  { kind: 'path', width: 1.6, color: 'rgba(185,212,222,0.42)' },
+  { kind: 'minor', width: 2.2, color: 'rgba(185,212,222,0.5)' },
+  { kind: 'road', width: 3.4, color: 'rgba(200,224,232,0.62)' },
+  { kind: 'major', width: 5, color: 'rgba(222,238,244,0.72)' },
+];
 
 /** Position (local metres) at the sample, interpolated between fixes. */
 function positionAt(ride: RideData, l: Local, s: RideSample): { e: number; n: number } | null {
@@ -99,7 +148,8 @@ export function drawRoundMap(ctx: Ctx2D, frame: FrameState, style: OverlayStyle,
   const theta = pos ? headingAt(ride, l, s, pos) : 0;
   const cos = Math.cos(theta);
   const sin = Math.sin(theta);
-  const k = (MAP_R * 1.1) / l.viewM;
+  const viewM = style.mapRadiusM && style.mapRadiusM > 0 ? style.mapRadiusM : l.viewM;
+  const k = (MAP_R * 1.1) / viewM;
   const sx = (e: number, n: number) => CX + ((e - (pos?.e ?? 0)) * cos - (n - (pos?.n ?? 0)) * sin) * k;
   const sy = (e: number, n: number) => RIDER_Y - ((e - (pos?.e ?? 0)) * sin + (n - (pos?.n ?? 0)) * cos) * k;
 
@@ -113,10 +163,27 @@ export function drawRoundMap(ctx: Ctx2D, frame: FrameState, style: OverlayStyle,
   ctx.fillStyle = bg;
   ctx.fillRect(CX - MAP_R, CY - MAP_R, MAP_R * 2, MAP_R * 2);
 
-  if (pos) {
+  const streets = pos && octx.streets?.ways.length ? localStreets(octx.streets, ride, l) : undefined;
+  if (pos && streets) {
+    // Streets and paths around (OpenStreetMap): what makes a bend recognisable.
+    const reach = viewM * 1.6;
+    ctx.lineJoin = 'round';
+    ctx.lineCap = 'round';
+    for (const look of STREET_LOOK) {
+      ctx.beginPath();
+      for (const w of streets) {
+        if (w.kind !== look.kind || w.maxE < pos.e - reach || w.minE > pos.e + reach || w.maxN < pos.n - reach || w.minN > pos.n + reach) continue;
+        ctx.moveTo(sx(w.e[0], w.n[0]), sy(w.e[0], w.n[0]));
+        for (let i = 1; i < w.e.length; i++) ctx.lineTo(sx(w.e[i], w.n[i]), sy(w.e[i], w.n[i]));
+      }
+      ctx.strokeStyle = look.color;
+      ctx.lineWidth = look.width;
+      ctx.stroke();
+    }
+  } else if (pos) {
     // World-aligned grid: shows the map turning and moving.
-    const step = l.viewM / 3;
-    const reach = l.viewM * 2;
+    const step = viewM / 3;
+    const reach = viewM * 2;
     ctx.strokeStyle = 'rgba(160,220,210,0.07)';
     ctx.lineWidth = 1;
     const g0e = Math.floor((pos.e - reach) / step) * step;
@@ -133,9 +200,10 @@ export function drawRoundMap(ctx: Ctx2D, frame: FrameState, style: OverlayStyle,
       ctx.lineTo(sx(pos.e + reach, n), sy(pos.e + reach, n));
       ctx.stroke();
     }
-
+  }
+  if (pos) {
     // Route: only points near the view, decimated to ~1.5 px.
-    const near = (l.viewM * 1.8) ** 2;
+    const near = (viewM * 1.8) ** 2;
     const minStep = 1.5 / k;
     const path = (from: number, to: number, extra?: { e: number; n: number }) => {
       ctx.beginPath();
@@ -190,6 +258,8 @@ export function drawRoundMap(ctx: Ctx2D, frame: FrameState, style: OverlayStyle,
   ctx.fillStyle = shade;
   ctx.fillRect(CX - MAP_R, CY - MAP_R, MAP_R * 2, MAP_R * 2);
   ctx.restore();
+
+  if (streets) drawText(ctx, STREETS_ATTRIBUTION, CX, CY + MAP_R - 12, p.ts, { size: 11, weight: 600, color: 'rgba(255,255,255,0.6)', align: 'center', tabular: false });
 
   // Rider arrow (always pointing up: the map turns, not the arrow).
   if (pos) {

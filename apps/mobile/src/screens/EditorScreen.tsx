@@ -7,6 +7,7 @@ import { t } from '../i18n.ts';
 import { pause } from '../lib/player.ts';
 import { FormatPanel } from '../panels/FormatPanel.tsx';
 import { GadgetsPanel } from '../panels/GadgetsPanel.tsx';
+import { useStreets } from '../lib/streets.ts';
 import { SyncPanel } from '../panels/SyncPanel.tsx';
 import { useProject, type Tab } from '../state.ts';
 
@@ -19,6 +20,7 @@ const ICONS: Record<Tab, string> = {
 export function EditorScreen() {
   const s = useProject();
   const tabs: Tab[] = ['gadgets', 'sync', 'format'];
+  useStreets();
   // Gadgets in their default places may sit on areas the social apps cover: move them on opening
   useEffect(() => useProject.getState().settleAll(), []);
   return (

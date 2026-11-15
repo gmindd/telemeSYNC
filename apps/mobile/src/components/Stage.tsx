@@ -7,7 +7,7 @@ import { LANG, t } from '../i18n.ts';
 import { cropsSideways, isVertical } from '../lib/formats.ts';
 import { FramePlayer } from '../lib/framePlayer.ts';
 import { attachFrames, attachVideo, togglePlay } from '../lib/player.ts';
-import { clipStart, frameAspect, placements, STYLE, useProject } from '../state.ts';
+import { clipStart, frameAspect, placements, STYLE, styleOf, useProject } from '../state.ts';
 
 const MIN_W = 0.06;
 
@@ -87,10 +87,10 @@ export function Stage() {
       c.height = ch;
     }
     const start = clipStart(s);
-    drawComposite(ctx as unknown as Ctx2D, s.overlays, pl, start + sec * 1000, STYLE, { ride: s.ride, clipStart: start, clipEnd: start + s.trim.end * 1000 }, cw, ch);
+    drawComposite(ctx as unknown as Ctx2D, s.overlays, pl, start + sec * 1000, styleOf(s), { ride: s.ride, clipStart: start, clipEnd: start + s.trim.end * 1000, streets: s.streets }, cw, ch);
   };
   const currentTime = () => (useFrames ? framePlayer.current?.time : video.current?.currentTime) ?? s.playheadS;
-  useEffect(() => draw.current(currentTime()), [s.overlays, s.layout, s.offsetS, s.autoStart, s.ride, s.format, size.w, size.h]);
+  useEffect(() => draw.current(currentTime()), [s.overlays, s.layout, s.offsetS, s.autoStart, s.ride, s.format, s.mapZoomM, s.streets, size.w, size.h]);
   useEffect(() => void (lastFrame.current && drawBg.current(lastFrame.current)), [s.format, s.cropPos, size.w, size.h]);
 
   // Frame player, when the <video> failed

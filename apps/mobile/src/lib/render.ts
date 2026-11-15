@@ -11,6 +11,7 @@ import {
   type OverlayId,
   type OverlayStyle,
   type RideData,
+  type Streets,
 } from '@telemesync/core';
 import { ALL_FORMATS, BlobSource, BufferTarget, Conversion, Input, Mp4OutputFormat, Output, QUALITY_HIGH, type InputVideoTrack } from 'mediabunny';
 import type { Crop } from './formats.ts';
@@ -23,6 +24,8 @@ export interface RenderSettings {
   /** Places chosen in the editor (fractions of the exported frame); the others get the default layout. */
   layout: GadgetLayout;
   style: OverlayStyle;
+  /** Streets around the clip for the round map (OpenStreetMap), when they were fetched. */
+  streets?: Streets;
   /** Part of the clip kept (displayed pixels); the whole frame when absent. */
   crop?: Crop;
   /** Part of the clip to export, in seconds from its start. */
@@ -103,7 +106,7 @@ function overlayPainter(s: RenderSettings, width: number, height: number) {
   const canvas = new OffscreenCanvas(width, height);
   const ctx = canvas.getContext('2d')!;
   const placements = resolveLayout(s.overlays, s.layout, width / height, s.style);
-  const octx = { ride: s.ride, clipStart: s.clipStartUtcMs, clipEnd: s.clipStartUtcMs + s.trim.end * 1000 };
+  const octx = { ride: s.ride, clipStart: s.clipStartUtcMs, clipEnd: s.clipStartUtcMs + s.trim.end * 1000, streets: s.streets };
   let lastKey = Number.NaN;
   return (t: number): OffscreenCanvas => {
     const key = compositeFrameKey(s.overlays, t, s.clipStartUtcMs, s.style);
