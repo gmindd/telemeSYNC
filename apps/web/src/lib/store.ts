@@ -224,7 +224,7 @@ export const useApp = create<State & Actions>((set, get) => ({
       const buf = new Uint8Array(await file.arrayBuffer());
       const ride = buildRide(parseTelemetryFile(file.name, buf));
       const { id } = await api.uploadTelemetry(file);
-      const sync = resolveAll(get().sync, ride.startTime);
+      const sync = resolveAll(get().sync, ride.startTime, ride);
       // Keep only overlays that this ride supports.
       const overlays = get().overlays.filter((o) => ride.available.has(getOverlay(o).requires));
       // Segments from an opened project stay when they fall within this ride.
@@ -268,7 +268,7 @@ export const useApp = create<State & Actions>((set, get) => ({
       }
     }
     const before = new Set(st.sync.clips.map((c) => c.id));
-    const sync = addClips(st.sync, newMetas.map((m) => m.meta), st.ride?.startTime, undefined, currentLang());
+    const sync = addClips(st.sync, newMetas.map((m) => m.meta), st.ride?.startTime, undefined, currentLang(), st.ride);
     const selected = { ...st.selected };
     const added = sync.clips.filter((c) => !before.has(c.id));
     added.forEach((c, i) => {
@@ -289,7 +289,7 @@ export const useApp = create<State & Actions>((set, get) => ({
     delete f[id];
     const s = { ...selected };
     delete s[id];
-    set({ sync: resolveAll({ cameras, clips }, get().ride?.startTime), files: f, selected: s, activeClipId: get().activeClipId === id ? undefined : get().activeClipId });
+    set({ sync: resolveAll({ cameras, clips }, get().ride?.startTime, get().ride), files: f, selected: s, activeClipId: get().activeClipId === id ? undefined : get().activeClipId });
   },
 
   setActiveClip: (activeClipId) => set({ activeClipId }),
@@ -308,7 +308,7 @@ export const useApp = create<State & Actions>((set, get) => ({
   setManualStart(clipId, utcMs) {
     const sync = get().sync;
     const clips = sync.clips.map((c) => (c.id === clipId ? { ...c, manualStartUtcMs: utcMs } : c));
-    set({ sync: resolveAll({ ...sync, clips }, get().ride?.startTime) });
+    set({ sync: resolveAll({ ...sync, clips }, get().ride?.startTime, get().ride) });
   },
 
   /** target = existing camera id, or "new:<profile>" to create another camera. */
@@ -328,13 +328,13 @@ export const useApp = create<State & Actions>((set, get) => ({
     }
     const clips = sync.clips.map((c) => (c.id === clipId ? { ...c, cameraId: camId } : c));
     cameras = cameras.filter((cam) => clips.some((c) => c.cameraId === cam.id));
-    set({ sync: resolveAll({ cameras, clips }, get().ride?.startTime) });
+    set({ sync: resolveAll({ cameras, clips }, get().ride?.startTime, get().ride) });
   },
 
   setCameraTimeZone(cameraId, tz) {
     const sync = get().sync;
     const cameras = sync.cameras.map((c) => (c.id === cameraId ? { ...c, timeZone: tz } : c));
-    set({ sync: resolveAll({ ...sync, cameras }, get().ride?.startTime) });
+    set({ sync: resolveAll({ ...sync, cameras }, get().ride?.startTime, get().ride) });
   },
 
   setCameraLabel(cameraId, label) {
@@ -530,7 +530,7 @@ export const useApp = create<State & Actions>((set, get) => ({
         clipOffsetMs: c.clipOffsetMs,
         resolved: { candidates: [] },
       }));
-      const sync = resolveAll({ cameras: p.cameras, clips }, get().ride?.startTime);
+      const sync = resolveAll({ cameras: p.cameras, clips }, get().ride?.startTime, get().ride);
       const selected: Record<string, boolean> = {};
       p.clips.forEach((c) => (selected[c.id] = c.selected));
       set({

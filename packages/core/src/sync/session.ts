@@ -2,8 +2,9 @@ import type { ClipMetadata } from '../media/types.ts';
 import { DEFAULT_TIME_ZONE } from '../util/timezone.ts';
 import { chainChapters } from './chapters.ts';
 import type { Lang } from '../i18n/index.ts';
+import type { RideData } from '../telemetry/ride.ts';
 import { CAMERA_PROFILES, detectProfile, profileLabel } from './profiles.ts';
-import { resolveStart } from './resolve.ts';
+import { movingFraction, resolveStart } from './resolve.ts';
 import { sanityChecks } from './sanity.ts';
 import type { Camera, CameraProfileId, Clip, SyncWarning } from './types.ts';
 
@@ -23,9 +24,13 @@ export function clipIdFor(meta: ClipMetadata): string {
   return `${meta.fileName}#${meta.sizeBytes}#${++idCounter}`;
 }
 
-/** Re-runs resolvers and chapter chaining for every clip (call after adding clips or changing a camera/profile). */
-export function resolveAll(state: SyncState, rideStartUtcMs?: number): SyncState {
+/**
+ * Re-runs resolvers and chapter chaining for every clip (call after adding clips or changing a camera/profile).
+ * With the ride, a creation_time that could be local time or UTC is read the way the ride is moving in the clip.
+ */
+export function resolveAll(state: SyncState, rideStartUtcMs?: number, ride?: RideData): SyncState {
   const camById = new Map(state.cameras.map((c) => [c.id, c]));
+  const moving = ride ? (start: number, duration: number) => movingFraction(ride, start, duration) : undefined;
   const clips = state.clips.map((clip) => {
     const cam = camById.get(clip.cameraId)!;
     const resolved = resolveStart(clip.meta, {
@@ -33,6 +38,7 @@ export function resolveAll(state: SyncState, rideStartUtcMs?: number): SyncState
       timeZone: cam.timeZone,
       rideStartUtcMs,
       manualStartUtcMs: clip.manualStartUtcMs,
+      movingFraction: moving,
     });
     return { ...clip, resolved };
   });
@@ -53,7 +59,7 @@ export function resolveAll(state: SyncState, rideStartUtcMs?: number): SyncState
 }
 
 /** Adds clips, detecting the camera profile and creating cameras as needed. */
-export function addClips(state: SyncState, metas: ClipMetadata[], rideStartUtcMs?: number, timeZone = DEFAULT_TIME_ZONE, lang?: Lang): SyncState {
+export function addClips(state: SyncState, metas: ClipMetadata[], rideStartUtcMs?: number, timeZone = DEFAULT_TIME_ZONE, lang?: Lang, ride?: RideData): SyncState {
   const cameras = [...state.cameras];
   const clips = [...state.clips];
   for (const meta of metas) {
@@ -65,7 +71,7 @@ export function addClips(state: SyncState, metas: ClipMetadata[], rideStartUtcMs
     }
     clips.push({ id: clipIdFor(meta), meta, cameraId: cam.id, resolved: { candidates: [] }, clipOffsetMs: 0 });
   }
-  return resolveAll({ cameras, clips }, rideStartUtcMs);
+  return resolveAll({ cameras, clips }, rideStartUtcMs, ride);
 }
 
 /** Start before offsets. */

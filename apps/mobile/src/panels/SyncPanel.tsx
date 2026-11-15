@@ -32,7 +32,7 @@ export function SyncPanel() {
   const offsetLabel = signed(s.offsetS);
   // The slider fine-tunes within ±5 min of the whole hours set with the ±1 h buttons.
   const hours = Math.round(s.offsetS / 3600) * 3600;
-  const source = s.clip ? startSource(s.clip, LANG) : undefined;
+  const source = s.clip ? startSource(s.clip, s.ride, LANG) : undefined;
 
   return (
     <div className="panel">

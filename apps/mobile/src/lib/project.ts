@@ -40,7 +40,7 @@ function deviceTimeZone(): string | undefined {
 }
 
 function resolved(clip: LoadedClip, ride?: RideData) {
-  const state = addClips({ cameras: [], clips: [] }, [clip.meta], ride?.startTime, deviceTimeZone());
+  const state = addClips({ cameras: [], clips: [] }, [clip.meta], ride?.startTime, deviceTimeZone(), undefined, ride);
   return { clip: state.clips[0]!, camera: state.cameras[0]! };
 }
 
@@ -51,8 +51,8 @@ export function detectedStart(clip: LoadedClip, ride?: RideData): number | undef
 }
 
 /** Where that start came from, in words ("GoPro GPS (GPMF)", "Date/time in the file name"…). */
-export function startSource(clip: LoadedClip, lang: Lang): string | undefined {
-  const c = resolved(clip).clip.resolved.candidates[0];
+export function startSource(clip: LoadedClip, ride: RideData | undefined, lang: Lang): string | undefined {
+  const c = resolved(clip, ride).clip.resolved.candidates[0];
   return c ? candidateLabel(c, lang) : undefined;
 }
 
