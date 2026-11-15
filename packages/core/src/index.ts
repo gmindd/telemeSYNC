@@ -37,3 +37,4 @@ export * from './overlays/layout.ts';
 export * from './overlays/safeZones.ts';
 export * from './export/formats.ts';
 export * from './map/streets.ts';
+export * from './map/fetchStreets.ts';

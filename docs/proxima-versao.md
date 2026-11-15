@@ -43,6 +43,13 @@ dela.
 - Os nomes dos ficheiros dos gadgets novos levam o desporto à frente (ex.: `corrida-mostrador-fc`), para não se
   confundirem com os de ciclismo.
 
+- **Mapa na sincronização, com ruas e cruzamentos (como na app do telemóvel):** no passo 3 aparece o mapa circular na
+  posição da agulha, com zoom de 50 m a 3,2 km (ou automático). Pare o vídeo à entrada de uma curva ou de um cruzamento e
+  ajuste o offset até a seta ficar no mesmo ponto do mapa. O mapa circular (e o de Natal) passa a desenhar as ruas e os
+  caminhos à volta (OpenStreetMap, através do OpenFreeMap, sem conta nem chave), na pré-visualização e no vídeo exportado;
+  o zoom escolhido vale também para o gadget. O botão "Pôr este mapa no vídeo" ativa o gadget, que se arrasta na
+  pré-visualização como os outros. Sem rede, o mapa mostra só o percurso, como antes.
+
 ### Pequenas correções (sugestões de utilizadores)
 
 - **Mapa circular sem soluços:** a direção para onde o mapa roda deixou de saltar uma vez por segundo (a cada ponto do

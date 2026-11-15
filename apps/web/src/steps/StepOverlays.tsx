@@ -326,7 +326,7 @@ function Color({ label, k }: { label: string; k: 'textColor' | 'accentColor' | '
 }
 
 export function StepOverlays() {
-  const { ride, overlays, toggleOverlay, style, setStyle, sync, activeClipId, playhead, setStep, overlayLang, setOverlayLang, sport, setSport } = useApp();
+  const { ride, overlays, toggleOverlay, style, setStyle, sync, activeClipId, playhead, setStep, overlayLang, setOverlayLang, sport, setSport, streets } = useApp();
   const tr = useT();
   const lang = useLang((s) => s.lang);
   const [theme, setTheme] = useState<OverlayTheme>(storedTheme);
@@ -378,7 +378,7 @@ export function StepOverlays() {
       <input type="checkbox" checked={overlays.includes(d.id)} onChange={(e) => toggleOverlay(d.id, e.target.checked)} />
       <span>{overlayLabel(d.id, lang)}</span>
       <div className="checker">
-        <OverlayCanvas id={d.id} ride={ride} style={viewStyle} t={previewT(d)} clipStart={clipStart} clipEnd={clipEnd} cssScale={0.45} fitHeight={190} />
+        <OverlayCanvas id={d.id} ride={ride} style={viewStyle} t={previewT(d)} clipStart={clipStart} clipEnd={clipEnd} streets={streets} cssScale={0.45} fitHeight={190} />
       </div>
     </label>
   );
@@ -411,7 +411,7 @@ export function StepOverlays() {
               </label>
             </div>
             <div className="checker" onClick={() => toggleOverlay(d.id, !on)}>
-              <OverlayCanvas id={d.id} ride={ride} style={viewStyle} t={t} clipStart={clipStart} clipEnd={clipEnd} cssScale={0.45} fitHeight={220} />
+              <OverlayCanvas id={d.id} ride={ride} style={viewStyle} t={t} clipStart={clipStart} clipEnd={clipEnd} streets={streets} cssScale={0.45} fitHeight={220} />
             </div>
           </div>
         );

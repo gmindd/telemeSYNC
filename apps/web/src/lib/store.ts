@@ -35,6 +35,7 @@ import {
   SPORTS,
   overlaySports,
   type Sport,
+  type Streets,
 } from '@telemesync/core';
 import { currentLang, t, t as tr, useLang } from '../i18n/index.tsx';
 import { api, type JobSnapshot } from './api.ts';
@@ -85,6 +86,11 @@ interface State {
   safeZones: SocialPlatform[];
   /** Sport whose gadgets step 4 shows (from the file when it says, else the last one chosen). */
   sport: Sport;
+  /** Streets and paths around the active clip (OpenStreetMap) for the round maps, see lib/streets.ts. */
+  streets?: Streets;
+  streetsState: 'idle' | 'loading' | 'ok' | 'failed';
+  /** Bumped by "try again" to ask for the streets once more. */
+  streetsRetry: number;
 }
 
 interface Actions {
@@ -114,6 +120,8 @@ interface Actions {
   importDeviceLaps(): void;
   toggleSafeZone(p: SocialPlatform): void;
   setSport(s: Sport): void;
+  setStreets(streets: Streets | undefined, state: State['streetsState']): void;
+  retryStreets(): void;
   setFormat(f: OutputFormat): void;
   setMaxFps(fps: number): void;
   setOutputDir(d: string): void;
@@ -227,6 +235,8 @@ export const useApp = create<State & Actions>((set, get) => ({
   overlays: loadStoredOverlays(),
   safeZones: loadStored<SocialPlatform[]>(SAFE_ZONES_KEY, []).filter((p) => SOCIAL_PLATFORMS.includes(p)),
   sport: ((s) => (SPORTS.includes(s) ? s : 'cycling'))(loadStored<Sport>(SPORT_KEY, 'cycling')),
+  streetsState: 'idle',
+  streetsRetry: 0,
   style: loadStoredStyle(initialOverlayLang),
   overlayLang: initialOverlayLang,
   format: loadStored<OutputFormat>(FORMAT_KEY, DEFAULT_OUTPUT_FORMAT),
@@ -275,6 +285,8 @@ export const useApp = create<State & Actions>((set, get) => ({
         style: { ...get().style, segments, ghost: ghost ? { ...ghost, startMs: ghostStart } : null, mapRange, mapMode },
         segAnchor: undefined,
         ride,
+        streets: undefined,
+        streetsState: 'idle',
         rideId: id,
         rideFile: { name: file.name, size: file.size },
         rideName: rideNameFrom(ride, file.name),
@@ -462,6 +474,9 @@ export const useApp = create<State & Actions>((set, get) => ({
     set({ sport });
     store(SPORT_KEY, sport);
   },
+
+  setStreets: (streets, streetsState) => set({ streets, streetsState }),
+  retryStreets: () => set({ streetsRetry: get().streetsRetry + 1 }),
 
   toggleSafeZone(p) {
     const cur = get().safeZones;

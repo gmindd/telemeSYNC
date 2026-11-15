@@ -272,3 +272,12 @@ table.licenses td { padding: 3px 6px; border-bottom: 1px solid var(--border); }
 .route-picker canvas { display: block; border-radius: 10px; border: 1px solid var(--border); cursor: crosshair; touch-action: none; }
 .route-picker-strip { margin-top: 6px; }
 .route-picker .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; vertical-align: -1px; }
+
+/* Sync step: round map at the playhead, to line a bend up with the video */
+.syncmap { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.syncmap h3 { align-self: flex-start; margin: 0; font-size: 14px; }
+.syncmap__map { display: block; }
+.syncmap__zoom { display: flex; align-items: center; gap: 8px; }
+.syncmap__zoom button.small { min-width: 30px; font-size: 16px; font-weight: 700; }
+.syncmap__note { margin: 0; font-size: 12px; text-align: center; }
+button.link-inline { background: none; border: none; padding: 0; color: var(--accent); text-decoration: underline; cursor: pointer; font: inherit; }

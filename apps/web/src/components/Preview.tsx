@@ -90,6 +90,7 @@ export function Preview(props: {
 }) {
   const { clip, camera, file, ride, overlays, style } = props;
   const setPlayhead = useApp((s) => s.setPlayhead);
+  const streets = useApp((s) => s.streets);
   const t = useT();
   const playhead = useApp((s) => s.playhead);
   const start = effectiveStart(clip, camera);
@@ -124,7 +125,7 @@ export function Preview(props: {
       const s = startRef.current;
       if (s === undefined) return;
       const t = s + ms;
-      const octx = { ride, clipStart: s, clipEnd: s + clip.meta.durationMs };
+      const octx = { ride, clipStart: s, clipEnd: s + clip.meta.durationMs, streets };
       for (const id of overlays) {
         const c = canvases.current.get(id);
         const ctx = c?.getContext('2d');
@@ -136,7 +137,7 @@ export function Preview(props: {
         setPlayhead({ t, source: 'video' });
       }
     },
-    [ride, overlays, style, clip.meta.durationMs, setPlayhead],
+    [ride, overlays, style, clip.meta.durationMs, setPlayhead, streets],
   );
 
   // Redraw when anything that affects the image changes.

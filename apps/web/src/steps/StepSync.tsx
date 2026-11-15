@@ -18,6 +18,7 @@ import { gadgetZones, PLATFORM_NAMES, SOCIAL_PLATFORMS } from '@telemesync/core'
 import { Preview } from '../components/Preview.tsx';
 import { Timeline } from '../components/Timeline.tsx';
 import { ValuesPanel } from '../components/ValuesPanel.tsx';
+import { SyncMap } from '../components/SyncMap.tsx';
 import { useLang, useT } from '../i18n/index.tsx';
 import { drawStyle, useApp } from '../lib/store.ts';
 import { dec, fmtOffset, parseDecimal } from '../lib/format.ts';
@@ -174,6 +175,7 @@ export function StepSync() {
   const cams = new Map(sync.cameras.map((c) => [c.id, c]));
   const clip = sync.clips.find((c) => c.id === activeClipId) ?? sync.clips[0];
   const cam = clip ? cams.get(clip.cameraId)! : undefined;
+  const clipStart = clip && cam ? effectiveStart(clip, cam) : undefined;
   return (
     <section>
       <h2>{t('nav.sync')}</h2>
@@ -214,6 +216,7 @@ export function StepSync() {
           <div className="sync-side">
             <ClipDetail clip={clip} cam={cam} />
             {playhead ? <ValuesPanel ride={ride} t={playhead.t} style={style} /> : null}
+            {playhead && clipStart !== undefined && ride.available.has('map') ? <SyncMap ride={ride} t={playhead.t} clipStart={clipStart} clipEnd={clipStart + clip.meta.durationMs} style={viewStyle} /> : null}
             <SegmentsPanel ride={ride} timeZone={style.timeZone} />
           </div>
         </div>
