@@ -572,6 +572,7 @@ export const useApp = create<State & Actions>((set, get) => ({
       style: st.style,
       output: { format: st.format, separate: st.exportSeparate, composite: st.exportComposite, compositeShortSide: st.compositeShortSide, maxFps: st.maxFps },
       layout: st.layout,
+      sport: st.sport,
     };
     const blob = new Blob([serializeProject(p)], { type: 'application/json' });
     const a = document.createElement('a');
@@ -607,6 +608,8 @@ export const useApp = create<State & Actions>((set, get) => ({
         exportComposite: p.output.composite ?? false,
         compositeShortSide: p.output.compositeShortSide ?? 1080,
         layout: p.layout ?? {},
+        // The project's sport tab; the ride's own sport, when its file says, still wins (see loadTelemetry).
+        sport: get().ride?.sport ?? p.sport ?? get().sport,
         rideName: p.name,
         activeClipId: clips[0]?.id,
         step: get().ride ? 'sync' : 'telemetry',

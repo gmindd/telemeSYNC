@@ -5,6 +5,7 @@ import type { Camera } from '../sync/types.ts';
 import type { GadgetLayout } from '../overlays/layout.ts';
 import { LocalizedError } from '../i18n/index.ts';
 import type { Segment } from '../segments/segments.ts';
+import { SPORTS, type Sport } from '../telemetry/types.ts';
 
 export const PROJECT_VERSION = 1;
 
@@ -27,6 +28,8 @@ export interface ProjectFile {
   output: { format: OutputFormat; separate?: boolean; composite?: boolean; compositeShortSide?: number; maxFps?: number };
   /** Gadget positions (fractions of the frame). */
   layout?: GadgetLayout;
+  /** Sport tab of step 4 (older projects have none). */
+  sport?: Sport;
 }
 
 /** Segments of a project file: only well-formed ones (older projects have none). */
@@ -63,5 +66,6 @@ export function parseProject(json: string): ProjectFile {
       compositeShortSide: Number(p.output?.compositeShortSide) || 1080,
     },
     layout: p.layout && typeof p.layout === 'object' ? p.layout : {},
+    sport: SPORTS.includes(p.sport) ? p.sport : undefined,
   };
 }
