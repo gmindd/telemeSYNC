@@ -31,7 +31,7 @@
   <main id="conteudo" class="legal">
     <div class="container container--narrow">
       <h1>Aviso legal, termos e privacidade</h1>
-      <p>Última atualização: <time datetime="2026-11-10">10 de novembro de 2026</time>.</p>
+      <p>Última atualização: <time datetime="2026-11-19">19 de novembro de 2026</time>.</p>
 
       <nav class="legal__toc" aria-label="Índice">
         <ol>
@@ -72,7 +72,7 @@
         </p>
         <p>
           O programa é fornecido “tal como está”, sem garantias de qualquer tipo, incluindo de exatidão dos dados apresentados
-          (velocidade, inclinação, altitude, frequência cardíaca, posição). Os valores dependem dos dados do seu ciclocomputador e da
+          (velocidade, inclinação, altitude, frequência cardíaca, posição). Os valores dependem dos dados do seu ciclocomputador ou relógio e da
           sincronização com os vídeos, e não devem ser usados para fins de segurança, médicos ou de prova. Na medida máxima permitida
           por lei, o autor não é responsável por danos resultantes da utilização do programa. Faça cópias de segurança dos seus ficheiros.
         </p>
@@ -93,6 +93,16 @@
           <a href="https://openfreemap.org/" target="_blank" rel="noopener">OpenFreeMap</a> (tiles.openfreemap.org) os quadrados de mapa
           à volta do troço do clip, para desenhar as ruas e os caminhos (dados © OpenStreetMap): o OpenFreeMap recebe o endereço IP e a zona
           do mapa pedida, mas não a volta, a hora nem os vídeos. Sem rede, o mapa mostra só o percurso.
+        </p>
+        <p>
+          <strong>Na app para Android (em testes):</strong> tal como no computador, os vídeos e a telemetria são processados no telemóvel e
+          não são enviados para nenhum servidor; a app usa os mesmos mapas do OpenFreeMap e consulta este site para saber se há uma versão nova.
+          Se entrar com a conta do <a href="https://www.strava.com/" target="_blank" rel="noopener">Strava</a> para ir buscar uma atividade, a
+          autorização é dada no site do Strava, e o serviço deste site (/api/strava) troca o código de autorização pelas chaves de acesso, porque
+          isso exige uma chave secreta que não pode estar dentro da app. As chaves ficam guardadas apenas no telemóvel: o servidor mantém-nas em
+          memória no máximo dois minutos, até a app as levantar, não as escreve em disco e não regista nada sobre o atleta (o endereço IP é usado
+          só para limitar pedidos abusivos, em memória). Os dados da atividade vão diretamente do Strava para o telemóvel. Pode retirar o
+          acesso a qualquer momento nas definições do Strava (Aplicações autorizadas). Aplicam-se as regras de privacidade do Strava.
         </p>
         <p><strong>Neste site:</strong> o responsável pelo tratamento é o titular indicado no aviso legal. São tratados apenas os dados seguintes:</p>
         <ul>
