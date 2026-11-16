@@ -19,6 +19,8 @@ import {
   validCondition,
   type Ctx2D,
   type GadgetCondition,
+  type GadgetPlacement,
+  type OverlayId,
   type OverlayStyle,
 } from '../src/index.ts';
 import { registerEmbeddedFonts, renderOverlay } from '../src/node/index.ts';
@@ -107,7 +109,7 @@ describe('gadget conditions (appear / disappear)', () => {
       const c = createCanvas(W, W);
       const ctx = c.getContext('2d');
       const layer = (w: number, h: number) => createCanvas(w, h).getContext('2d') as unknown as Ctx2D & { canvas: unknown };
-      drawComposite(ctx as unknown as Ctx2D, ['speed'], { speed: { x: 0.1, y: 0.1, w: 0.8 } }, t, st, { ride, clipStart: t, clipEnd: t + 1000 }, W, W, layer);
+      drawComposite(ctx as unknown as Ctx2D, ['speed'], { speed: { x: 0.1, y: 0.1, w: 0.8 } } as Record<OverlayId, GadgetPlacement>, t, st, { ride, clipStart: t, clipEnd: t + 1000 }, W, W, layer);
       const d = ctx.getImageData(0, 0, W, W).data;
       let a = 0;
       for (let i = 3; i < d.length; i += 4) a += d[i];

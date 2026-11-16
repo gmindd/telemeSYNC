@@ -144,6 +144,7 @@ progress { accent-color: var(--accent); height: 10px; }
 .safe-zone-status.warn { color: var(--warn); }
 .safe-zone-status.ok { color: #4ade80; }
 .gadget:hover { outline-color: rgba(255, 255, 255, 0.6); }
+.gadget.is-hidden { outline: 1px dashed rgba(255, 255, 255, 0.35); }
 .gadget canvas { display: block; width: 100%; height: auto; }
 .gadget-resize {
   position: absolute; right: -6px; bottom: -6px; width: 14px; height: 14px; border-radius: 3px; background: var(--accent);
@@ -281,3 +282,13 @@ table.licenses td { padding: 3px 6px; border-bottom: 1px solid var(--border); }
 .syncmap__zoom button.small { min-width: 30px; font-size: 16px; font-weight: 700; }
 .syncmap__note { margin: 0; font-size: 12px; text-align: center; }
 button.link-inline { background: none; border: none; padding: 0; color: var(--accent); text-decoration: underline; cursor: pointer; font: inherit; }
+
+/* Step 4: when gadgets appear (conditions) */
+.cond-panel summary { display: flex; align-items: baseline; gap: 12px; cursor: pointer; list-style: revert; }
+.cond-panel summary h3 { display: inline; margin: 0; }
+.cond-row { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px 14px; padding: 8px 0; border-top: 1px solid var(--border); }
+.cond-row .cond-name { min-width: 180px; font-weight: 600; align-self: center; }
+.cond-row > select { align-self: center; }
+.cond-input { display: inline-flex; align-items: center; gap: 6px; }
+.cond-value input { width: 76px; }
+.cond-warn { flex-basis: 100%; margin: 0; }

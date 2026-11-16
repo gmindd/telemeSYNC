@@ -62,11 +62,9 @@ export function ownConditionMetric(id: OverlayId): ConditionMetric | undefined {
   return OWN_METRIC.get(id);
 }
 
-/** A new condition for a gadget: its own metric (or speed), a sensible threshold and 3 s before hiding. */
-export function defaultCondition(id: OverlayId, ride?: RideData): GadgetCondition {
-  const own = ownConditionMetric(id);
-  const metric = own ?? (ride && !conditionMetricAvailable(ride, 'speed') ? CONDITION_METRICS.find((m) => conditionMetricAvailable(ride, m)) ?? 'speed' : 'speed');
-  const start: Record<ConditionMetric, Pick<GadgetCondition, 'above' | 'below'>> = {
+/** Starting thresholds of a condition on a metric (base units): what most people would pick first. */
+export function startingThresholds(m: ConditionMetric): Pick<GadgetCondition, 'above' | 'below'> {
+  const table: Record<ConditionMetric, Pick<GadgetCondition, 'above' | 'below'>> = {
     speed: { above: 30 / 3.6, below: null },
     pace: { above: null, below: 300 },
     heartRate: { above: 170, below: null },
@@ -78,7 +76,14 @@ export function defaultCondition(id: OverlayId, ride?: RideData): GadgetConditio
     altitude: { above: 1000, below: null },
     temperature: { above: 30, below: null },
   };
-  return { metric, ...start[metric], hideAfterS: 3 };
+  return table[m];
+}
+
+/** A new condition for a gadget: its own metric (or speed, or the first the ride has), and 3 s before hiding. */
+export function defaultCondition(id: OverlayId, ride?: RideData): GadgetCondition {
+  const own = ownConditionMetric(id);
+  const metric = own ?? (ride && !conditionMetricAvailable(ride, 'speed') ? CONDITION_METRICS.find((m) => conditionMetricAvailable(ride, m)) ?? 'speed' : 'speed');
+  return { metric, ...startingThresholds(metric), hideAfterS: 3 };
 }
 
 /** A condition read from a project or the saved settings: only well-formed ones count. */
@@ -160,7 +165,8 @@ export function visibleSpans(ride: RideData, c: GadgetCondition, style: Pick<Ove
 /** Opacity of a gadget at instant t (0 hidden … 1 shown), with the fades. Gadgets without a condition: 1. */
 export function gadgetOpacity(id: OverlayId, t: number, style: Pick<OverlayStyle, 'conditions' | 'powerSmoothing'>, ride: RideData): number {
   const c = style.conditions?.[id];
-  if (!c) return 1;
+  // No condition, or one still without a value (being filled in): always shown.
+  if (!c || (c.above === null && c.below === null)) return 1;
   const s = visibleSpans(ride, c, style);
   // Last span starting at or before t.
   let lo = 0;

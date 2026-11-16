@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   effectiveStart,
+  gadgetOpacity,
   formatDuration,
   gadgetZones,
   resolveLayout,
@@ -130,6 +131,12 @@ export function Preview(props: {
         const c = canvases.current.get(id);
         const ctx = c?.getContext('2d');
         if (ctx) renderOverlayFrame(ctx as unknown as Ctx2D, getOverlay(id), t, style, octx);
+        if (c) {
+          // Gadget with a condition: as it will look in the video; while hidden, a faint outline so it can still be placed.
+          const a = gadgetOpacity(id, t, style, ride);
+          c.style.opacity = String(a > 0 ? a : 0.12);
+          c.parentElement?.classList.toggle('is-hidden', a <= 0);
+        }
       }
       const now = performance.now();
       if (now - lastStoreUpdate.current > 100) {

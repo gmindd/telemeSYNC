@@ -43,6 +43,14 @@ dela.
 - Os nomes dos ficheiros dos gadgets novos levam o desporto à frente (ex.: `corrida-mostrador-fc`), para não se
   confundirem com os de ciclismo.
 
+- **Gadgets que aparecem só quando interessa:** no passo 4, a caixa "Quando aparecem" dá a cada gadget escolhido a opção
+  "Só quando…": acima de um valor, abaixo de um valor, ou fora de uma faixa (com os dois, ex.: inclinação abaixo de −5 % ou
+  acima de +5 %), e quantos segundos fica depois de a condição deixar de se verificar. Aparece e desaparece com uma
+  transição suave, na pré-visualização e no vídeo exportado (gadgets separados e composição). Por omissão usa a métrica do
+  próprio gadget, mas qualquer gadget pode usar outra (ex.: o mapa só acima de 20 km/h). Métricas de todos os desportos:
+  velocidade, ritmo (mais lento / mais rápido que, em min/km ou min/mi), FC, potência, cadência (rpm ou passos), inclinação,
+  declive, velocidade vertical, altitude e temperatura. Na pré-visualização, um gadget escondido fica ténue e tracejado para
+  se poder posicionar. Guardado no projeto.
 - **Mapa na sincronização, com ruas e cruzamentos (como na app do telemóvel):** no passo 3 aparece o mapa circular na
   posição da agulha, com zoom de 50 m a 3,2 km (ou automático). Pare o vídeo à entrada de uma curva ou de um cruzamento e
   ajuste o offset até a seta ficar no mesmo ponto do mapa. O mapa circular (e o de Natal) passa a desenhar as ruas e os

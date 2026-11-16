@@ -35,6 +35,7 @@ import {
   type PanelOptions,
 } from '@telemesync/core';
 import { OverlayCanvas } from '../components/OverlayCanvas.tsx';
+import { ConditionsPanel } from '../components/ConditionsPanel.tsx';
 import { langName, useLang, useT } from '../i18n/index.tsx';
 import { clipsSpan, drawStyle, useApp } from '../lib/store.ts';
 import { RoutePicker } from '../components/RoutePicker.tsx';
@@ -456,6 +457,7 @@ export function StepOverlays() {
       {showPower ? <PowerOptions /> : null}
       {showHr ? <HeartRateOptions /> : null}
       {showArea ? <AreaOptions /> : null}
+      <ConditionsPanel />
 
       {sport === 'cycling' ? (
         <>
