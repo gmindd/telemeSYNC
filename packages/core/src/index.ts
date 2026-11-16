@@ -35,6 +35,7 @@ export * from './sync/report.ts';
 export * from './project/project.ts';
 export * from './overlays/layout.ts';
 export * from './overlays/safeZones.ts';
+export * from './overlays/visibility.ts';
 export * from './export/formats.ts';
 export * from './map/streets.ts';
 export * from './map/fetchStreets.ts';

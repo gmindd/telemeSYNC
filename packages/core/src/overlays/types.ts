@@ -5,6 +5,7 @@ import type { Segment } from '../segments/segments.ts';
 import type { Units } from './units.ts';
 import type { Ghost } from '../metrics/running.ts';
 import type { Sport } from '../telemetry/types.ts';
+import type { GadgetCondition } from './visibility.ts';
 
 /**
  * Minimal 2D context surface used by renderers. Satisfied by the browser's
@@ -50,6 +51,8 @@ export interface Ctx2D {
   shadowBlur: number;
   shadowOffsetX: number;
   shadowOffsetY: number;
+  /** Copies another canvas in (used to fade a gadget as a whole, see drawComposite). */
+  drawImage?(image: unknown, dx: number, dy: number): void;
 }
 
 export interface CanvasGradientLike {
@@ -211,6 +214,8 @@ export interface OverlayStyle {
   hrMax: number;
   /** Personal record raced by the PR ghost gadget (running); null = not set. */
   ghost: Ghost | null;
+  /** When each gadget appears and disappears (see visibility.ts); gadgets not listed are always shown. */
+  conditions: Partial<Record<OverlayId, GadgetCondition>>;
 }
 
 export const DEFAULT_STYLE: OverlayStyle = {
@@ -248,6 +253,7 @@ export const DEFAULT_STYLE: OverlayStyle = {
   weightKg: 0,
   hrMax: 0,
   ghost: null,
+  conditions: {},
 };
 
 /** True when W/kg should be shown (chosen and a weight entered). */

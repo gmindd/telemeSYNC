@@ -1,6 +1,8 @@
 import { changesAtTextRate, frameState, getOverlay, textInstant } from './registry.ts';
 import type { Ctx2D, OverlayContext, OverlayId, OverlayStyle } from './types.ts';
 import { setNumberLang } from './units.ts';
+import { gadgetOpacity, hasConditions } from './visibility.ts';
+import type { RideData } from '../telemetry/ride.ts';
 
 /**
  * Position of a gadget inside the video frame, independent of resolution:
@@ -64,6 +66,8 @@ export function drawComposite(
   octx: OverlayContext,
   width: number,
   height: number,
+  /** Blank canvas of a size, to fade a gadget as a whole (without it, a fading gadget is drawn with globalAlpha). */
+  layer?: (w: number, h: number) => Ctx2D & { canvas: unknown },
 ): void {
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.clearRect(0, 0, width, height);
@@ -73,15 +77,47 @@ export function drawComposite(
     const def = getOverlay(id);
     const p = placements[id];
     if (!p) continue;
-    const k = (p.w * width) / def.size(style).width;
+    // Gadgets with a condition (see visibility.ts) are hidden, or fading in or out.
+    const alpha = gadgetOpacity(id, t, style, octx.ride);
+    if (alpha <= 0) continue;
+    const base = def.size(style);
+    const k = (p.w * width) / base.width;
+    if (alpha < 1 && layer && ctx.drawImage) {
+      const L = layer(Math.ceil(base.width * k), Math.ceil(base.height * k));
+      L.setTransform(1, 0, 0, 1, 0, 0);
+      L.clearRect(0, 0, base.width * k + 1, base.height * k + 1);
+      L.save();
+      L.setTransform(k, 0, 0, k, 0, 0);
+      def.draw(L, fs, style, octx);
+      L.restore();
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.drawImage(L.canvas, p.x * width, p.y * height);
+      ctx.restore();
+      continue;
+    }
     ctx.save();
+    if (alpha < 1) ctx.globalAlpha = alpha;
     ctx.setTransform(k, 0, 0, k, p.x * width, p.y * height);
     def.draw(ctx, fs, style, octx);
     ctx.restore();
   }
 }
 
-/** Key that changes only when the composite image can change (sets that only change at the text rate). */
-export function compositeFrameKey(ids: OverlayId[], t: number, clipStart: number, style: OverlayStyle): number {
-  return ids.every((id) => changesAtTextRate(getOverlay(id), style)) ? textInstant(t, clipStart, style.textRateHz) : t;
+/**
+ * Key that changes only when the composite image can change (sets that only change at the text rate). Gadgets with
+ * a condition add which of them are shown; while one fades, every frame is new.
+ */
+export function compositeFrameKey(ids: OverlayId[], t: number, clipStart: number, style: OverlayStyle): number;
+export function compositeFrameKey(ids: OverlayId[], t: number, clipStart: number, style: OverlayStyle, ride: RideData): number | string;
+export function compositeFrameKey(ids: OverlayId[], t: number, clipStart: number, style: OverlayStyle, ride?: RideData): number | string {
+  const base = ids.every((id) => changesAtTextRate(getOverlay(id), style)) ? textInstant(t, clipStart, style.textRateHz) : t;
+  if (!ride || !hasConditions(ids, style)) return base;
+  let shown = '';
+  for (const id of ids) {
+    const a = gadgetOpacity(id, t, style, ride);
+    if (a > 0 && a < 1) return t;
+    shown += a > 0 ? '1' : '0';
+  }
+  return `${base}|${shown}`;
 }
