@@ -26,7 +26,7 @@ const PREFS_KEY = 'telemesync-mobile-prefs';
 const MAX_DEFAULT_S = 60;
 
 /** Gadget settings kept between videos (the desktop's look and zones). */
-export type Look = Pick<OverlayStyle, 'panelOpacity' | 'hrZones' | 'hrMax' | 'colorByZone' | 'ftp'>;
+export type Look = Pick<OverlayStyle, 'panelOpacity' | 'hrZones' | 'hrMax' | 'colorByZone' | 'ftp' | 'gadgetOpacity'>;
 const LOOK_KEYS: (keyof Look)[] = ['panelOpacity', 'hrZones', 'hrMax', 'colorByZone', 'ftp'];
 
 interface Prefs {
@@ -53,13 +53,18 @@ function loadPrefs(): Partial<Prefs> {
 
 export const STYLE: OverlayStyle = { ...DEFAULT_STYLE, language: LANG };
 
-export const DEFAULT_LOOK: Look = Object.fromEntries(LOOK_KEYS.map((k) => [k, DEFAULT_STYLE[k]])) as Look;
+export const DEFAULT_LOOK: Look = { ...(Object.fromEntries(LOOK_KEYS.map((k) => [k, DEFAULT_STYLE[k]])) as Look), gadgetOpacity: {} };
+
+const isOpacity = (v: unknown): v is number => typeof v === 'number' && v >= 0 && v <= 1;
 
 /** Saved look, keeping only valid values (an older or damaged save falls back to the defaults). */
 function lookOf(v: Partial<Look> | undefined): Look {
   const l = { ...DEFAULT_LOOK };
   if (!v) return l;
-  if (typeof v.panelOpacity === 'number' && v.panelOpacity >= 0 && v.panelOpacity <= 1) l.panelOpacity = v.panelOpacity;
+  if (isOpacity(v.panelOpacity)) l.panelOpacity = v.panelOpacity;
+  if (v.gadgetOpacity && typeof v.gadgetOpacity === 'object') {
+    l.gadgetOpacity = Object.fromEntries(Object.entries(v.gadgetOpacity).filter(([, o]) => isOpacity(o)));
+  }
   if (Array.isArray(v.hrZones) && v.hrZones.length === 4 && v.hrZones.every((z) => typeof z === 'number' && z > 0)) l.hrZones = v.hrZones;
   if (typeof v.hrMax === 'number' && v.hrMax >= 0) l.hrMax = v.hrMax;
   if (typeof v.colorByZone === 'boolean') l.colorByZone = v.colorByZone;
@@ -131,7 +136,10 @@ interface State extends Omit<Prefs, 'overlays'> {
   setBlockZones(b: boolean): void;
   setShortSide(s: number): void;
   setMapZoom(m: number): void;
+  /** Look settings; a new background opacity applies to every gadget (dropping the ones set one by one). */
   setLook(l: Partial<Look>): void;
+  /** Background opacity of one gadget; undefined = the same as the others. */
+  setGadgetOpacity(id: OverlayId, op: number | undefined): void;
   setStreets(s: Streets | undefined, state: 'loading' | 'ok' | 'failed'): void;
   retryStreets(): void;
 }
@@ -240,7 +248,11 @@ export const useProject = create<State>((set, get) => {
     },
     setShortSide: (shortSide) => set({ shortSide }),
     setMapZoom: (mapZoomM) => set({ mapZoomM }),
-    setLook: (l) => set({ look: { ...get().look, ...l } }),
+    setLook: (l) => set({ look: { ...get().look, ...(l.panelOpacity !== undefined ? { gadgetOpacity: {} } : {}), ...l } }),
+    setGadgetOpacity: (id, op) => {
+      const { [id]: _old, ...rest } = get().look.gadgetOpacity ?? {};
+      set({ look: { ...get().look, gadgetOpacity: op === undefined ? rest : { ...rest, [id]: op } } });
+    },
     streetsState: 'idle',
     streetsRetry: 0,
     setStreets: (streets, streetsState) => set({ streets, streetsState }),

@@ -163,6 +163,8 @@ input[type='range'] { width: 100%; accent-color: var(--accent); height: 28px; ma
 /* Gadgets panel */
 .selected { display: grid; gap: 10px; padding: 12px; border-radius: 16px; background: var(--panel); border: 1px solid var(--accent); }
 .selected__head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.gadget-bg { display: grid; gap: 6px; justify-items: start; }
+.gadget-bg .field { justify-self: stretch; }
 .onvideo { display: grid; gap: 8px; }
 .onvideo .chips { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin: 0 -14px; padding: 0 14px; }
 .onvideo .chips::-webkit-scrollbar { display: none; }

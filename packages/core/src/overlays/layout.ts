@@ -54,6 +54,19 @@ export function resolveLayout(ids: OverlayId[], layout: GadgetLayout, aspect: nu
   return out;
 }
 
+const ownStyles = new WeakMap<OverlayStyle, Map<OverlayId, OverlayStyle>>();
+
+/** The style a gadget is drawn with: the shared one, or with its own background opacity (one object per gadget, kept). */
+export function gadgetStyle(style: OverlayStyle, id: OverlayId): OverlayStyle {
+  const op = style.gadgetOpacity?.[id];
+  if (op === undefined || op === style.panelOpacity) return style;
+  let m = ownStyles.get(style);
+  if (!m) ownStyles.set(style, (m = new Map()));
+  let s = m.get(id);
+  if (!s) m.set(id, (s = { ...style, panelOpacity: op }));
+  return s;
+}
+
 /** Draws several gadgets into one frame of size width × height (transparent background). */
 export function drawComposite(
   ctx: Ctx2D,
@@ -76,7 +89,7 @@ export function drawComposite(
     const k = (p.w * width) / def.size(style).width;
     ctx.save();
     ctx.setTransform(k, 0, 0, k, p.x * width, p.y * height);
-    def.draw(ctx, fs, style, octx);
+    def.draw(ctx, fs, gadgetStyle(style, id), octx);
     ctx.restore();
   }
 }
