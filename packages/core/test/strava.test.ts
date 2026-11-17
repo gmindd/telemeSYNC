@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { activityForClip, buildRide, stravaToRaw, type StravaStreams } from '../src/index.ts';
+import { activityForClip, buildRide, stravaId, stravaToRaw, type StravaStreams } from '../src/index.ts';
 
 const ACTIVITY = { id: 1, name: 'Volta de sábado', start_date: '2026-10-11T08:00:31Z', utc_offset: 3600, device_name: 'iGPSPORT iGS800' };
 const STREAMS: StravaStreams = {
@@ -48,5 +48,15 @@ describe('Strava activities', () => {
     // Between them: the nearest within 2 h
     expect(activityForClip(acts, 11 * h)?.id).toBe('morning');
     expect(activityForClip(acts, 14 * h)).toBeUndefined();
+  });
+
+  it('prefers id_str for ids that no longer fit a JS number (64-bit ids from 2027-06-01)', () => {
+    // 2^53 + 1 is rounded by JSON.parse: only the string keeps it
+    const parsed = JSON.parse('{"id":9007199254740993,"id_str":"9007199254740993"}');
+    expect(parsed.id).toBe(9007199254740992);
+    expect(stravaId(parsed)).toBe('9007199254740993');
+    expect(stravaId({ id: 123456789 })).toBe('123456789');
+    expect(() => stravaId(JSON.parse('{"id":9007199254740993}'))).toThrow();
+    expect(() => stravaId({})).toThrow();
   });
 });

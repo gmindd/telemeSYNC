@@ -43,13 +43,16 @@ export function parseState(state) {
   return { mode, id, challenge };
 }
 
-/** What the app keeps: the tokens and the athlete's name (nothing else from Strava's answer). */
+/**
+ * What the app keeps: the tokens and the athlete's name (nothing else from Strava's answer). The athlete id goes out as
+ * Strava's id_str: ids become 64-bit after 2027-06-01 and res.json() rounds the numeric one.
+ */
 export function tokenReply(t) {
   return {
     access_token: t.access_token,
     refresh_token: t.refresh_token,
     expires_at: t.expires_at,
-    athlete: t.athlete ? { id: t.athlete.id, firstname: t.athlete.firstname ?? '', lastname: t.athlete.lastname ?? '' } : undefined,
+    athlete: t.athlete ? { id: t.athlete.id_str ?? String(t.athlete.id), firstname: t.athlete.firstname ?? '', lastname: t.athlete.lastname ?? '' } : undefined,
   };
 }
 
