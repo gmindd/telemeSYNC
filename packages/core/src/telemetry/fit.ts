@@ -120,7 +120,8 @@ export function parseFit(data: ArrayBuffer | Uint8Array, name?: string): RawTele
   const device = manu !== undefined ? [MANUFACTURERS[manu] ?? `manufacturer ${manu}`, product].filter((x) => x !== undefined).join(' ') : undefined;
 
   // Laps: start_time (field 2) and total_elapsed_time (field 7, ms × 1000), or the lap's timestamp as its end.
-  const laps: { startMs: number; endMs: number }[] = [];
+  // Also total_ascent (field 21) and total_descent (field 22), in metres, when the device measured them.
+  const laps: { startMs: number; endMs: number; ascentM?: number; descentM?: number }[] = [];
   for (const m of messages) {
     if (m.num !== MSG.lap) continue;
     const st = num(m.fields.get(2));
@@ -129,9 +130,15 @@ export function parseFit(data: ArrayBuffer | Uint8Array, name?: string): RawTele
     if (st === undefined) continue;
     const startMs = FIT_EPOCH_MS + st * 1000;
     const endMs = elapsed !== undefined ? startMs + elapsed : ts !== undefined ? FIT_EPOCH_MS + ts * 1000 : NaN;
-    if (endMs > startMs) laps.push({ startMs, endMs });
+    if (endMs > startMs) laps.push({ startMs, endMs, ascentM: num(m.fields.get(21)), descentM: num(m.fields.get(22)) });
   }
   laps.sort((a, b) => a.startMs - b.startMs);
 
-  return { source: 'fit', name, device, localOffsetMs, samples, recordFields: [...recordFields].sort(), laps: laps.length ? laps : undefined, sport };
+  // The device's own climb and descent for the whole activity: session total_ascent (22) and total_descent (23).
+  const session = messages.find((m) => m.num === MSG.session);
+  const ascentM = num(session?.fields.get(22));
+  const descentM = num(session?.fields.get(23));
+  const deviceTotals = ascentM !== undefined || descentM !== undefined ? { ascentM, descentM } : undefined;
+
+  return { source: 'fit', name, device, localOffsetMs, samples, recordFields: [...recordFields].sort(), laps: laps.length ? laps : undefined, sport, deviceTotals };
 }

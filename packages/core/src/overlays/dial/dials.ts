@@ -1,4 +1,3 @@
-import { cumulativeLoss } from '../../metrics/elevation.ts';
 import type { MetricKey, RideData, RideSample } from '../../telemetry/ride.ts';
 import { formatDuration } from '../../util/timezone.ts';
 import { drawText, font, measureTabular } from '../draw.ts';
@@ -28,12 +27,9 @@ import {
   type DialPaint,
 } from './common.ts';
 
-const lossCache = new WeakMap<RideData, Float64Array>();
-
-/** Elevation loss so far (m), with the same hysteresis as the gain. */
+/** Elevation loss so far (m), matched to the device's own figures like the gain (see buildRide). */
 export function elevationLossAt(ride: RideData, s: RideSample): number {
-  let loss = lossCache.get(ride);
-  if (!loss) lossCache.set(ride, (loss = cumulativeLoss(ride.altitude)));
+  const loss = ride.elevationLoss;
   return loss[Math.max(0, Math.min(loss.length - 1, s.index))];
 }
 

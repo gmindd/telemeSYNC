@@ -39,8 +39,10 @@ export interface RawTelemetry {
   samples: RawSample[];
   /** Names of the fields found in FIT record messages (diagnostics). */
   recordFields?: string[];
-  /** Laps recorded by the device (lap button or auto-lap), UTC ms. */
-  laps?: { startMs: number; endMs: number }[];
+  /** Laps recorded by the device (lap button or auto-lap), UTC ms, with the climb and descent it measured (m). */
+  laps?: { startMs: number; endMs: number; ascentM?: number; descentM?: number }[];
+  /** Totals the device worked out itself (FIT session), when the file has them. */
+  deviceTotals?: { ascentM?: number; descentM?: number };
   /** Sport the file says it is (FIT session/sport, GPX track type), when it says. */
   sport?: Sport;
 }
