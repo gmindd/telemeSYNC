@@ -24,13 +24,28 @@ export interface StravaStreams {
 
 /** The fields used from the activity (GET /activities/{id} or an item of /athlete/activities). */
 export interface StravaActivity {
+  /** Numeric id: after 2027-06-01 Strava may send 64-bit values a JS number can't hold exactly. Use stravaId(). */
   id: number;
+  /** The same id as a string (Strava's recommended field). */
+  id_str?: string;
   name?: string;
   /** ISO date in UTC of the first sample. */
   start_date: string;
   /** Seconds between local time and UTC at the start. */
   utc_offset?: number;
   device_name?: string;
+}
+
+/**
+ * The id of a Strava object (activity, athlete) as a string. Strava moves these ids to 64 bits after 2027-06-01:
+ * JSON.parse rounds integers above 2^53, so the numeric `id` may silently point at another object. `id_str` carries
+ * the exact value; the numeric id is only accepted while it is still exact.
+ */
+export function stravaId(o: { id?: number | string; id_str?: string }): string {
+  if (typeof o.id_str === 'string' && /^\d+$/.test(o.id_str)) return o.id_str;
+  if (typeof o.id === 'string' && /^\d+$/.test(o.id)) return o.id;
+  if (typeof o.id === 'number' && Number.isSafeInteger(o.id) && o.id >= 0) return String(o.id);
+  throw new Error('Strava object without a usable id');
 }
 
 const num = (v: unknown): number | undefined => (typeof v === 'number' && Number.isFinite(v) ? v : undefined);

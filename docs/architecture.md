@@ -17,7 +17,7 @@ apps/web  (browser)                         apps/server (Node, local)
 
 | Pasta | Conteúdo |
 |---|---|
-| `telemetry/` | `parseFit` (`@garmin/fitsdk`), `parseGpx` (tolerante), `buildRide` (série normalizada + derivadas), `sampleAt` (interpolação linear, buracos > 10 s não interpolados) |
+| `telemetry/` | `parseFit` (`@garmin/fitsdk`), `parseGpx` (tolerante), `buildRide` (série normalizada + derivadas), `sampleAt` (interpolação linear, buracos > 10 s não interpolados), Strava (`stravaToRaw`, `stravaId`; ver [strava.md](strava.md), ids de 64 bits) |
 | `metrics/` | suavização (média móvel por tempo, mediana), altitude filtrada, **inclinação sobre distância** (janela 40 m, ±35 %), D+ com histerese (2,5 m) |
 | `media/` | leitor ISO-BMFF próprio: lê cabeçalhos e o `moov` (mesmo no fim do ficheiro); `mvhd` creation_time, fps (stts), resolução, codec, timecode `tmcd`, deteção de GPMF, tags `udta`/`meta` |
 | `sync/` | perfis de câmara, resolvers pluggable (manual, GPMF, creation_time, nome, timecode), capítulos GoPro, sanity checks, offsets por câmara + por clip |

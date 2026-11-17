@@ -4,7 +4,7 @@
 import { Capacitor, CapacitorHttp } from '@capacitor/core';
 import { App } from '@capacitor/app';
 import { Browser } from '@capacitor/browser';
-import { buildRide, STRAVA_STREAM_KEYS, stravaToRaw, type RideData, type StravaActivity, type StravaStreams } from '@telemesync/core';
+import { buildRide, STRAVA_STREAM_KEYS, stravaId, stravaToRaw, type RideData, type StravaActivity, type StravaStreams } from '@telemesync/core';
 
 export const STRAVA_CLIENT_ID = '291951';
 const SITE = 'https://telemesync.pereiragabriel.com';
@@ -19,11 +19,14 @@ export interface StravaSession {
   refresh_token: string;
   /** Seconds since the epoch. */
   expires_at: number;
-  athlete?: { id: number; firstname: string; lastname: string };
+  /** id is Strava's id_str (64-bit ids from 2027-06-01); sessions saved before this change hold a number. */
+  athlete?: { id: string | number; firstname: string; lastname: string };
 }
 
 /** An activity in the list, with what the picker shows. */
 export interface ActivityItem extends StravaActivity {
+  /** The exact id (id_str): what goes into URLs and keys, never the numeric id. */
+  key: string;
   sport_type?: string;
   distance?: number;
   elapsed_time: number;
@@ -174,12 +177,12 @@ export async function listActivities(around?: number): Promise<ActivityItem[]> {
   }
   const list = (await api(`/athlete/activities?${q}`)) as (StravaActivity & { elapsed_time: number; sport_type?: string; distance?: number })[];
   return list
-    .map((a) => ({ ...a, startMs: Date.parse(a.start_date), elapsedMs: a.elapsed_time * 1000 }))
+    .map((a) => ({ ...a, key: stravaId(a), startMs: Date.parse(a.start_date), elapsedMs: a.elapsed_time * 1000 }))
     .sort((a, b) => b.startMs - a.startMs);
 }
 
 /** An activity's streams as a ride (the same as loading its FIT file). */
 export async function loadActivityRide(a: ActivityItem): Promise<RideData> {
-  const streams = (await api(`/activities/${a.id}/streams?keys=${STRAVA_STREAM_KEYS.join(',')}&key_by_type=true`)) as StravaStreams;
+  const streams = (await api(`/activities/${a.key}/streams?keys=${STRAVA_STREAM_KEYS.join(',')}&key_by_type=true`)) as StravaStreams;
   return buildRide(stravaToRaw(a, streams));
 }

@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { challengeOf, createHandler, parseState, randomToken } from '../strava-auth.mjs';
 
 const ENV = { clientId: '291951', clientSecret: 'test-secret' };
-const TOKENS = { access_token: 'acc', refresh_token: 'ref', expires_at: 1_900_000_000, athlete: { id: 7, firstname: 'Ana', lastname: 'R', city: 'Porto', weight: 60 } };
+const TOKENS = { access_token: 'acc', refresh_token: 'ref', expires_at: 1_900_000_000, athlete: { id: 7, id_str: '7', firstname: 'Ana', lastname: 'R', city: 'Porto', weight: 60 } };
 
 let server: Server | undefined;
 afterEach(() => server?.close());
@@ -55,7 +55,7 @@ describe('Strava sign-in service', () => {
       access_token: 'acc',
       refresh_token: 'ref',
       expires_at: 1_900_000_000,
-      athlete: { id: 7, firstname: 'Ana', lastname: 'R' },
+      athlete: { id: '7', firstname: 'Ana', lastname: 'R' },
       scope: 'read,activity:read_all',
     });
     // Only once

@@ -16,7 +16,7 @@ export function stravaMessage(e: unknown): string {
 export function StravaSheet(props: { clipStart?: number; onRide: (ride: RideData) => void; onClose: () => void; onSignedOut: () => void }) {
   const [around, setAround] = useState<number | undefined>(props.clipStart);
   const [items, setItems] = useState<ActivityItem[] | null>(null);
-  const [busy, setBusy] = useState<number | null>(null);
+  const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -40,7 +40,7 @@ export function StravaSheet(props: { clipStart?: number; onRide: (ride: RideData
   const ordered = items && match ? [match, ...items.filter((a) => a !== match)] : items;
 
   async function pick(a: ActivityItem) {
-    setBusy(a.id);
+    setBusy(a.key);
     setError('');
     try {
       props.onRide(await loadActivityRide(a));
@@ -66,7 +66,7 @@ export function StravaSheet(props: { clipStart?: number; onRide: (ride: RideData
         ) : ordered && ordered.length ? (
           <ul className="acts">
             {ordered.map((a) => (
-              <li key={a.id}>
+              <li key={a.key}>
                 <button type="button" className={`act${a === match ? ' is-match' : ''}`} disabled={busy !== null} onClick={() => void pick(a)}>
                   <span className="act__name">{a.name || a.sport_type}</span>
                   <span className="act__meta">
@@ -74,7 +74,7 @@ export function StravaSheet(props: { clipStart?: number; onRide: (ride: RideData
                     {a.distance ? ` · ${num(a.distance / 1000)} km` : ''}
                   </span>
                   {a === match && <span className="act__badge">{t('strava.match')}</span>}
-                  {busy === a.id && <span className="act__badge">{t('strava.loading')}</span>}
+                  {busy === a.key && <span className="act__badge">{t('strava.loading')}</span>}
                 </button>
               </li>
             ))}
