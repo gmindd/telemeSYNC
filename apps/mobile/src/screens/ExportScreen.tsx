@@ -2,6 +2,7 @@
 // the user picks or to share.
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { mmss, num, t } from '../i18n.ts';
+import { framingMoves } from '../lib/formats.ts';
 import { outputSizeFor, renderVideo, type RenderProgress, type RenderResult } from '../lib/render.ts';
 import { defaultName, fileNameFor, saveVideoAs, shareVideo } from '../lib/save.ts';
 import { clipStart, frameAspect, frameCrop, styleOf, useProject } from '../state.ts';
@@ -29,7 +30,19 @@ export function ExportScreen() {
     try {
       const r = await renderVideo(
         s.clip.file,
-        { ride: s.ride, clipStartUtcMs: clipStart(s), overlays: s.overlays, layout: s.layout, style: styleOf(s), streets: s.streets, crop, trim: s.trim, shortSide: s.shortSide, formatAspect: social },
+        {
+          ride: s.ride,
+          clipStartUtcMs: clipStart(s),
+          overlays: s.overlays,
+          layout: s.layout,
+          style: styleOf(s),
+          streets: s.streets,
+          crop,
+          cropAt: framingMoves(s.cropKeys) ? (sec) => frameCrop(s, sec)! : undefined,
+          trim: s.trim,
+          shortSide: s.shortSide,
+          formatAspect: social,
+        },
         (p) => setStatus({ kind: 'working', p }),
         abort.current.signal,
       );

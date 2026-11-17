@@ -1,9 +1,10 @@
-// Format of the exported video (the clip's own or a social network's shape, with the framing slider) and the areas
-// TikTok, Instagram Reels and YouTube Shorts cover, with the option to keep gadgets out of them.
+// Format of the exported video (the clip's own or a social network's shape) with its framing, still or moving between
+// keyframes, and the areas TikTok, Instagram Reels and YouTube Shorts cover, with the option to keep gadgets out of them.
 import { gadgetZones, PLATFORM_NAMES, SOCIAL_PLATFORMS } from '@telemesync/core';
-import { t } from '../i18n.ts';
-import { cropsSideways, FORMATS, formatAspect, isVertical, type FormatId } from '../lib/formats.ts';
-import { frameAspect, placements, STYLE, useProject } from '../state.ts';
+import { num, t } from '../i18n.ts';
+import { cropsSideways, FORMATS, formatAspect, isVertical, posAt, type FormatId } from '../lib/formats.ts';
+import { seek } from '../lib/player.ts';
+import { frameAspect, KEY_SNAP_S, placements, STYLE, useProject } from '../state.ts';
 
 const NAMES: Record<FormatId, () => string> = {
   original: () => t('format.original'),
@@ -40,12 +41,7 @@ export function FormatPanel() {
           );
         })}
       </div>
-      {sideways && (
-        <label className="field">
-          <span>{t('format.crop')}</span>
-          <input type="range" min={0} max={1} step={0.01} value={s.cropPos} onChange={(e) => s.setCropPos(Number(e.target.value))} />
-        </label>
-      )}
+      {sideways && <Framing />}
 
       <h3>{t('format.zones')}</h3>
       {vertical ? (
@@ -74,6 +70,51 @@ export function FormatPanel() {
       ) : (
         <p className="fine">{t('format.zonesOnlyVertical')}</p>
       )}
+    </div>
+  );
+}
+
+/** Framing: where the picture sits in the frame, at the playhead; with keyframes it slides from one to the next. */
+function Framing() {
+  const s = useProject();
+  const now = s.playheadS;
+  const here = s.cropKeys.find((k) => Math.abs(k.t - now) <= KEY_SNAP_S);
+  return (
+    <div className="framing">
+      <label className="field">
+        <span>
+          {t('format.crop')}
+          {s.cropKeys.length > 0 && <b className="framing__at"> · {here ? t('format.keyHere') : t('format.keyAuto')}</b>}
+        </span>
+        <input type="range" min={0} max={1} step={0.005} value={posAt(s.cropKeys, s.cropPos, now)} onChange={(e) => s.frameAt(Number(e.target.value), now)} />
+      </label>
+      <p className="fine">{t('format.dragHint')}</p>
+      <div className="row">
+        {here ? (
+          <button type="button" className="chip-btn" onClick={() => s.removeCropKey(now)}>
+            {t('format.keyRemove')}
+          </button>
+        ) : (
+          <button type="button" className="chip-btn" onClick={() => s.addCropKey(now)}>
+            ◆ {t('format.keyAdd')}
+          </button>
+        )}
+        {s.cropKeys.length > 0 && (
+          <button type="button" className="chip-btn danger" onClick={() => s.clearCropKeys()}>
+            {t('format.keyClear')}
+          </button>
+        )}
+      </div>
+      {s.cropKeys.length > 0 && (
+        <div className="chips">
+          {s.cropKeys.map((k) => (
+            <button key={k.t} type="button" className={`chip${k === here ? ' is-on' : ''}`} onClick={() => seek(k.t)}>
+              ◆ {num(k.t, 1)} s
+            </button>
+          ))}
+        </div>
+      )}
+      <p className="fine">{s.cropKeys.length < 2 ? t('format.keyHint') : t('format.keyMoving')}</p>
     </div>
   );
 }

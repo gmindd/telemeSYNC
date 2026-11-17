@@ -14,7 +14,7 @@ function SyncMap(props: { ride: RideData; at: number; zoomM: number; streets?: S
   const { ride, at, zoomM, streets, onZoom } = props;
   const ref = useRef<HTMLCanvasElement>(null);
   const def = getOverlay('dialMap');
-  const style = styleOf({ mapZoomM: zoomM });
+  const style = styleOf({ mapZoomM: zoomM, look: useProject((st) => st.look) });
   const { width, height } = overlayPixelSize(def, style);
   useEffect(() => {
     const ctx = ref.current?.getContext('2d');

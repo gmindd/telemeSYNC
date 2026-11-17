@@ -28,6 +28,8 @@ export interface RenderSettings {
   streets?: Streets;
   /** Part of the clip kept (displayed pixels); the whole frame when absent. */
   crop?: Crop;
+  /** Framing that moves during the clip (keyframes): the part kept at each moment (seconds from the clip's start), same size as `crop`. */
+  cropAt?: (sec: number) => Crop;
   /** Part of the clip to export, in seconds from its start. */
   trim: { start: number; end: number };
   /** Short side of the output (1080 = Full HD). */
@@ -134,14 +136,16 @@ export async function renderVideo(file: Blob, s: RenderSettings, onProgress: (p:
     let frames = 0;
     // Whether process() gets input timestamps or output ones (starting at 0 after the trim) is found on the first frame.
     let tsShift: number | undefined;
+    const cropAt = s.cropAt;
+    // Moving framing: the whole frame comes to process(), which draws the part kept at that moment; otherwise
+    // Mediabunny crops and scales once for the whole clip.
+    const fixed = cropAt ? {} : { crop: s.crop, width, height };
     const conversion = await Conversion.init({
       input,
       output,
       trim: { start: first + s.trim.start, end: first + s.trim.end },
       video: {
-        crop: s.crop,
-        width,
-        height,
+        ...fixed,
         fit: 'fill',
         // Rotation baked into the pixels, so the gadgets are drawn upright over portrait phone videos
         allowTransformationMetadata: false,
@@ -154,7 +158,10 @@ export async function renderVideo(file: Blob, s: RenderSettings, onProgress: (p:
           if (tsShift === undefined) tsShift = sample.timestamp < first + s.trim.start - 0.25 ? s.trim.start : -first;
           const tClip = sample.timestamp + tsShift; // seconds from the clip's first frame
           fctx.clearRect(0, 0, width, height);
-          sample.draw(fctx, 0, 0, width, height);
+          if (cropAt) {
+            const c = cropAt(tClip);
+            sample.draw(fctx, c.left, c.top, c.width, c.height, 0, 0, width, height);
+          } else sample.draw(fctx, 0, 0, width, height);
           fctx.drawImage(paint(s.clipStartUtcMs + tClip * 1000), 0, 0);
           frames++;
           return frame;

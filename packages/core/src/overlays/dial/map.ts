@@ -116,22 +116,121 @@ function positionAt(ride: RideData, l: Local, s: RideSample): { e: number; n: nu
   return { e: l.e[a] + (l.e[j] - l.e[a]) * f, n: l.n[a] + (l.n[j] - l.n[a]) * f };
 }
 
-/** Direction of travel (radians clockwise from north) over the last ~40 m, stable when stopped. */
-function headingAt(ride: RideData, l: Local, s: RideSample, pos: { e: number; n: number }): number {
-  for (let i = Math.min(ride.t.length - 1, s.index); i >= 0 && s.index - i < 2000; i--) {
+/** Distance (m) looked at on each side of a point for its direction, and how far in time (ms) to look for it. */
+const HEADING_M = 12;
+const HEADING_MAX_MS = 8000;
+/** Half-width (ms) of the smoothing of the direction, so GPS jitter doesn't shake the map. */
+const HEADING_SMOOTH_MS = 1500;
+
+const headingCache = new WeakMap<RideData, { x: Float64Array; y: Float64Array }>();
+
+/**
+ * Direction of travel at every sample, as a unit vector (x east, y north): from the position ~12 m before to the one
+ * ~12 m after (so the map turns in the bend, not seconds later), smoothed over ±1.5 s. Where the rider is stopped the
+ * last direction is kept.
+ */
+function headingsOf(ride: RideData, l: Local): { x: Float64Array; y: Float64Array } {
+  const hit = headingCache.get(ride);
+  if (hit) return hit;
+  const len = ride.t.length;
+  const rx = new Float64Array(len).fill(NaN);
+  const ry = new Float64Array(len).fill(NaN);
+  const far = (i: number, j: number) => {
+    const de = l.e[j] - l.e[i];
+    const dn = l.n[j] - l.n[i];
+    return de * de + dn * dn >= HEADING_M * HEADING_M;
+  };
+  for (let i = 0; i < len; i++) {
     if (Number.isNaN(l.e[i])) continue;
-    const de = pos.e - l.e[i];
-    const dn = pos.n - l.n[i];
-    if (de * de + dn * dn >= 40 * 40) return Math.atan2(de, dn);
+    let b = i;
+    for (let j = i - 1; j >= 0 && ride.t[i] - ride.t[j] <= HEADING_MAX_MS; j--) {
+      if (Number.isNaN(l.e[j])) continue;
+      b = j;
+      if (far(j, i)) break;
+    }
+    let a = i;
+    for (let j = i + 1; j < len && ride.t[j] - ride.t[i] <= HEADING_MAX_MS; j++) {
+      if (Number.isNaN(l.e[j])) continue;
+      a = j;
+      if (far(i, j)) break;
+    }
+    const de = l.e[a] - l.e[b];
+    const dn = l.n[a] - l.n[b];
+    const d = Math.hypot(de, dn);
+    if (d < HEADING_M) continue; // stopped or crawling: the direction is noise
+    rx[i] = de / d;
+    ry[i] = dn / d;
   }
-  // Start of the ride: look ahead instead.
-  for (let i = s.index + 1; i < ride.t.length && i - s.index < 2000; i++) {
-    if (Number.isNaN(l.e[i])) continue;
-    const de = l.e[i] - pos.e;
-    const dn = l.n[i] - pos.n;
-    if (de * de + dn * dn >= 40 * 40) return Math.atan2(de, dn);
+  // Stopped: keep the last direction (the first one before the ride moves)
+  let lx = NaN;
+  let ly = NaN;
+  for (let i = 0; i < len; i++) {
+    if (Number.isNaN(rx[i])) {
+      rx[i] = lx;
+      ry[i] = ly;
+    } else {
+      lx = rx[i];
+      ly = ry[i];
+    }
   }
-  return 0;
+  const first = rx.findIndex((v) => !Number.isNaN(v));
+  for (let i = 0; i < first; i++) {
+    rx[i] = rx[first];
+    ry[i] = ry[first];
+  }
+  // Smoothing: mean of the vectors over ±1.5 s (sliding window)
+  const x = new Float64Array(len);
+  const y = new Float64Array(len);
+  let sx = 0;
+  let sy = 0;
+  let lo = 0;
+  let hi = -1;
+  for (let i = 0; i < len; i++) {
+    while (hi + 1 < len && ride.t[hi + 1] - ride.t[i] <= HEADING_SMOOTH_MS) {
+      hi++;
+      if (!Number.isNaN(rx[hi])) {
+        sx += rx[hi];
+        sy += ry[hi];
+      }
+    }
+    while (ride.t[i] - ride.t[lo] > HEADING_SMOOTH_MS) {
+      if (!Number.isNaN(rx[lo])) {
+        sx -= rx[lo];
+        sy -= ry[lo];
+      }
+      lo++;
+    }
+    const d = Math.hypot(sx, sy);
+    x[i] = d > 1e-9 ? sx / d : NaN;
+    y[i] = d > 1e-9 ? sy / d : NaN;
+  }
+  const h = { x, y };
+  headingCache.set(ride, h);
+  return h;
+}
+
+/** Direction of travel (radians clockwise from north) at the instant, between the samples' directions. */
+function headingAt(ride: RideData, l: Local, s: RideSample): number {
+  const h = headingsOf(ride, l);
+  const last = ride.t.length - 1;
+  const i = Math.max(0, Math.min(last, s.index));
+  const j = Math.min(last, i + 1);
+  const f = Math.max(0, Math.min(1, s.fractionalIndex - i));
+  let x = h.x[i];
+  let y = h.y[i];
+  if (!Number.isNaN(h.x[j]) && !Number.isNaN(x)) {
+    x += (h.x[j] - x) * f;
+    y += (h.y[j] - y) * f;
+  } else if (Number.isNaN(x)) {
+    x = h.x[j];
+    y = h.y[j];
+  }
+  return Number.isNaN(x) || Math.hypot(x, y) < 1e-9 ? 0 : Math.atan2(x, y);
+}
+
+/** Direction the round map turns to at an instant (radians clockwise from north). */
+export function roundMapHeading(ride: RideData, s: RideSample): number {
+  return headingAt(ride, localOf(ride), s);
 }
 
 /**
@@ -145,7 +244,7 @@ export function drawRoundMap(ctx: Ctx2D, frame: FrameState, style: OverlayStyle,
   const s = frame.sample;
   rim(ctx);
   const pos = positionAt(ride, l, s);
-  const theta = pos ? headingAt(ride, l, s, pos) : 0;
+  const theta = pos ? headingAt(ride, l, s) : 0;
   const cos = Math.cos(theta);
   const sin = Math.sin(theta);
   const viewM = style.mapRadiusM && style.mapRadiusM > 0 ? style.mapRadiusM : l.viewM;
