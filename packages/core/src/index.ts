@@ -19,6 +19,7 @@ export * from './overlays/fonts.ts';
 export { PANEL_IDS, panelMetricOf, POWER_ZONES } from './overlays/panel/panel.ts';
 export { isDialOverlay } from './overlays/dial/index.ts';
 export { isSegmentOverlay } from './overlays/segment/segment.ts';
+export { glassPanelMetricOf, GLASS_PANEL_IDS } from './overlays/glass/index.ts';
 export { PANEL_METRIC_INFO, PANEL_METRICS, panelMetricName, panelOptions } from './overlays/panel/series.ts';
 export * from './segments/segments.ts';
 export * from './sync/types.ts';

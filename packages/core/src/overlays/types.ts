@@ -107,7 +107,28 @@ export type OverlayId =
   | 'natalTemperature'
   | 'natalMap'
   | 'natalProfile'
-  | 'natalSummary';
+  | 'natalSummary'
+  | 'glassHeartRate'
+  | 'glassCadence'
+  | 'glassSpeed'
+  | 'glassGrade'
+  | 'glassAltitude'
+  | 'glassPower'
+  | 'glassDistance'
+  | 'glassTime'
+  | 'glassTemperature'
+  | 'glassPanelSpeed'
+  | 'glassPanelAltitude'
+  | 'glassPanelGrade'
+  | 'glassPanelHeartRate'
+  | 'glassPanelCadence'
+  | 'glassPanelPower'
+  | 'glassPanelTemperature'
+  | 'glassMap'
+  | 'glassProfile'
+  | 'glassProfileStrip'
+  | 'glassSummary'
+  | 'glassHeartRateZone';
 
 /** Metrics that have a dashboard panel (gauge + stats + chart), and that a panel chart can show. */
 export type PanelMetric = 'speed' | 'altitude' | 'grade' | 'heartRate' | 'cadence' | 'power' | 'temperature';
@@ -235,7 +256,11 @@ export interface FrameState {
   textSample: RideSample;
 }
 
-export type OverlayTheme = 'default' | 'natal';
+export type OverlayTheme = 'default' | 'glass' | 'natal';
+/**
+ * Themes offered in the apps (tabs on the desktop, categories on the phone), in this order. The glass theme is
+ * finished but kept back for now: add 'glass' after 'default' to offer it.
+ */
 export const OVERLAY_THEMES: OverlayTheme[] = ['default', 'natal'];
 
 export interface OverlayDefinition {

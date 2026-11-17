@@ -3,6 +3,7 @@ import type { RideData } from '../telemetry/ride.ts';
 import { sampleAt } from '../telemetry/ride.ts';
 import { dialFamily } from './dial/index.ts';
 import { elevationProfileOverlay } from './elevationProfile.ts';
+import { glassFamily } from './glass/index.ts';
 import { mapOverlay } from './map.ts';
 import { natalFamily } from './natal/index.ts';
 import { segmentOverlays } from './segment/segment.ts';
@@ -12,7 +13,7 @@ import { METRIC_SLUGS } from './slugs.ts';
 import { setNumberLang } from './units.ts';
 import type { Ctx2D, FrameState, OverlayContext, OverlayDefinition, OverlayId, OverlayStyle, OverlayTheme } from './types.ts';
 
-export const OVERLAYS: OverlayDefinition[] = [...textOverlays, mapOverlay, elevationProfileOverlay, ...panelOverlays, ...dialFamily, ...segmentOverlays, ...natalFamily];
+export const OVERLAYS: OverlayDefinition[] = [...textOverlays, mapOverlay, elevationProfileOverlay, ...panelOverlays, ...dialFamily, ...segmentOverlays, ...glassFamily, ...natalFamily];
 
 /** Theme of an overlay in the app (tabs in step 4). */
 export function overlayTheme(id: OverlayId): OverlayTheme {

@@ -8,6 +8,7 @@ import {
   isSegmentOverlay,
   overlayLabel,
   overlayPixelSize,
+  OVERLAY_THEMES,
   overlayTheme,
   PANEL_IDS,
   POWER_ZONES,
@@ -21,12 +22,14 @@ import { LANG, t } from '../i18n.ts';
 import { offeredOverlays } from '../lib/project.ts';
 import { clipStart, DEFAULT_LOOK, placements, STYLE, styleOf, useProject } from '../state.ts';
 
-type Category = 'dials' | 'panels' | 'numbers' | 'maps' | 'natal';
-const CATEGORIES: Category[] = ['dials', 'panels', 'numbers', 'maps', 'natal'];
+type Category = 'dials' | 'panels' | 'numbers' | 'maps' | 'glass' | 'natal';
+/** Gadget categories; the glass one only while its theme is offered (see OVERLAY_THEMES). */
+const CATEGORIES = (['dials', 'panels', 'numbers', 'maps', 'glass', 'natal'] as Category[]).filter((c) => c !== 'glass' || OVERLAY_THEMES.includes('glass'));
 const PANELS = new Set<OverlayId>(Object.values(PANEL_IDS));
 
 function categoryOf(id: OverlayId): Category {
-  if (overlayTheme(id) === 'natal') return 'natal';
+  const theme = overlayTheme(id);
+  if (theme === 'natal' || theme === 'glass') return theme;
   if (isDialOverlay(id)) return 'dials';
   if (PANELS.has(id)) return 'panels';
   if (id === 'map' || id === 'elevationProfile') return 'maps';

@@ -2,7 +2,7 @@ import type { RideData } from '../../telemetry/ride.ts';
 import { drawText, font } from '../draw.ts';
 import { withAlpha } from '../panel/paint.ts';
 import { niceStep } from '../panel/series.ts';
-import type { Ctx2D, OverlayDefinition, OverlayStyle } from '../types.ts';
+import type { Ctx2D, FrameState, OverlayContext, OverlayDefinition, OverlayStyle } from '../types.ts';
 import { convert, fmt } from '../units.ts';
 import { tr } from '../../i18n/index.ts';
 import { dialPaint } from './common.ts';
@@ -111,136 +111,165 @@ export function profilePeak(ride: RideData, style: OverlayStyle): { x: number; y
   return { x: pr.xs[k], y: PY1 - ((pr.alt[k] - pr.lo) / (pr.hi - pr.lo)) * (PY1 - PY0) };
 }
 
+/** What a theme can change in the profile card (the glass card is see-through, with lighter type). */
+export interface ProfileLook {
+  card: (ctx: Ctx2D, w: number, h: number, style: OverlayStyle) => void;
+  /** Card title at (x, y), left-aligned baseline. */
+  title: (ctx: Ctx2D, text: string, x: number, y: number, ts: OverlayStyle) => void;
+  /** Not-yet-ridden terrain, top → bottom. */
+  terrain: [string, string];
+  grid: string;
+  /** Weight of the numbers in the header. */
+  valueWeight: number;
+  /** Small grey labels (axes, GAIN/LOSS); undefined = the dial label colour. */
+  label?: string;
+  /** Soft shadow under the text (see-through cards). */
+  textShadow?: boolean;
+}
+
+const CLASSIC_PROFILE: ProfileLook = {
+  card: drawCard,
+  title: (ctx, text, x, y, ts) => drawText(ctx, text, x, y, ts, { size: 20, weight: 800, tabular: false }),
+  terrain: ['rgba(120,88,64,0.75)', 'rgba(40,30,24,0.35)'],
+  grid: 'rgba(255,255,255,0.08)',
+  valueWeight: 800,
+};
+
 export const dialProfileOverlay: OverlayDefinition = {
   id: 'dialProfile',
   label: 'Elevation profile (card)',
   requires: 'elevationProfile',
   textOnly: false,
   size: () => ({ width: W, height: H }),
-  draw: (ctx: Ctx2D, frame, style, octx) => {
-    const ride = octx.ride;
-    const pr = profileOf(ride, style);
-    const pt = dialPaint(style);
-    const accent = style.accentColor;
-    const s = frame.sample;
-    const ts = frame.textSample;
-    const before = s.outside && s.t < ride.startTime;
-    const Y = (a: number) => PY1 - ((a - pr.lo) / (pr.hi - pr.lo)) * (PY1 - PY0);
-    const curX = before ? PX0 : PX0 + (Math.min(s.distance, pr.total) / pr.total) * (PX1 - PX0);
-    const curA = convert.elevation(s.altitude, style.units);
+  draw: (ctx: Ctx2D, frame, style, octx) => drawProfileCard(ctx, frame, style, octx),
+};
 
-    drawCard(ctx, W, H, style);
+/** The whole-ride profile card (PROFILE_W × PROFILE_H at the origin), in the classic look or a theme's. */
+export function drawProfileCard(ctx: Ctx2D, frame: FrameState, style: OverlayStyle, octx: OverlayContext, lookIn?: Partial<ProfileLook>) {
+  const look = { ...CLASSIC_PROFILE, ...lookIn };
+  const ride = octx.ride;
+  const pr = profileOf(ride, style);
+  const dp = dialPaint(style);
+  const pt = { ...dp, label: look.label ?? dp.label, ts: look.textShadow ? { ...dp.ts, outlineWidth: 0, shadow: true } : dp.ts };
+  const accent = style.accentColor;
+  const s = frame.sample;
+  const ts = frame.textSample;
+  const before = s.outside && s.t < ride.startTime;
+  const Y = (a: number) => PY1 - ((a - pr.lo) / (pr.hi - pr.lo)) * (PY1 - PY0);
+  const curX = before ? PX0 : PX0 + (Math.min(s.distance, pr.total) / pr.total) * (PX1 - PX0);
+  const curA = convert.elevation(s.altitude, style.units);
 
-    // Header: title, gain and loss so far.
-    drawText(ctx, tr(style.language, 'card.altitude'), 26, 40, pt.ts, { size: 20, weight: 800, tabular: false });
-    const u = convert.elevationUnit(style.units);
-    const gain = before ? NaN : convert.elevation(ts.elevationGain, style.units);
-    const loss = before ? NaN : convert.elevation(elevationLossAt(ride, ts), style.units);
-    const items: [string, string][] = [[tr(style.language, 'card.gain'), `${fmt(gain, 0)} ${u}`], [tr(style.language, 'card.loss'), `${fmt(loss, 0)} ${u}`]];
-    let x = W - 26;
-    for (const [label, value] of items.reverse()) {
-      x -= drawText(ctx, value, x, 40, pt.ts, { size: 17, weight: 800, align: 'right' }) + 7;
-      ctx.font = font(pt.ts, 13, 700);
-      x -= drawText(ctx, label, x, 40, pt.ts, { size: 13, weight: 700, align: 'right', tabular: false, color: pt.label }) + 18;
-    }
+  look.card(ctx, W, H, style);
 
-    // Grid and axes.
-    ctx.lineWidth = 1;
-    for (let a = pr.lo; a <= pr.hi + 1e-9; a += pr.step) {
-      const y = Y(a);
-      ctx.beginPath();
-      ctx.moveTo(PX0, y);
-      ctx.lineTo(PX1, y);
-      ctx.strokeStyle = 'rgba(255,255,255,0.08)';
-      ctx.stroke();
-      drawText(ctx, fmt(a, 0), PX0 - 10, y + 5, pt.ts, { size: 13, weight: 600, align: 'right', color: pt.label });
-    }
-    const totalU = convert.distance(pr.total, style.units);
-    const dStep = niceStep(totalU / 5);
-    const du = convert.distanceUnit(style.units);
-    for (let d = 0; d <= totalU - dStep * 0.4; d += dStep) {
-      const xx = PX0 + (d / totalU) * (PX1 - PX0);
-      drawText(ctx, d === 0 ? `0 ${du}` : fmt(d, 0), xx, H - 20, pt.ts, { size: 13, weight: 600, align: d === 0 ? 'left' : 'center', color: pt.label });
-    }
-    drawText(ctx, fmt(totalU, 1), PX1, H - 20, pt.ts, { size: 13, weight: 700, align: 'right', color: pt.label });
+  // Header: title, gain and loss so far.
+  look.title(ctx, tr(style.language, 'card.altitude'), 26, 40, pt.ts);
+  const u = convert.elevationUnit(style.units);
+  const gain = before ? NaN : convert.elevation(ts.elevationGain, style.units);
+  const loss = before ? NaN : convert.elevation(elevationLossAt(ride, ts), style.units);
+  const items: [string, string][] = [[tr(style.language, 'card.gain'), `${fmt(gain, 0)} ${u}`], [tr(style.language, 'card.loss'), `${fmt(loss, 0)} ${u}`]];
+  let x = W - 26;
+  for (const [label, value] of items.reverse()) {
+    x -= drawText(ctx, value, x, 40, pt.ts, { size: 17, weight: look.valueWeight, align: 'right' }) + 7;
+    ctx.font = font(pt.ts, 13, 700);
+    x -= drawText(ctx, label, x, 40, pt.ts, { size: 13, weight: 700, align: 'right', tabular: false, color: pt.label }) + 18;
+  }
 
-    // Terrain area and ridge line.
-    const area = (toX: number) => {
-      ctx.beginPath();
-      ctx.moveTo(pr.xs[0], PY1);
-      let k = 0;
-      for (; k < pr.xs.length && pr.xs[k] <= toX; k++) ctx.lineTo(pr.xs[k], Y(pr.alt[k]));
-      if (toX < PX1 && Number.isFinite(curA)) ctx.lineTo(toX, Y(curA));
-      ctx.lineTo(Math.min(toX, pr.xs[pr.xs.length - 1]), PY1);
-      ctx.closePath();
-    };
-    const ridge = (fromX: number, toX: number, end?: boolean) => {
-      ctx.beginPath();
-      let pen = false;
-      for (let k = 0; k < pr.xs.length; k++) {
-        if (pr.xs[k] < fromX) continue;
-        if (pr.xs[k] > toX) break;
-        if (!pen && fromX > PX0 && Number.isFinite(curA)) {
-          ctx.moveTo(fromX, Y(curA));
-          pen = true;
-        }
-        if (pen) ctx.lineTo(pr.xs[k], Y(pr.alt[k]));
-        else ctx.moveTo(pr.xs[k], Y(pr.alt[k]));
+  // Grid and axes.
+  ctx.lineWidth = 1;
+  for (let a = pr.lo; a <= pr.hi + 1e-9; a += pr.step) {
+    const y = Y(a);
+    ctx.beginPath();
+    ctx.moveTo(PX0, y);
+    ctx.lineTo(PX1, y);
+    ctx.strokeStyle = look.grid;
+    ctx.stroke();
+    drawText(ctx, fmt(a, 0), PX0 - 10, y + 5, pt.ts, { size: 13, weight: 600, align: 'right', color: pt.label });
+  }
+  const totalU = convert.distance(pr.total, style.units);
+  const dStep = niceStep(totalU / 5);
+  const du = convert.distanceUnit(style.units);
+  for (let d = 0; d <= totalU - dStep * 0.4; d += dStep) {
+    const xx = PX0 + (d / totalU) * (PX1 - PX0);
+    drawText(ctx, d === 0 ? `0 ${du}` : fmt(d, 0), xx, H - 20, pt.ts, { size: 13, weight: 600, align: d === 0 ? 'left' : 'center', color: pt.label });
+  }
+  drawText(ctx, fmt(totalU, 1), PX1, H - 20, pt.ts, { size: 13, weight: 700, align: 'right', color: pt.label });
+
+  // Terrain area and ridge line.
+  const area = (toX: number) => {
+    ctx.beginPath();
+    ctx.moveTo(pr.xs[0], PY1);
+    let k = 0;
+    for (; k < pr.xs.length && pr.xs[k] <= toX; k++) ctx.lineTo(pr.xs[k], Y(pr.alt[k]));
+    if (toX < PX1 && Number.isFinite(curA)) ctx.lineTo(toX, Y(curA));
+    ctx.lineTo(Math.min(toX, pr.xs[pr.xs.length - 1]), PY1);
+    ctx.closePath();
+  };
+  const ridge = (fromX: number, toX: number, end?: boolean) => {
+    ctx.beginPath();
+    let pen = false;
+    for (let k = 0; k < pr.xs.length; k++) {
+      if (pr.xs[k] < fromX) continue;
+      if (pr.xs[k] > toX) break;
+      if (!pen && fromX > PX0 && Number.isFinite(curA)) {
+        ctx.moveTo(fromX, Y(curA));
         pen = true;
       }
-      if (end && pen && Number.isFinite(curA)) ctx.lineTo(toX, Y(curA));
-    };
-    area(Infinity);
-    const terrain = ctx.createLinearGradient(0, PY0, 0, PY1);
-    terrain.addColorStop(0, 'rgba(120,88,64,0.75)');
-    terrain.addColorStop(1, 'rgba(40,30,24,0.35)');
-    ctx.fillStyle = terrain;
+      if (pen) ctx.lineTo(pr.xs[k], Y(pr.alt[k]));
+      else ctx.moveTo(pr.xs[k], Y(pr.alt[k]));
+      pen = true;
+    }
+    if (end && pen && Number.isFinite(curA)) ctx.lineTo(toX, Y(curA));
+  };
+  area(Infinity);
+  const terrain = ctx.createLinearGradient(0, PY0, 0, PY1);
+  terrain.addColorStop(0, look.terrain[0]);
+  terrain.addColorStop(1, look.terrain[1]);
+  ctx.fillStyle = terrain;
+  ctx.fill();
+  if (curX > PX0) {
+    area(curX);
+    const done = ctx.createLinearGradient(0, PY0, 0, PY1);
+    done.addColorStop(0, withAlpha(accent, 0.45));
+    done.addColorStop(1, withAlpha(accent, 0.05));
+    ctx.fillStyle = done;
     ctx.fill();
-    if (curX > PX0) {
-      area(curX);
-      const done = ctx.createLinearGradient(0, PY0, 0, PY1);
-      done.addColorStop(0, withAlpha(accent, 0.45));
-      done.addColorStop(1, withAlpha(accent, 0.05));
-      ctx.fillStyle = done;
-      ctx.fill();
-    }
-    ctx.lineJoin = 'round';
-    ctx.lineCap = 'round';
-    ridge(curX, Infinity);
-    ctx.strokeStyle = withAlpha(accent, 0.45);
-    ctx.lineWidth = 2.5;
+  }
+  ctx.lineJoin = 'round';
+  ctx.lineCap = 'round';
+  ridge(curX, Infinity);
+  ctx.strokeStyle = withAlpha(accent, 0.45);
+  ctx.lineWidth = 2.5;
+  ctx.stroke();
+  if (curX > PX0) {
+    ridge(-Infinity, curX, true);
+    ctx.shadowColor = withAlpha(accent, 0.85);
+    ctx.shadowBlur = 10;
+    ctx.strokeStyle = accent;
+    ctx.lineWidth = 3;
     ctx.stroke();
-    if (curX > PX0) {
-      ridge(-Infinity, curX, true);
-      ctx.shadowColor = withAlpha(accent, 0.85);
-      ctx.shadowBlur = 10;
-      ctx.strokeStyle = accent;
-      ctx.lineWidth = 3;
-      ctx.stroke();
-      ctx.shadowColor = 'rgba(0,0,0,0)';
-      ctx.shadowBlur = 0;
-    }
+    ctx.shadowColor = 'rgba(0,0,0,0)';
+    ctx.shadowBlur = 0;
+  }
 
-    // Current position.
-    if (!before && Number.isFinite(curA)) {
-      const y = Y(curA);
-      ctx.beginPath();
-      ctx.moveTo(curX, y + 8);
-      ctx.lineTo(curX, PY1);
-      ctx.strokeStyle = 'rgba(255,255,255,0.35)';
-      ctx.lineWidth = 1.5;
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.arc(curX, y, 7, 0, Math.PI * 2);
-      ctx.shadowColor = withAlpha(accent, 0.95);
-      ctx.shadowBlur = 12;
-      ctx.fillStyle = '#ffffff';
-      ctx.fill();
-      ctx.shadowColor = 'rgba(0,0,0,0)';
-      ctx.shadowBlur = 0;
-      ctx.strokeStyle = accent;
-      ctx.lineWidth = 3;
-      ctx.stroke();
-    }
-  },
-};
+  // Current position.
+  if (!before && Number.isFinite(curA)) {
+    const y = Y(curA);
+    ctx.beginPath();
+    ctx.moveTo(curX, y + 8);
+    ctx.lineTo(curX, PY1);
+    ctx.strokeStyle = 'rgba(255,255,255,0.35)';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(curX, y, 7, 0, Math.PI * 2);
+    ctx.shadowColor = withAlpha(accent, 0.95);
+    ctx.shadowBlur = 12;
+    ctx.fillStyle = '#ffffff';
+    ctx.fill();
+    ctx.shadowColor = 'rgba(0,0,0,0)';
+    ctx.shadowBlur = 0;
+    ctx.strokeStyle = accent;
+    ctx.lineWidth = 3;
+    ctx.stroke();
+  }
+}

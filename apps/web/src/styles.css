@@ -195,6 +195,12 @@ button.tiny { padding: 0 6px; font-size: 11px; }
   background: repeating-conic-gradient(#3b4a3b 0% 25%, #2c382c 0% 50%) 0 0 / 20px 20px; border-radius: 6px; padding: 6px; display: flex;
   justify-content: center; align-items: center; min-height: 80px; overflow: hidden;
 }
+/* Glass thumbnails: over a landscape-like gradient (sky, light, ground), so the see-through glass reads. */
+.checker.glass-backdrop {
+  background:
+    radial-gradient(120% 70% at 75% 10%, rgba(255, 236, 196, 0.65), transparent 60%),
+    linear-gradient(170deg, #6f9cc4 0%, #a9c3d8 32%, #b9a77e 52%, #5d6e4c 72%, #2f362c 100%);
+}
 
 .style-form { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end; background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 14px; }
 @media (max-width: 1000px) { .sync-bottom { grid-template-columns: 1fr; } }

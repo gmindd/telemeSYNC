@@ -62,6 +62,11 @@ export const CORE_MESSAGES = {
   'natal.v.mug': ['hot chocolate', 'chocolate quente', 'chocolat chaud', 'chocolate caliente', 'heiße Schokolade'],
   'natal.extra': ['EXTRA DATA', 'DADOS EXTRA', 'DONNÉES EXTRA', 'DATOS EXTRA', 'EXTRA-DATEN'],
 
+  // Glass theme.
+  'overlay.glass': ['Glass · {name}', 'Vidro · {name}', 'Verre · {name}', 'Cristal · {name}', 'Glas · {name}'],
+  'glass.v.zone': ['zone chip', 'chip de zona', 'pastille de zone', 'chip de zona', 'Zonen-Chip'],
+  'glass.v.strip': ['strip', 'faixa', 'bandeau', 'franja', 'Leiste'],
+
   // Panels: chart names, subtitles, stats.
   'chart.speed': ['speed', 'velocidade', 'vitesse', 'velocidad', 'Geschwindigkeit'],
   'chart.altitude': ['elevation', 'altimetria', 'altimétrie', 'altimetría', 'Höhenprofil'],

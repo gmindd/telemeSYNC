@@ -29,7 +29,7 @@ import { useApp } from '../lib/store.ts';
 
 const THEME_KEY = 'telemesync.overlayTheme';
 
-/** Tab of overlay designs last opened (Default or Christmas). */
+/** Tab of overlay designs last opened (Default, Glass or Christmas). */
 function storedTheme(): OverlayTheme {
   try {
     const v = localStorage.getItem(THEME_KEY);
@@ -44,9 +44,9 @@ const LB_PER_KG = 2.20462;
 
 /** Power options, shown when a gadget with power is chosen: instantaneous or 3 s average, and W/kg with the weight. */
 /** Gadgets that colour or place values by power zone (need the FTP). */
-const POWER_ZONE_IDS: OverlayId[] = ['dialPower', 'panelPower'];
+const POWER_ZONE_IDS: OverlayId[] = ['dialPower', 'panelPower', 'glassPower', 'glassPanelPower'];
 /** Gadgets that show heart-rate zones (need the zone limits). */
-const HR_ZONE_IDS: OverlayId[] = ['heartRate', 'dialHeartRate', 'panelHeartRate', 'natalHeartRate', 'natalHeartRateReindeer'];
+const HR_ZONE_IDS: OverlayId[] = ['heartRate', 'dialHeartRate', 'panelHeartRate', 'natalHeartRate', 'natalHeartRateReindeer', 'glassHeartRate', 'glassPanelHeartRate', 'glassHeartRateZone'];
 
 function PowerOptions() {
   const { style, setStyle, overlays } = useApp();
@@ -171,6 +171,7 @@ export function StepOverlays() {
   if (!ride) return <section><p>{tr('sync.needRide')}</p></section>;
   const all = availableOverlays(ride);
   const natal = all.filter((d) => d.theme === 'natal');
+  const glass = all.filter((d) => d.theme === 'glass');
   const classic = all.filter((d) => (d.theme ?? 'default') === 'default');
   const segs = classic.filter((d) => isSegmentOverlay(d.id));
   const defs = classic.filter((d) => !panelMetricOf(d.id) && !isDialOverlay(d.id) && !isSegmentOverlay(d.id));
@@ -286,6 +287,21 @@ export function StepOverlays() {
                 <span>{overlayLabel(d.id, lang)}</span>
                 <div className="checker">
                   <OverlayCanvas id={d.id} ride={ride} style={style} t={segT} clipStart={clipStart} clipEnd={clipEnd} cssScale={0.45} fitHeight={190} />
+                </div>
+              </label>
+            ))}
+          </div>
+        </>
+      ) : theme === 'glass' ? (
+        <>
+          <p className="lead">{tr('ov.glassLead')}</p>
+          <div className="overlay-grid glass">
+            {glass.map((d) => (
+              <label key={d.id} className={`overlay-card${overlays.includes(d.id) ? ' on' : ''}`}>
+                <input type="checkbox" checked={overlays.includes(d.id)} onChange={(e) => toggleOverlay(d.id, e.target.checked)} />
+                <span>{overlayLabel(d.id, lang)}</span>
+                <div className="checker glass-backdrop">
+                  <OverlayCanvas id={d.id} ride={ride} style={style} t={t} clipStart={clipStart} clipEnd={clipEnd} cssScale={0.45} fitHeight={190} />
                 </div>
               </label>
             ))}
