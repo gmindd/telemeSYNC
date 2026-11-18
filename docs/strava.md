@@ -51,3 +51,8 @@ Regras (já aplicadas no mobile e no serviço de login):
 - Scope pedido: `read,activity:read_all`. Tokens ficam no dispositivo; o site não guarda nada.
 - Streams pedidas: `STRAVA_STREAM_KEYS` no core. `stravaToRaw` transforma-as no mesmo `RawTelemetry` que um FIT/GPX.
 - `activityForClip` escolhe a atividade em que um clip foi filmado (pela hora de início).
+
+## Aumentar o limite de atletas
+
+A app está limitada a 10 atletas (Standard Tier). A candidatura ao Strava Developer Program, com as respostas ao
+formulário, as capturas a tirar e o resumo de conformidade, está em [strava-developer-program.md](strava-developer-program.md).

@@ -5,7 +5,8 @@ import { StravaSheet, stravaMessage } from '../components/StravaSheet.tsx';
 import { clock, mmss, num, t } from '../i18n.ts';
 import { loadClip, loadRide } from '../lib/project.ts';
 import { probeVideo } from '../lib/render.ts';
-import { finishSignIn, loadSession, onSignInReturn, signOut, startSignIn, type StravaSession } from '../lib/strava.ts';
+import { finishSignIn, loadSession, onSignInReturn, openExternal, PRIVACY_URL, signOut, startSignIn, type StravaSession } from '../lib/strava.ts';
+import connectWithStrava from '../assets/strava/btn_strava_connect_with_orange.svg';
 import { checkForUpdate, dismissUpdate, installUpdate, openUpdateInBrowser, type MobileRelease, type UpdateStep } from '../lib/updates.ts';
 import { clipStart, useProject } from '../state.ts';
 
@@ -176,15 +177,30 @@ export function StartScreen() {
             <p className="fine">{t('start.rideHint')}</p>
           )}
         </div>
-        <div className="pickcard__actions">
-          <button type="button" className="strava-btn" disabled={busy === 'strava'} onClick={() => void fromStrava()}>
-            {busy === 'strava' ? t('strava.connecting') : strava ? t('strava.from') : t('strava.connect')}
-          </button>
+        <div className={`pickcard__actions${strava ? '' : ' is-connect'}`}>
+          {strava ? (
+            <button type="button" className="strava-btn" disabled={busy === 'strava'} onClick={() => void fromStrava()}>
+              {t('strava.from')}
+            </button>
+          ) : (
+            // The official "Connect with Strava" button (brand guidelines: unmodified, 48 px high)
+            <button type="button" className="strava-connect" disabled={busy === 'strava'} aria-busy={busy === 'strava'} onClick={() => void fromStrava()}>
+              <img src={connectWithStrava} width={237} height={48} alt={t('strava.connect')} />
+            </button>
+          )}
           <label className="pick">
             <input type="file" onChange={(e) => e.target.files?.[0] && void openRide(e.target.files[0], e.target.files[0].name)} />
             <span>{busy === 'ride' ? t('start.loading') : t('strava.file')}</span>
           </label>
         </div>
+        {!strava && (
+          <p className="pickcard__foot fine">
+            {busy === 'strava' ? t('strava.connecting') : t('strava.consent')}{' '}
+            <button type="button" className="link" onClick={() => openExternal(PRIVACY_URL)}>
+              {t('strava.privacy')}
+            </button>
+          </p>
+        )}
         {strava && (
           <p className="pickcard__foot fine">
             {t('strava.signedIn', { name: [strava.athlete?.firstname, strava.athlete?.lastname].filter(Boolean).join(' ') || 'Strava' })} ·{' '}

@@ -9,6 +9,8 @@ import { buildRide, STRAVA_STREAM_KEYS, stravaId, stravaToRaw, type RideData, ty
 export const STRAVA_CLIENT_ID = '291951';
 const SITE = 'https://telemesync.pereiragabriel.com';
 const API = 'https://www.strava.com/api/v3';
+/** The privacy policy's Strava section (what the app reads, where it stays, how to disconnect). */
+export const PRIVACY_URL = `${SITE}/legal.html#strava`;
 const TOKENS_KEY = 'telemesync-strava';
 const PENDING_KEY = 'telemesync-strava-pending';
 /** read: profile name; activity:read_all: the athlete's activities, including those only they can see. */
@@ -70,6 +72,15 @@ const random = (n: number) => b64url(crypto.getRandomValues(new Uint8Array(n)));
 async function challengeOf(verifier: string): Promise<string> {
   return b64url(new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(verifier))));
 }
+
+/** Opens a page outside the app (in-app browser on the phone, a new tab in development). */
+export function openExternal(url: string): void {
+  if (native) void Browser.open({ url });
+  else window.open(url, '_blank', 'noopener');
+}
+
+/** The activity on strava.com, for the brand guidelines' "View on Strava" link. */
+export const activityUrl = (a: ActivityItem) => `https://www.strava.com/activities/${a.key}`;
 
 /** Opens Strava's authorization (its app when installed). The answer comes back through finishSignIn. */
 export async function startSignIn(): Promise<void> {

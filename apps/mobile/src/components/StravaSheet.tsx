@@ -3,7 +3,8 @@
 import { useEffect, useState } from 'react';
 import { activityForClip, formatDuration, type RideData } from '@telemesync/core';
 import { clock, num, t, LOCALE } from '../i18n.ts';
-import { listActivities, loadActivityRide, type ActivityItem } from '../lib/strava.ts';
+import { activityUrl, listActivities, loadActivityRide, openExternal, type ActivityItem } from '../lib/strava.ts';
+import poweredByStrava from '../assets/strava/api_logo_pwrdBy_strava_horiz_white.svg';
 
 export function stravaMessage(e: unknown): string {
   const m = (e as Error).message;
@@ -76,6 +77,10 @@ export function StravaSheet(props: { clipStart?: number; onRide: (ride: RideData
                   {a === match && <span className="act__badge">{t('strava.match')}</span>}
                   {busy === a.key && <span className="act__badge">{t('strava.loading')}</span>}
                 </button>
+                {/* Brand guidelines: links back to the activity on Strava read "View on Strava" in every language */}
+                <a className="act__view" href={activityUrl(a)} onClick={(e) => (e.preventDefault(), openExternal(activityUrl(a)))}>
+                  View on Strava
+                </a>
               </li>
             ))}
           </ul>
@@ -87,7 +92,7 @@ export function StravaSheet(props: { clipStart?: number; onRide: (ride: RideData
             {t('strava.showRecent')}
           </button>
         )}
-        <p className="powered">{t('strava.powered')}</p>
+        <img className="powered" src={poweredByStrava} width={365} height={37} alt="Powered by Strava" />
       </div>
     </div>
   );
