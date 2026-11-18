@@ -3,6 +3,7 @@
 // heart rate and power zones), as on the desktop.
 import { memo, useEffect, useMemo, useRef, useState } from 'react';
 import {
+  gadgetStyle,
   getOverlay,
   isDialOverlay,
   isSegmentOverlay,
@@ -87,6 +88,7 @@ export function GadgetsPanel() {
               onPointerUp={() => s.settle(sel)}
             />
           </label>
+          <GadgetBackground id={sel} />
           <div className="row">
             <button type="button" className="chip-btn" onClick={() => s.resetPlace(sel)}>
               {t('gadgets.reset')}
@@ -133,7 +135,7 @@ export function GadgetsPanel() {
           return (
             <button key={id} type="button" className={`thumb${on ? ' is-on' : ''}`} aria-pressed={on} onClick={() => s.toggleOverlay(id)}>
               <span className="thumb__img">
-                <Thumb id={id} ride={ride} at={at} style={style} />
+                <Thumb id={id} ride={ride} at={at} style={gadgetStyle(style, id)} />
                 {on && <span className="thumb__check" aria-hidden="true">✓</span>}
               </span>
               <span className="thumb__label">{overlayLabel(id, LANG)}</span>
@@ -143,6 +145,30 @@ export function GadgetsPanel() {
       </div>
 
       <LookSettings ride={ride} />
+    </div>
+  );
+}
+
+/** Background opacity of the selected gadget: the shared one until moved, then its own. */
+function GadgetBackground({ id }: { id: OverlayId }) {
+  const look = useProject((st) => st.look);
+  const setGadgetOpacity = useProject((st) => st.setGadgetOpacity);
+  const own = look.gadgetOpacity?.[id];
+  const op = own ?? look.panelOpacity;
+  return (
+    <div className="gadget-bg">
+      <label className="field">
+        <span>
+          {t('gadgets.bg')} <b>{Math.round(op * 100)} %</b>
+          {own !== undefined && <b className="framing__at"> · {t('gadgets.bgOwn')}</b>}
+        </span>
+        <input type="range" min={0} max={1} step={0.05} value={op} onChange={(e) => setGadgetOpacity(id, Number(e.target.value))} />
+      </label>
+      {own !== undefined && (
+        <button type="button" className="chip-btn" onClick={() => setGadgetOpacity(id, undefined)}>
+          {t('gadgets.bgSame')}
+        </button>
+      )}
     </div>
   );
 }
@@ -242,7 +268,7 @@ function LookSettings({ ride }: { ride: RideData }) {
             </span>
           </label>
         )}
-        {(look.panelOpacity !== DEFAULT_LOOK.panelOpacity || look.colorByZone !== DEFAULT_LOOK.colorByZone) && (
+        {(look.panelOpacity !== DEFAULT_LOOK.panelOpacity || look.colorByZone !== DEFAULT_LOOK.colorByZone || Object.keys(look.gadgetOpacity ?? {}).length > 0) && (
           <button type="button" className="chip-btn" onClick={() => setLook({ panelOpacity: DEFAULT_LOOK.panelOpacity, colorByZone: DEFAULT_LOOK.colorByZone })}>
             {t('look.reset')}
           </button>

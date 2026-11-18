@@ -261,7 +261,10 @@ export function drawRoundMap(ctx: Ctx2D, frame: FrameState, style: OverlayStyle,
   bg.addColorStop(0, '#1d3a3a');
   bg.addColorStop(1, '#0a1619');
   ctx.fillStyle = bg;
+  // The map's background follows the background opacity (the streets and the route stay)
+  ctx.globalAlpha = p.rimAlpha;
   ctx.fillRect(CX - MAP_R, CY - MAP_R, MAP_R * 2, MAP_R * 2);
+  ctx.globalAlpha = 1;
 
   const streets = pos && octx.streets?.ways.length ? localStreets(octx.streets, ride, l) : undefined;
   if (pos && streets) {
@@ -357,7 +360,9 @@ export function drawRoundMap(ctx: Ctx2D, frame: FrameState, style: OverlayStyle,
   shade.addColorStop(0, 'rgba(0,0,0,0)');
   shade.addColorStop(1, 'rgba(0,0,0,0.45)');
   ctx.fillStyle = shade;
+  ctx.globalAlpha = p.rimAlpha;
   ctx.fillRect(CX - MAP_R, CY - MAP_R, MAP_R * 2, MAP_R * 2);
+  ctx.globalAlpha = 1;
   ctx.restore();
 
   if (streets) drawText(ctx, STREETS_ATTRIBUTION, CX, CY + MAP_R - 12, p.ts, { size: 11, weight: 600, color: 'rgba(255,255,255,0.6)', align: 'center', tabular: false });
@@ -386,7 +391,7 @@ export function drawRoundMap(ctx: Ctx2D, frame: FrameState, style: OverlayStyle,
   const ny = CY - Math.cos(theta) * (MAP_R + 2);
   ctx.beginPath();
   ctx.arc(nx, ny, 15, 0, Math.PI * 2);
-  ctx.fillStyle = '#0d1116';
+  ctx.fillStyle = p.rim;
   ctx.fill();
   ctx.strokeStyle = 'rgba(255,255,255,0.85)';
   ctx.lineWidth = 2;

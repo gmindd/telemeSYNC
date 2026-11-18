@@ -1,4 +1,4 @@
-import { buildRide } from '@telemesync/core';
+import { buildRide, gadgetStyle } from '@telemesync/core';
 import { beforeAll, describe, expect, it } from 'vitest';
 
 // The phone's storage, kept in memory
@@ -42,5 +42,20 @@ describe('choices remembered for the next video', () => {
   it('saves changes to the look', () => {
     state.useProject.getState().setLook({ panelOpacity: 0 });
     expect(JSON.parse(store.get('telemesync-mobile-prefs')!).look.panelOpacity).toBe(0);
+  });
+
+  it('one gadget can have its own background; moving the shared one changes them all again', () => {
+    const p = () => state.useProject.getState();
+    p().setLook({ panelOpacity: 0.6 });
+    p().setGadgetOpacity('dialSpeed', 0.1);
+    expect(gadgetStyle(state.styleOf(p()), 'dialSpeed').panelOpacity).toBe(0.1);
+    expect(gadgetStyle(state.styleOf(p()), 'dialHeartRate').panelOpacity).toBe(0.6);
+    expect(JSON.parse(store.get('telemesync-mobile-prefs')!).look.gadgetOpacity).toEqual({ dialSpeed: 0.1 });
+    p().setGadgetOpacity('dialSpeed', undefined);
+    expect(gadgetStyle(state.styleOf(p()), 'dialSpeed').panelOpacity).toBe(0.6);
+    p().setGadgetOpacity('dialSpeed', 0.1);
+    p().setLook({ panelOpacity: 0.4 });
+    expect(gadgetStyle(state.styleOf(p()), 'dialSpeed').panelOpacity).toBe(0.4);
+    expect(p().look.gadgetOpacity).toEqual({});
   });
 });
