@@ -25,6 +25,24 @@ describe('gadget layout and composite', () => {
     expect(l.elevationProfile.y).toBeGreaterThan(0.6); // bottom
   });
 
+  it('several maps and profiles get their own place, and a new 2D map is no larger than a dial', () => {
+    const ids = ['dialSpeed', 'dialMap', 'map', 'dialProfile', 'elevationProfile'] as const;
+    for (const aspect of [9 / 16, 16 / 9]) {
+      const l = resolveLayout([...ids], {}, aspect, DEFAULT_STYLE);
+      // The 2D map is as wide as the round one (not 420 px wide) and sits under it, both on the right
+      expect(l.map.w).toBeCloseTo(l.dialMap.w, 5);
+      expect(l.map.x).toBeGreaterThan(0.5);
+      expect(l.map.y).toBeGreaterThanOrEqual(l.dialMap.y + l.dialMap.w * aspect - 1e-9); // square: height = width × aspect
+      // The two profiles don't overlap either
+      expect(l.elevationProfile.y).not.toBeCloseTo(l.dialProfile.y, 3);
+    }
+  });
+
+  it('a new map goes under a map the user already placed', () => {
+    const l = resolveLayout(['dialMap', 'map'], { dialMap: { x: 0.7, y: 0.05, w: 0.28 } }, 9 / 16, DEFAULT_STYLE);
+    expect(l.map.y).toBeGreaterThanOrEqual(0.05 + 0.28 * (9 / 16) - 1e-9);
+  });
+
   it('draws gadgets where they were placed', () => {
     registerEmbeddedFonts();
     const synth = syntheticRide();
