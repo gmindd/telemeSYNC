@@ -241,6 +241,15 @@ input[type='range'] { width: 100%; accent-color: var(--accent); height: 28px; ma
 .cat__n { font-size: 0.72rem; padding: 1px 7px; border-radius: 999px; background: rgba(255, 255, 255, 0.08); }
 .cat.is-on .cat__n { background: rgba(0, 0, 0, 0.18); }
 
+/* Sport tabs above the gadget categories */
+.sports { display: flex; gap: 6px; margin-bottom: 8px; }
+.sport {
+  flex: 1; min-height: 40px; display: grid; place-items: center; gap: 0; padding: 4px 6px; border-radius: 12px;
+  border: 1px solid var(--border); background: var(--panel); color: var(--text); font-size: 0.8rem; font-weight: 700; line-height: 1.15;
+}
+.sport.is-on { background: var(--gradient); color: #140a00; border-color: transparent; }
+.sport__file { font-size: 0.66rem; font-weight: 600; opacity: 0.8; }
+
 /* Strava */
 .pickcard__actions { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .pickcard__actions .pick { grid-column: auto; }

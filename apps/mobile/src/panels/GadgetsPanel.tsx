@@ -8,7 +8,9 @@ import {
   isDialOverlay,
   isSegmentOverlay,
   overlayLabel,
+  overlayGroup,
   overlayPixelSize,
+  overlaySports,
   overlayTheme,
   PANEL_IDS,
   POWER_ZONES,
@@ -17,6 +19,8 @@ import {
   type OverlayId,
   type OverlayStyle,
   type RideData,
+  type Sport,
+  SPORTS,
 } from '@telemesync/core';
 import { LANG, t } from '../i18n.ts';
 import { offeredOverlays } from '../lib/project.ts';
@@ -28,7 +32,7 @@ const PANELS = new Set<OverlayId>(Object.values(PANEL_IDS));
 
 function categoryOf(id: OverlayId): Category {
   if (overlayTheme(id) === 'natal') return 'natal';
-  if (isDialOverlay(id)) return 'dials';
+  if (isDialOverlay(id) || overlayGroup(id) === 'dial') return 'dials';
   if (PANELS.has(id)) return 'panels';
   if (id === 'map' || id === 'elevationProfile') return 'maps';
   return 'numbers';
@@ -49,14 +53,19 @@ const Thumb = memo(function Thumb({ id, ride, at, style }: { id: OverlayId; ride
 export function GadgetsPanel() {
   const s = useProject();
   const [cat, setCat] = useState<Category>('dials');
+  // Each sport has its own catalogue (running and snow dials, pace, slope…); the ride's own sport first
+  const [sportPick, setSport] = useState<Sport | undefined>(undefined);
   if (!s.ride) return null;
   const ride = s.ride;
+  const sport = sportPick ?? ride.sport ?? 'cycling';
   // Thumbnails show the moment under the playhead, rounded to 5 s so they don't redraw while playing
   const now = clipStart(s) + s.playheadS * 1000;
   const at = Math.min(ride.endTime, Math.max(ride.startTime, Math.round(now / 5000) * 5000));
-  const offered = offeredOverlays(ride).filter((id) => !isSegmentOverlay(id));
+  // Laps, splits, ghost and runs need segments chosen on the desktop: not offered here yet
+  const offered = offeredOverlays(ride).filter((id) => !isSegmentOverlay(id) && overlayGroup(id) !== 'live' && overlaySports(id).includes(sport));
   const cats = CATEGORIES.filter((c) => offered.some((id) => categoryOf(id) === c));
-  const shown = offered.filter((id) => categoryOf(id) === cat);
+  const current = cats.includes(cat) ? cat : (cats[0] ?? 'dials');
+  const shown = offered.filter((id) => categoryOf(id) === current);
   const sel = s.selected && s.overlays.includes(s.selected) ? s.selected : undefined;
   const selP = sel ? placements(s)[sel] : undefined;
   // One style object while the settings don't change, so the thumbnails don't redraw for nothing
@@ -116,20 +125,28 @@ export function GadgetsPanel() {
         </div>
       )}
 
+      <div className="sports" role="tablist" aria-label={t('sport.label')}>
+        {SPORTS.map((sp) => (
+          <button key={sp} type="button" role="tab" aria-selected={sp === sport} className={`sport${sp === sport ? ' is-on' : ''}`} onClick={() => setSport(sp)}>
+            {t(`sport.${sp}`)}
+            {ride.sport === sp && <span className="sport__file">{t('sport.fromFile')}</span>}
+          </button>
+        ))}
+      </div>
       {/* Every category in view (they wrap): a sideways-scrolling bar hid the last ones on phones */}
       <div className="cats" role="tablist">
         {cats.map((c) => {
           const n = offered.filter((id) => categoryOf(id) === c).length;
-          const used = s.overlays.filter((id) => categoryOf(id) === c).length;
+          const used = s.overlays.filter((id) => categoryOf(id) === c && offered.includes(id)).length;
           return (
-            <button key={c} type="button" role="tab" aria-selected={c === cat} className={`cat${c === cat ? ' is-on' : ''}`} onClick={() => setCat(c)}>
+            <button key={c} type="button" role="tab" aria-selected={c === current} className={`cat${c === current ? ' is-on' : ''}`} onClick={() => setCat(c)}>
               {t(`cat.${c}`)}
               <span className="cat__n">{used ? `${used}/${n}` : n}</span>
             </button>
           );
         })}
       </div>
-      <div className={`thumbs thumbs--${cat}`}>
+      <div className={`thumbs thumbs--${current}`}>
         {shown.map((id) => {
           const on = s.overlays.includes(id);
           return (

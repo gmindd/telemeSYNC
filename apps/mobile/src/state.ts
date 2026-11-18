@@ -5,6 +5,7 @@ import {
   avoidZones,
   DEFAULT_STYLE,
   gadgetBox,
+  overlaySports,
   resolveLayout,
   type GadgetLayout,
   type GadgetPlacement,
@@ -178,7 +179,9 @@ export const useProject = create<State>((set, get) => {
     setRide: (ride) => {
       const offered = offeredOverlays(ride);
       // The chosen gadgets this ride can show (the others stay chosen for the next ride); none: the usual four
-      const kept = get().chosen.filter((id) => offered.includes(id));
+      // (and that belong to its sport: cycling dials don't come back on a run)
+      const sport = ride.sport ?? 'cycling';
+      const kept = get().chosen.filter((id) => offered.includes(id) && overlaySports(id).includes(sport));
       const overlays = kept.length ? kept : defaultSelection(ride);
       const clip = get().clip;
       set({ ride, streets: undefined, streetsState: 'idle', overlays, chosen: kept.length ? get().chosen : overlays, autoStart: clip ? detectedStart(clip, ride) : undefined });
