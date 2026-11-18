@@ -5,6 +5,8 @@ import type { Camera } from '../sync/types.ts';
 import type { GadgetLayout } from '../overlays/layout.ts';
 import { LocalizedError } from '../i18n/index.ts';
 import type { Segment } from '../segments/segments.ts';
+import { SPORTS, type Sport } from '../telemetry/types.ts';
+import { validCondition, type GadgetCondition } from '../overlays/visibility.ts';
 
 export const PROJECT_VERSION = 1;
 
@@ -27,6 +29,18 @@ export interface ProjectFile {
   output: { format: OutputFormat; separate?: boolean; composite?: boolean; compositeShortSide?: number; maxFps?: number };
   /** Gadget positions (fractions of the frame). */
   layout?: GadgetLayout;
+  /** Sport tab of step 4 (older projects have none). */
+  sport?: Sport;
+}
+
+/** Gadget conditions of a project file: only well-formed ones (older projects have none). */
+export function validConditions(v: unknown): Partial<Record<OverlayId, GadgetCondition>> {
+  const out: Partial<Record<OverlayId, GadgetCondition>> = {};
+  if (v && typeof v === 'object') for (const [id, c] of Object.entries(v)) {
+    const ok = validCondition(c);
+    if (ok) out[id as OverlayId] = ok;
+  }
+  return out;
 }
 
 /** Segments of a project file: only well-formed ones (older projects have none). */
@@ -54,7 +68,7 @@ export function parseProject(json: string): ProjectFile {
   }
   return {
     ...p,
-    style: { ...DEFAULT_STYLE, ...p.style, units: { ...DEFAULT_STYLE.units, ...p.style?.units }, segments: validSegments(p.style?.segments) },
+    style: { ...DEFAULT_STYLE, ...p.style, units: { ...DEFAULT_STYLE.units, ...p.style?.units }, segments: validSegments(p.style?.segments), conditions: validConditions(p.style?.conditions) },
     overlays: Array.isArray(p.overlays) ? p.overlays : [],
     output: {
       format: isOutputFormat(p.output?.format) ? p.output.format : 'prores',
@@ -63,5 +77,6 @@ export function parseProject(json: string): ProjectFile {
       compositeShortSide: Number(p.output?.compositeShortSide) || 1080,
     },
     layout: p.layout && typeof p.layout === 'object' ? p.layout : {},
+    sport: SPORTS.includes(p.sport) ? p.sport : undefined,
   };
 }

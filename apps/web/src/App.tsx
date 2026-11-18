@@ -5,6 +5,7 @@ import { UpdateBanner } from './components/UpdateBanner.tsx';
 import { DonateButton, WebsiteLink } from './components/ExternalLinks.tsx';
 import { StepWelcome } from './steps/StepWelcome.tsx';
 import { useApp, type Step } from './lib/store.ts';
+import { useStreets } from './lib/streets.ts';
 import { StepTelemetry } from './steps/StepTelemetry.tsx';
 import { StepClips } from './steps/StepClips.tsx';
 import { StepSync } from './steps/StepSync.tsx';
@@ -23,6 +24,8 @@ const STEPS: { id: Step; label: MessageKey }[] = [
 ];
 
 export function App() {
+  // Streets for the round maps, read while one is on screen.
+  useStreets();
   const { step, setStep, init, notice, dismissNotice, saveProject, openProject, ride, sync } = useApp();
   const projectInput = useRef<HTMLInputElement>(null);
   const [about, setAbout] = useState(false);

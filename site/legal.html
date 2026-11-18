@@ -31,7 +31,7 @@
   <main id="conteudo" class="legal">
     <div class="container container--narrow">
       <h1>Aviso legal, termos e privacidade</h1>
-      <p>Última atualização: <time datetime="2026-11-18">18 de novembro de 2026</time>.</p>
+      <p>Última atualização: <time datetime="2026-11-19">19 de novembro de 2026</time>.</p>
 
       <nav class="legal__toc" aria-label="Índice">
         <ol>
@@ -73,7 +73,7 @@
         </p>
         <p>
           O programa é fornecido “tal como está”, sem garantias de qualquer tipo, incluindo de exatidão dos dados apresentados
-          (velocidade, inclinação, altitude, frequência cardíaca, posição). Os valores dependem dos dados do seu ciclocomputador e da
+          (velocidade, inclinação, altitude, frequência cardíaca, posição). Os valores dependem dos dados do seu ciclocomputador ou relógio e da
           sincronização com os vídeos, e não devem ser usados para fins de segurança, médicos ou de prova. Na medida máxima permitida
           por lei, o autor não é responsável por danos resultantes da utilização do programa. Faça cópias de segurança dos seus ficheiros.
         </p>
@@ -89,8 +89,16 @@
           <strong>No programa:</strong> tudo corre no seu computador. Os vídeos e a telemetria não são enviados para nenhum servidor:
           o programa lê apenas os metadados dos vídeos e processa a telemetria localmente. O programa não recolhe estatísticas nem dados pessoais.
           Ao abrir, o programa consulta este site para saber se há uma versão nova; esse pedido não leva nenhum dado seu
-          (o servidor vê apenas o endereço IP, como em qualquer visita). A ligação opcional ao Strava da app Android está descrita na
-          <a href="#strava">secção 4</a>.
+          (o servidor vê apenas o endereço IP, como em qualquer visita).
+          Quando um mapa circular está no ecrã ou é exportado, o programa descarrega do
+          <a href="https://openfreemap.org/" target="_blank" rel="noopener">OpenFreeMap</a> (tiles.openfreemap.org) os quadrados de mapa
+          à volta do troço do clip, para desenhar as ruas e os caminhos (dados © OpenStreetMap): o OpenFreeMap recebe o endereço IP e a zona
+          do mapa pedida, mas não a volta, a hora nem os vídeos. Sem rede, o mapa mostra só o percurso.
+        </p>
+        <p>
+          <strong>Na app para Android (em testes):</strong> tal como no computador, os vídeos e a telemetria são processados no telemóvel e
+          não são enviados para nenhum servidor; a app usa os mesmos mapas do OpenFreeMap e consulta este site para saber se há uma versão nova.
+          A ligação opcional ao Strava está descrita na <a href="#strava">secção 4</a>.
         </p>
         <p><strong>Neste site:</strong> o responsável pelo tratamento é o titular indicado no aviso legal. São tratados apenas os dados seguintes:</p>
         <ul>
@@ -152,7 +160,8 @@
           <li>
             <strong>Onde ficam:</strong> no seu telemóvel, na memória da app, enquanto ela está aberta; não são guardados depois de a fechar.
             Não são enviados para este site nem para terceiros e não são mostrados a outras pessoas pela app. O vídeo que exportar fica no
-            seu telemóvel e é seu: só sai dele se o partilhar.
+            seu telemóvel e é seu: só sai dele se o partilhar. Para desenhar as ruas no mapa circular, a app pede ao OpenFreeMap os
+            quadrados de mapa da zona do percurso (ver secção 3): o OpenFreeMap recebe a zona pedida e o endereço IP, não a atividade.
           </li>
           <li>
             <strong>Chaves de acesso:</strong> as chaves que o Strava dá à app (tokens) ficam guardadas no telemóvel até desligar. Para
@@ -193,7 +202,9 @@
             <li>
               <strong>Where it stays:</strong> on your phone, in the app's memory while it is open; it is not kept after the app closes. It is
               not sent to this website or to third parties, and the app does not show it to anyone else. The video you export stays on your
-              phone and is yours: it only leaves the phone if you share it.
+              phone and is yours: it only leaves the phone if you share it. To draw the streets on the round map, the app requests the map
+            tiles of the route's area from OpenFreeMap (see section 3): OpenFreeMap receives the requested area and the IP address, not the
+            activity.
             </li>
             <li>
               <strong>Access tokens:</strong> the tokens Strava gives the app are stored on the phone until you disconnect. To obtain and

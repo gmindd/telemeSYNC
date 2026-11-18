@@ -531,7 +531,7 @@ export function darkInset(ctx: Ctx2D, x: number, y: number, w: number, h: number
   ctx.arc(x + r, y + h - r, r, Math.PI / 2, Math.PI);
   ctx.arc(x + r, y + r, r, Math.PI, Math.PI * 1.5);
   ctx.closePath();
-  ctx.fillStyle = `rgba(14,10,8,${Math.max(0.55, opacity)})`;
+  ctx.fillStyle = `rgba(14,10,8,${opacity})`;
   ctx.fill();
   ctx.strokeStyle = 'rgba(255,220,170,0.18)';
   ctx.lineWidth = 1.2;

@@ -1,6 +1,6 @@
 // Activities from the Strava API: the activity's streams (GET /activities/{id}/streams, key_by_type=true) become
 // the same raw telemetry a FIT or GPX file gives, so everything after it (ride, sync, gadgets) is unchanged.
-import type { RawSample, RawTelemetry } from './types.ts';
+import { sportFromText, type RawSample, type RawTelemetry } from './types.ts';
 
 /** The stream keys asked for: everything the gadgets can show. */
 export const STRAVA_STREAM_KEYS = ['time', 'latlng', 'altitude', 'velocity_smooth', 'heartrate', 'cadence', 'watts', 'temp', 'distance'] as const;
@@ -34,6 +34,8 @@ export interface StravaActivity {
   /** Seconds between local time and UTC at the start. */
   utc_offset?: number;
   device_name?: string;
+  /** Strava's sport ("Ride", "Run", "TrailRun", "AlpineSki", "Snowboard"…): picks the gadgets' sport. */
+  sport_type?: string;
 }
 
 /**
@@ -76,6 +78,7 @@ export function stravaToRaw(activity: StravaActivity, streams: StravaStreams): R
     name: activity.name,
     device: activity.device_name,
     localOffsetMs: activity.utc_offset !== undefined ? activity.utc_offset * 1000 : undefined,
+    sport: sportFromText(activity.sport_type),
     samples,
   };
 }

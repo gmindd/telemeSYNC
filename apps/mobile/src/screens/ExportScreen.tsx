@@ -5,7 +5,7 @@ import { mmss, num, t } from '../i18n.ts';
 import { framingMoves } from '../lib/formats.ts';
 import { outputSizeFor, renderVideo, type RenderProgress, type RenderResult } from '../lib/render.ts';
 import { defaultName, fileNameFor, saveVideoAs, shareVideo } from '../lib/save.ts';
-import { clipStart, frameAspect, frameCrop, styleOf, useProject } from '../state.ts';
+import { clipStart, frameAspect, frameCrop, projectStyle, useProject } from '../state.ts';
 
 type Status = { kind: 'idle' } | { kind: 'working'; p?: RenderProgress } | { kind: 'done'; r: RenderResult } | { kind: 'error'; message: string };
 
@@ -35,7 +35,7 @@ export function ExportScreen() {
           clipStartUtcMs: clipStart(s),
           overlays: s.overlays,
           layout: s.layout,
-          style: styleOf(s),
+          style: projectStyle(s),
           streets: s.streets,
           crop,
           cropAt: framingMoves(s.cropKeys) ? (sec) => frameCrop(s, sec)! : undefined,

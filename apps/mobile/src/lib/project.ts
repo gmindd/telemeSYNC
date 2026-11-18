@@ -13,6 +13,7 @@ import {
   type Lang,
   type OverlayId,
   type RideData,
+  type Sport,
 } from '@telemesync/core';
 
 export interface LoadedClip {
@@ -64,8 +65,16 @@ export function offeredOverlays(ride: RideData): OverlayId[] {
   return [...PREFERRED.filter((id) => ids.includes(id)), ...ids.filter((id) => !PREFERRED.includes(id))];
 }
 
+/** The usual four for each sport: two dials, the round map and the profile. */
+const DEFAULTS: Record<Sport, OverlayId[]> = {
+  cycling: ['dialSpeed', 'dialHeartRate', 'dialMap', 'dialProfile'],
+  running: ['runDialPace', 'runDialHeartRate', 'dialMap', 'dialProfile'],
+  snow: ['snowDialSpeed', 'snowDialAltitude', 'dialMap', 'dialProfile'],
+};
+
 export function defaultSelection(ride: RideData): OverlayId[] {
+  const wanted = DEFAULTS[ride.sport ?? 'cycling'];
   return offeredOverlays(ride)
-    .filter((id) => ['dialSpeed', 'dialHeartRate', 'dialMap', 'dialProfile'].includes(id))
+    .filter((id) => wanted.includes(id))
     .slice(0, 4);
 }

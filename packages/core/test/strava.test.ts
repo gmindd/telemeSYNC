@@ -59,4 +59,15 @@ describe('Strava activities', () => {
     expect(() => stravaId(JSON.parse('{"id":9007199254740993}'))).toThrow();
     expect(() => stravaId({})).toThrow();
   });
+
+  it("takes the sport from Strava's sport_type", () => {
+    const sport = (sport_type?: string) => stravaToRaw({ ...ACTIVITY, sport_type }, STREAMS).sport;
+    expect(sport('Ride')).toBe('cycling');
+    expect(sport('EBikeRide')).toBe('cycling');
+    expect(sport('TrailRun')).toBe('running');
+    expect(sport('Hike')).toBe('running');
+    expect(sport('AlpineSki')).toBe('snow');
+    expect(sport('Snowboard')).toBe('snow');
+    expect(sport(undefined)).toBeUndefined();
+  });
 });

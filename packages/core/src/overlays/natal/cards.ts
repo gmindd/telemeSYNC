@@ -33,7 +33,9 @@ export const natalMapOverlay: OverlayDefinition = {
       c.beginPath();
       c.arc(CX, CY, MAP_R, 0, Math.PI * 2);
       c.fillStyle = '#0a1619';
+      c.globalAlpha = dialPaint(style).rimAlpha;
       c.fill();
+      c.globalAlpha = 1;
     });
     lightsOnArc(ctx, CX, CY, MAP_R + 12, Math.PI * 0.1, Math.PI * 0.9, 9, t);
     snowOnArc(ctx, CX, CY, MAP_R + 20, -Math.PI / 2 - 0.9, -Math.PI / 2 + 0.9, 18, 63);
@@ -107,7 +109,7 @@ export const natalProfileOverlay: OverlayDefinition = {
     ctx.translate(PROF_PAD_X, PROF_PAD_Y);
     dialProfileOverlay.draw(ctx, frame, st, octx);
     candyFrame(ctx, 6, 6, PROFILE_W - 12, PROFILE_H - 12, 16, 10);
-    const peak = profilePeak(octx.ride, st);
+    const peak = profilePeak(octx.ride, st, octx);
     tree(ctx, peak.x, peak.y - 4, 46, frame.textSample.t);
     snowOnEdge(ctx, 14, 2, 170, 14, 71);
     snowOnEdge(ctx, PROFILE_W - 210, 2, 120, 12, 73);
@@ -147,7 +149,7 @@ export const natalSummaryOverlay: OverlayDefinition = {
     ctx.arc(x + r, y + h - r, r, Math.PI / 2, Math.PI);
     ctx.arc(x + r, y + r, r, Math.PI, Math.PI * 1.5);
     ctx.closePath();
-    ctx.fillStyle = `rgba(14,10,8,${Math.max(0.55, style.panelOpacity ?? 0.8)})`;
+    ctx.fillStyle = `rgba(14,10,8,${Math.max(0, Math.min(1, style.panelOpacity ?? 0.8))})`;
     ctx.fill();
     drawText(ctx, tr(style.language, 'natal.extra'), SUM_W / 2, top + 34, dialPaint(style).ts, { size: 22, weight: 800, align: 'center', tabular: false, color: '#fff3d6' });
     ctx.save();

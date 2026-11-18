@@ -7,7 +7,7 @@ import { formatNumber, tr, type Lang } from '../../i18n/index.ts';
 export type StatKind = 'max' | 'min' | 'avg' | 'delta' | 'accel' | 'zone' | 'gain';
 export type IconId =
   | 'gauge' | 'bolt' | 'thermo' | 'heart' | 'cadence' | 'mountain' | 'grade' | 'up' | 'down' | 'trend' | 'zone' | 'accel'
-  | 'clock' | 'link' | 'sun';
+  | 'clock' | 'link' | 'sun' | 'shoe' | 'steps' | 'route' | 'snowflake' | 'updown';
 
 export interface PanelMetricInfo {
   id: PanelMetric;

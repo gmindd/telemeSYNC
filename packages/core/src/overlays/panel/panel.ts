@@ -76,6 +76,7 @@ interface Paint {
   /** Style for text inside panels: no outline/shadow when the background is dark enough. */
   ts: OverlayStyle;
   hasBg: boolean;
+  op: number;
 }
 
 function paintOf(style: OverlayStyle): Paint {
@@ -89,6 +90,7 @@ function paintOf(style: OverlayStyle): Paint {
     label: 'rgba(255,255,255,0.68)',
     ts: op >= 0.35 ? { ...style, outlineWidth: 0, shadow: false } : style,
     hasBg,
+    op,
   };
 }
 
@@ -137,7 +139,7 @@ function drawHeader(ctx: Ctx2D, info: PanelMetricInfo, subtitle: string, p: Pain
   ctx.beginPath();
   ctx.arc(34, 31, 26, 0, Math.PI * 2);
   if (p.hasBg) {
-    ctx.fillStyle = 'rgba(6,9,14,0.92)';
+    ctx.fillStyle = `rgba(6,9,14,${Math.min(0.92, Math.round(p.op * 1150) / 1000)})`;
     ctx.fill();
   }
   ctx.strokeStyle = hGradient(ctx, 8, 60, p.from, p.to);

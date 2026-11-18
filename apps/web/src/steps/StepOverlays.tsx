@@ -1,7 +1,20 @@
 import { useState } from 'react';
 import {
-  availableOverlays,
   DEFAULT_STYLE,
+  detectRuns,
+  formatClock,
+  GHOST_DISTANCES,
+  parseClock,
+  formatPace,
+  overlayGroup,
+  overlaySports,
+  overlaysForSport,
+  paceUnit,
+  paceUnitM,
+  SPORTS,
+  type OverlayDefinition,
+  type RideData,
+  type Sport,
   effectiveStart,
   getOverlay,
   isDialOverlay,
@@ -24,8 +37,10 @@ import {
   type PanelOptions,
 } from '@telemesync/core';
 import { OverlayCanvas } from '../components/OverlayCanvas.tsx';
+import { ConditionsPanel } from '../components/ConditionsPanel.tsx';
 import { langName, useLang, useT } from '../i18n/index.tsx';
-import { useApp } from '../lib/store.ts';
+import { clipsSpan, drawStyle, useApp } from '../lib/store.ts';
+import { RoutePicker } from '../components/RoutePicker.tsx';
 
 const THEME_KEY = 'telemesync.overlayTheme';
 
@@ -144,6 +159,152 @@ function HeartRateOptions() {
   );
 }
 
+const GHOST_NAMES = ['ov.ghost.5k', 'ov.ghost.10k', 'ov.ghost.half', 'ov.ghost.marathon'] as const;
+
+/** The personal record raced by the PR ghost gadget: distance, time and where the race starts. */
+function GhostOptions({ clipStart }: { clipStart?: number }) {
+  const { style, setStyle } = useApp();
+  const tr = useT();
+  const g = style.ghost;
+  const unitM = paceUnitM(style.units);
+  const unit = style.units.system === 'metric' ? 'km' : 'mi';
+  const known = g ? GHOST_DISTANCES.findIndex((d) => Math.abs(d - g.distanceM) < 1) : 1;
+  const [distSel, setDistSel] = useState(known >= 0 ? String(GHOST_DISTANCES[known]) : 'custom');
+  const [custom, setCustom] = useState(g && known < 0 ? String(Math.round((g.distanceM / unitM) * 100) / 100) : '');
+  const [timeText, setTimeText] = useState(g ? formatClock(g.timeMs) : '');
+  const distanceM = distSel === 'custom' ? Number(custom.replace(',', '.')) * unitM : Number(distSel);
+  const timeMs = parseClock(timeText);
+  const save = (d: number, ms: number | null, startMs: number | null) =>
+    setStyle({ ghost: d > 0 && ms ? { distanceM: d, timeMs: ms, startMs } : null });
+  const segs = sortedSegments(style.segments);
+  const startValue =
+    g?.startMs == null ? 'ride' : segs.find((x) => x.startMs === g.startMs) ? `seg:${segs.find((x) => x.startMs === g.startMs)!.id}` : 'clip';
+  const chooseStart = (v: string) => {
+    const startMs = v === 'ride' ? null : v === 'clip' ? clipStart ?? null : segs.find((x) => `seg:${x.id}` === v)?.startMs ?? null;
+    save(distanceM, timeMs, startMs);
+  };
+  return (
+    <div className="card power-options ghost-options">
+      <h3>{tr('ov.ghost.title')}</h3>
+      <p className="lead small">{tr('ov.ghost.lead')}</p>
+      <div className="row">
+        <label className="field">
+          {tr('ov.ghost.distance')}
+          <select
+            value={distSel}
+            onChange={(e) => {
+              setDistSel(e.target.value);
+              if (e.target.value !== 'custom') save(Number(e.target.value), timeMs, g?.startMs ?? null);
+            }}
+          >
+            {GHOST_DISTANCES.map((d, i) => <option key={d} value={String(d)}>{tr(GHOST_NAMES[i])}</option>)}
+            <option value="custom">{tr('ov.ghost.custom')}</option>
+          </select>
+        </label>
+        {distSel === 'custom' ? (
+          <label className="field">
+            {tr('ov.ghost.customDist', { unit })}
+            <input
+              type="number"
+              min={0.1}
+              max={300}
+              step={0.01}
+              value={custom}
+              onChange={(e) => {
+                setCustom(e.target.value);
+                save(Number(e.target.value.replace(',', '.')) * unitM, timeMs, g?.startMs ?? null);
+              }}
+            />
+          </label>
+        ) : null}
+        <label className={`field${!g ? ' suggested' : ''}`}>
+          {tr('ov.ghost.time')}
+          <input
+            type="text"
+            inputMode="numeric"
+            placeholder="45:00"
+            value={timeText}
+            onChange={(e) => {
+              setTimeText(e.target.value);
+              save(distanceM, parseClock(e.target.value), g?.startMs ?? null);
+            }}
+          />
+        </label>
+        <label className="field">
+          {tr('ov.ghost.start')}
+          <select value={startValue} onChange={(e) => chooseStart(e.target.value)}>
+            <option value="ride">{tr('ov.ghost.startRide')}</option>
+            {segs.map((x) => <option key={x.id} value={`seg:${x.id}`}>{tr('ov.ghost.startSegment', { name: x.name })}</option>)}
+            {clipStart !== undefined || startValue === 'clip' ? <option value="clip">{tr('ov.ghost.startClip')}</option> : null}
+          </select>
+        </label>
+      </div>
+      {timeText && !timeMs ? <p className="notice small">{tr('ov.ghost.badTime')}</p> : null}
+      {g ? (
+        <p className="small muted">{tr('ov.ghost.pace', { pace: `${formatPace(g.distanceM / (g.timeMs / 1000), style.units)} ${paceUnit(style.units)}` })}</p>
+      ) : (
+        <p className="notice small">{tr('ov.ghost.need')}</p>
+      )}
+    </div>
+  );
+}
+
+/** Gadgets that draw the route or the elevation profile (the area option applies to them). */
+const ROUTE_IDS: OverlayId[] = ['map', 'elevationProfile', 'dialMap', 'dialProfile', 'natalMap', 'natalProfile'];
+const AREA_MODES: OverlayStyle['mapMode'][] = ['full', 'clips', 'clip', 'custom'];
+
+/** What the maps and profiles show: whole ride, the clips, clip by clip, or a stretch picked on the map. */
+function AreaOptions() {
+  const { style, setStyle, ride, sync } = useApp();
+  const tr = useT();
+  if (!ride) return null;
+  const span = clipsSpan(sync);
+  const clips = sync.clips
+    .map((c) => {
+      const cam = sync.cameras.find((x) => x.id === c.cameraId);
+      const start = cam ? effectiveStart(c, cam) : undefined;
+      return start === undefined ? null : { startMs: start, endMs: start + c.meta.durationMs };
+    })
+    .filter((c): c is { startMs: number; endMs: number } => !!c);
+  const choose = (mode: OverlayStyle['mapMode']) => {
+    // Picking on the map starts from the clips' stretch (or the whole ride) when nothing is chosen yet.
+    if (mode === 'custom' && !style.mapRange) setStyle({ mapMode: mode, mapRange: span ?? { startMs: ride.startTime, endMs: ride.endTime } });
+    else setStyle({ mapMode: mode });
+  };
+  const help = style.mapMode === 'clips' ? (span ? 'ov.area.clipsHelp' : 'ov.area.noClips') : style.mapMode === 'clip' ? (clips.length ? 'ov.area.clipHelp' : 'ov.area.noClips') : style.mapMode === 'custom' ? 'ov.area.customHelp' : null;
+  return (
+    <div className="card power-options area-options">
+      <h3>{tr('ov.area.title')}</h3>
+      <p className="lead small">{tr('ov.area.lead')}</p>
+      <div className="segmented" role="radiogroup">
+        {AREA_MODES.map((m) => (
+          <button key={m} role="radio" aria-checked={style.mapMode === m} className={style.mapMode === m ? 'active' : ''} onClick={() => choose(m)}>
+            {tr(`ov.area.${m}`)}
+          </button>
+        ))}
+      </div>
+      {help ? <p className={`small${help === 'ov.area.noClips' ? ' notice' : ' muted'}`}>{tr(help)}</p> : null}
+      {style.mapMode === 'custom' ? (
+        <RoutePicker
+          ride={ride}
+          value={style.mapRange ?? { startMs: ride.startTime, endMs: ride.endTime }}
+          clips={clips}
+          units={style.units}
+          onChange={(r) => setStyle({ mapRange: r })}
+        />
+      ) : null}
+    </div>
+  );
+}
+
+/** A preview instant inside the ski runs (the second run when the playhead is not in one). */
+function snowPreviewT(ride: RideData, t: number): number {
+  const runs = detectRuns(ride);
+  if (!runs.length || runs.some((r) => t >= r.startMs && t < r.endMs + 15_000)) return t;
+  const r = runs[Math.min(1, runs.length - 1)];
+  return r.startMs + (r.endMs - r.startMs) * 0.6;
+}
+
 function Color({ label, k }: { label: string; k: 'textColor' | 'accentColor' | 'outlineColor' | 'gradientFrom' | 'gradientTo' }) {
   const { style, setStyle } = useApp();
   const hex = /^#[0-9a-f]{6}$/i.test(style[k]) ? style[k] : '#000000';
@@ -156,7 +317,7 @@ function Color({ label, k }: { label: string; k: 'textColor' | 'accentColor' | '
 }
 
 export function StepOverlays() {
-  const { ride, overlays, toggleOverlay, style, setStyle, sync, activeClipId, playhead, setStep, overlayLang, setOverlayLang } = useApp();
+  const { ride, overlays, toggleOverlay, style, setStyle, sync, activeClipId, playhead, setStep, overlayLang, setOverlayLang, sport, setSport, streets } = useApp();
   const tr = useT();
   const lang = useLang((s) => s.lang);
   const [theme, setTheme] = useState<OverlayTheme>(storedTheme);
@@ -169,13 +330,18 @@ export function StepOverlays() {
     }
   };
   if (!ride) return <section><p>{tr('sync.needRide')}</p></section>;
-  const all = availableOverlays(ride);
-  const natal = all.filter((d) => d.theme === 'natal');
-  const classic = all.filter((d) => (d.theme ?? 'default') === 'default');
+  const cycling = overlaysForSport(ride, 'cycling');
+  const natal = cycling.filter((d) => d.theme === 'natal');
+  const classic = cycling.filter((d) => (d.theme ?? 'default') === 'default');
   const segs = classic.filter((d) => isSegmentOverlay(d.id));
   const defs = classic.filter((d) => !panelMetricOf(d.id) && !isDialOverlay(d.id) && !isSegmentOverlay(d.id));
   const dials = classic.filter((d) => isDialOverlay(d.id));
   const panels = classic.filter((d) => panelMetricOf(d.id));
+  const sportList = sport === 'cycling' ? [] : overlaysForSport(ride, sport);
+  // Maps on "only the clips": the stretch the clips cover.
+  const viewStyle = drawStyle(style, sync);
+  const showArea = overlays.some((o) => ROUTE_IDS.includes(o));
+  const byGroup = (g: ReturnType<typeof overlayGroup>) => sportList.filter((d) => overlayGroup(d.id) === g);
   const chartMetrics = PANEL_METRICS.filter((m) => ride.available.has(m));
   const distUnit = style.units.system === 'metric' ? 'km' : 'mi';
   const setPanel = (m: PanelMetric, patch: Partial<PanelOptions>) =>
@@ -192,18 +358,87 @@ export function StepOverlays() {
   const sortedSegs = sortedSegments(style.segments);
   const sample = sortedSegs[Math.min(1, sortedSegs.length - 1)];
   const segT = segmentAt(style.segments, t) || !sample ? t : sample.startMs + (sample.endMs - sample.startMs) * 0.6;
+  // The PR ghost is previewed during the race (40 % of the PR time in, when the playhead is outside it).
+  const ghostStart = style.ghost?.startMs ?? ride.startTime;
+  const ghostT = style.ghost && (t < ghostStart || t > ghostStart + style.ghost.timeMs * 1.1) ? ghostStart + style.ghost.timeMs * 0.4 : t;
+  const previewT = (d: OverlayDefinition) =>
+    isSegmentOverlay(d.id) ? segT : d.id === 'runGhost' ? ghostT : d.id === 'snowRunLive' || d.id === 'snowRuns' ? snowPreviewT(ride, t) : t;
+
+  const card = (d: OverlayDefinition) => (
+    <label key={d.id} className={`overlay-card${overlays.includes(d.id) ? ' on' : ''}`}>
+      <input type="checkbox" checked={overlays.includes(d.id)} onChange={(e) => toggleOverlay(d.id, e.target.checked)} />
+      <span>{overlayLabel(d.id, lang)}</span>
+      <div className="checker">
+        <OverlayCanvas id={d.id} ride={ride} style={viewStyle} t={previewT(d)} clipStart={clipStart} clipEnd={clipEnd} streets={streets} cssScale={0.45} fitHeight={190} />
+      </div>
+    </label>
+  );
+  const grid = (list: OverlayDefinition[]) => (list.length ? <div className="overlay-grid">{list.map(card)}</div> : null);
+  const panelGrid = (list: OverlayDefinition[]) => (
+    <div className="overlay-grid panels">
+      {list.map((d) => {
+        const m = panelMetricOf(d.id)!;
+        const o = panelOptions(m, style, ride);
+        const on = overlays.includes(d.id);
+        return (
+          <div key={d.id} className={`overlay-card${on ? ' on' : ''}`}>
+            <label className="overlay-card-head">
+              <input type="checkbox" checked={on} onChange={(e) => toggleOverlay(d.id, e.target.checked)} />
+              <span>{overlayLabel(d.id, lang)}</span>
+            </label>
+            <div className="panel-opts">
+              <label className="field">
+                {tr('ov.chart')}
+                <select value={o.chart} onChange={(e) => setPanel(m, { chart: e.target.value as PanelMetric })}>
+                  {chartMetrics.map((c) => <option key={c} value={c}>{panelMetricName(c, lang)}</option>)}
+                </select>
+              </label>
+              <label className="field">
+                {tr('ov.window')}
+                <select value={o.window} onChange={(e) => setPanel(m, { window: e.target.value as PanelOptions['window'] })}>
+                  <option value="time">{tr('ov.lastMin', { n: style.chartMinutes })}</option>
+                  <option value="distance">{tr('ov.lastDist', { n: style.chartDistance, unit: distUnit })}</option>
+                </select>
+              </label>
+            </div>
+            <div className="checker" onClick={() => toggleOverlay(d.id, !on)}>
+              <OverlayCanvas id={d.id} ride={ride} style={viewStyle} t={t} clipStart={clipStart} clipEnd={clipEnd} streets={streets} cssScale={0.45} fitHeight={220} />
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+  /** Gadgets, dials and panels of a sport other than cycling (same sections as cycling). */
+  const sportSections = (lead: string) => (
+    <>
+      <p className="lead">{lead}</p>
+      <h3>{tr('ov.gadgets')}</h3>
+      {grid(byGroup('gadget'))}
+      <h3>{tr('ov.dials')}</h3>
+      {grid(byGroup('dial'))}
+      {byGroup('panel').length ? (
+        <>
+          <h3>{tr('ov.panels')}</h3>
+          <p className="lead">{tr('ov.panelsLead')}</p>
+          {panelGrid(byGroup('panel'))}
+        </>
+      ) : null}
+    </>
+  );
 
   return (
     <section>
       <h2>{tr('ov.title')}</h2>
       <p className="lead">{tr('ov.lead')}</p>
-      <div className="theme-tabs" role="tablist">
-        {OVERLAY_THEMES.map((th) => {
-          const n = overlays.filter((o) => overlayTheme(o) === th).length;
+      <div className="sport-tabs" role="tablist">
+        {SPORTS.map((sp: Sport) => {
+          const n = overlays.filter((o) => overlaySports(o).includes(sp)).length;
           return (
-            <button key={th} role="tab" aria-selected={theme === th} className={theme === th ? 'active' : ''} onClick={() => chooseTheme(th)}>
-              {tr(`ov.theme.${th}`)}
+            <button key={sp} role="tab" aria-selected={sport === sp} className={sport === sp ? 'active' : ''} onClick={() => setSport(sp)}>
+              {tr(`ov.sport.${sp}`)}
               {n ? <span className="theme-count">{n}</span> : null}
+              {ride.sport === sp ? <span className="sport-file">{tr('ov.sportFromFile')}</span> : null}
             </button>
           );
         })}
@@ -211,100 +446,59 @@ export function StepOverlays() {
 
       {showPower ? <PowerOptions /> : null}
       {showHr ? <HeartRateOptions /> : null}
+      {showArea ? <AreaOptions /> : null}
+      <ConditionsPanel />
 
-      {theme === 'default' ? (
+      {sport === 'cycling' ? (
         <>
-        <div className="overlay-grid">
-          {defs.map((d) => (
-            <label key={d.id} className={`overlay-card${overlays.includes(d.id) ? ' on' : ''}`}>
-              <input type="checkbox" checked={overlays.includes(d.id)} onChange={(e) => toggleOverlay(d.id, e.target.checked)} />
-              <span>{overlayLabel(d.id, lang)}</span>
-              <div className="checker">
-                <OverlayCanvas id={d.id} ride={ride} style={style} t={t} clipStart={clipStart} clipEnd={clipEnd} cssScale={0.45} fitHeight={190} />
-              </div>
-            </label>
-          ))}
-        </div>
-
-        <h3>{tr('ov.dials')}</h3>
-        <p className="lead">{tr('ov.dialsLead')}</p>
-        <div className="overlay-grid">
-          {dials.map((d) => (
-            <label key={d.id} className={`overlay-card${overlays.includes(d.id) ? ' on' : ''}`}>
-              <input type="checkbox" checked={overlays.includes(d.id)} onChange={(e) => toggleOverlay(d.id, e.target.checked)} />
-              <span>{overlayLabel(d.id, lang)}</span>
-              <div className="checker">
-                <OverlayCanvas id={d.id} ride={ride} style={style} t={t} clipStart={clipStart} clipEnd={clipEnd} cssScale={0.45} fitHeight={190} />
-              </div>
-            </label>
-          ))}
-        </div>
-
-        <h3>{tr('ov.panels')}</h3>
-        <p className="lead">{tr('ov.panelsLead')}</p>
-        <div className="overlay-grid panels">
-          {panels.map((d) => {
-            const m = panelMetricOf(d.id)!;
-            const o = panelOptions(m, style, ride);
-            const on = overlays.includes(d.id);
-            return (
-              <div key={d.id} className={`overlay-card${on ? ' on' : ''}`}>
-                <label className="overlay-card-head">
-                  <input type="checkbox" checked={on} onChange={(e) => toggleOverlay(d.id, e.target.checked)} />
-                  <span>{overlayLabel(d.id, lang)}</span>
-                </label>
-                <div className="panel-opts">
-                  <label className="field">
-                    {tr('ov.chart')}
-                    <select value={o.chart} onChange={(e) => setPanel(m, { chart: e.target.value as PanelMetric })}>
-                      {chartMetrics.map((c) => <option key={c} value={c}>{panelMetricName(c, lang)}</option>)}
-                    </select>
-                  </label>
-                  <label className="field">
-                    {tr('ov.window')}
-                    <select value={o.window} onChange={(e) => setPanel(m, { window: e.target.value as PanelOptions['window'] })}>
-                      <option value="time">{tr('ov.lastMin', { n: style.chartMinutes })}</option>
-                      <option value="distance">{tr('ov.lastDist', { n: style.chartDistance, unit: distUnit })}</option>
-                    </select>
-                  </label>
-                </div>
-                <div className="checker" onClick={() => toggleOverlay(d.id, !on)}>
-                  <OverlayCanvas id={d.id} ride={ride} style={style} t={t} clipStart={clipStart} clipEnd={clipEnd} cssScale={0.45} fitHeight={220} />
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
-          <h3>{tr('seg.section')}</h3>
-          <p className="lead">{tr('seg.sectionLead')}</p>
-          {style.segments.length === 0 ? <p className="notice">{tr('seg.noneHint')}</p> : null}
-          <div className="overlay-grid">
-            {segs.map((d) => (
-              <label key={d.id} className={`overlay-card${overlays.includes(d.id) ? ' on' : ''}`}>
-                <input type="checkbox" checked={overlays.includes(d.id)} onChange={(e) => toggleOverlay(d.id, e.target.checked)} />
-                <span>{overlayLabel(d.id, lang)}</span>
-                <div className="checker">
-                  <OverlayCanvas id={d.id} ride={ride} style={style} t={segT} clipStart={clipStart} clipEnd={clipEnd} cssScale={0.45} fitHeight={190} />
-                </div>
-              </label>
-            ))}
+          <div className="theme-tabs" role="tablist">
+            {OVERLAY_THEMES.map((th) => {
+              const n = overlays.filter((o) => overlayTheme(o) === th && overlaySports(o).includes('cycling')).length;
+              return (
+                <button key={th} role="tab" aria-selected={theme === th} className={theme === th ? 'active' : ''} onClick={() => chooseTheme(th)}>
+                  {tr(`ov.theme.${th}`)}
+                  {n ? <span className="theme-count">{n}</span> : null}
+                </button>
+              );
+            })}
           </div>
+          {theme === 'default' ? (
+            <>
+              {grid(defs)}
+              <h3>{tr('ov.dials')}</h3>
+              <p className="lead">{tr('ov.dialsLead')}</p>
+              {grid(dials)}
+              <h3>{tr('ov.panels')}</h3>
+              <p className="lead">{tr('ov.panelsLead')}</p>
+              {panelGrid(panels)}
+              <h3>{tr('seg.section')}</h3>
+              <p className="lead">{tr('seg.sectionLead')}</p>
+              {style.segments.length === 0 ? <p className="notice">{tr('seg.noneHint')}</p> : null}
+              {grid(segs)}
+            </>
+          ) : (
+            <>
+              <p className="lead">{tr('ov.natalLead')}</p>
+              {grid(natal)}
+            </>
+          )}
+        </>
+      ) : sport === 'running' ? (
+        <>
+          {sportSections(tr('ov.run.lead'))}
+          <h3>{tr('ov.run.live')}</h3>
+          <p className="lead">{tr('ov.run.liveLead')}</p>
+          <GhostOptions clipStart={cs} />
+          {style.segments.length === 0 ? <p className="notice">{tr('seg.noneHint')}</p> : null}
+          {grid(byGroup('live'))}
         </>
       ) : (
         <>
-          <p className="lead">{tr('ov.natalLead')}</p>
-          <div className="overlay-grid">
-            {natal.map((d) => (
-              <label key={d.id} className={`overlay-card${overlays.includes(d.id) ? ' on' : ''}`}>
-                <input type="checkbox" checked={overlays.includes(d.id)} onChange={(e) => toggleOverlay(d.id, e.target.checked)} />
-                <span>{overlayLabel(d.id, lang)}</span>
-                <div className="checker">
-                  <OverlayCanvas id={d.id} ride={ride} style={style} t={t} clipStart={clipStart} clipEnd={clipEnd} cssScale={0.45} fitHeight={190} />
-                </div>
-              </label>
-            ))}
-          </div>
+          {sportSections(tr('ov.snow.lead'))}
+          <h3>{tr('ov.snow.live')}</h3>
+          <p className="lead">{tr('ov.snow.liveLead')}</p>
+          {detectRuns(ride).length === 0 ? <p className="notice">{tr('ov.snow.noRuns')}</p> : null}
+          {grid(byGroup('live'))}
         </>
       )}
 
@@ -358,13 +552,6 @@ export function StepOverlays() {
           {tr('ov.resolution')}
           <select value={style.scale} onChange={(e) => setStyle({ scale: Number(e.target.value) })}>
             {[1, 1.5, 2, 3].map((v) => <option key={v} value={v}>{v}×</option>)}
-          </select>
-        </label>
-        <label className="field">
-          {tr('ov.map')}
-          <select value={style.mapMode} onChange={(e) => setStyle({ mapMode: e.target.value as 'full' | 'clip' })}>
-            <option value="full">{tr('ov.mapFull')}</option>
-            <option value="clip">{tr('ov.mapClip')}</option>
           </select>
         </label>
         <label className="field">
