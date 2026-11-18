@@ -154,7 +154,12 @@ describe('PR time entry', () => {
     expect(parseClock('25:00')).toBe(25 * 60_000);
     expect(parseClock('1:45:30')).toBe((105 * 60 + 30) * 1000);
     expect(parseClock('4:5')).toBe(245_000);
-    expect(parseClock('25')).toBeNull();
+    // Digits only (number pads have no ":")
+    expect(parseClock('28')).toBe(28 * 60_000);
+    expect(parseClock('2830')).toBe((28 * 60 + 30) * 1000);
+    expect(parseClock('13015')).toBe((90 * 60 + 15) * 1000);
+    expect(parseClock('2875')).toBeNull();
+    expect(parseClock('abc')).toBeNull();
     expect(parseClock('12:75')).toBeNull();
     expect(parseClock('0:00')).toBeNull();
   });

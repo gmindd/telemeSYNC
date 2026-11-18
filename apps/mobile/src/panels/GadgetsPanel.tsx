@@ -29,7 +29,7 @@ import {
 } from '@telemesync/core';
 import { LANG, t } from '../i18n.ts';
 import { offeredOverlays } from '../lib/project.ts';
-import { clipStart, DEFAULT_LOOK, placements, STYLE, styleOf, useProject, type Pr } from '../state.ts';
+import { clipStart, DEFAULT_LOOK, placements, STYLE, styleOf, useProject } from '../state.ts';
 
 type Category = 'dials' | 'live' | 'panels' | 'numbers' | 'maps' | 'natal';
 const CATEGORIES: Category[] = ['dials', 'live', 'panels', 'numbers', 'maps', 'natal'];
@@ -75,7 +75,7 @@ export function GadgetsPanel() {
   const sel = s.selected && s.overlays.includes(s.selected) ? s.selected : undefined;
   const selP = sel ? placements(s)[sel] : undefined;
   // One style object while the settings don't change, so the thumbnails don't redraw for nothing
-  const style = useMemo(() => styleOf({ look: s.look, mapZoomM: s.mapZoomM, pr: s.pr }), [s.look, s.mapZoomM, s.pr]);
+  const style = useMemo(() => styleOf({ look: s.look, mapZoomM: s.mapZoomM, pr: s.pr, rideStart: s.ride?.startTime }), [s.look, s.mapZoomM, s.pr, s.ride]);
 
   return (
     <div className="panel">
@@ -239,14 +239,21 @@ const PR_NAMES = ['pr.5k', 'pr.10k', 'pr.half', 'pr.marathon'] as const;
 function PrSettings() {
   const pr = useProject((st) => st.pr);
   const setPr = useProject((st) => st.setPr);
+  const ride = useProject((st) => st.ride);
+  const videoStart = useProject((st) => (st.ride ? clipStart(st) : undefined));
   const known = pr ? GHOST_DISTANCES.findIndex((d) => Math.abs(d - pr.distanceM) < 1) : 0;
   const [dist, setDist] = useState(known >= 0 ? String(GHOST_DISTANCES[known]) : 'custom');
   const [customKm, setCustomKm] = useState(pr && known < 0 ? String(Math.round(pr.distanceM / 10) / 100) : '');
   const [timeText, setTimeText] = useState(pr ? formatClock(pr.timeMs) : '');
+  const [startText, setStartText] = useState(pr?.startOffsetMs ? formatClock(pr.startOffsetMs) : '');
   const distanceM = dist === 'custom' ? Number(customKm.replace(',', '.')) * 1000 : Number(dist);
   const timeMs = parseClock(timeText);
-  const from = pr?.from ?? 'ride';
-  const save = (d: number, ms: number | null, f: Pr['from']) => setPr(d > 0 && ms ? { distanceM: d, timeMs: ms, from: f } : null);
+  // Blank (or 0:00) = the start of the activity
+  const startOffset = (text: string) => (text.trim() ? parseClock(text) : null);
+  const badStart = startText.trim() !== '' && startOffset(startText) === null && !/^0+([:.,]0+)*$/.test(startText.trim());
+  const save = (d: number, ms: number | null, startText2: string) => setPr(d > 0 && ms ? { distanceM: d, timeMs: ms, startOffsetMs: startOffset(startText2) } : null);
+  // Time of the video's start into the activity, offered as a shortcut
+  const videoOffset = ride && videoStart !== undefined && videoStart > ride.startTime ? videoStart - ride.startTime : null;
   return (
     <div className="pr">
       <h3>{t('pr.title')}</h3>
@@ -259,7 +266,7 @@ function PrSettings() {
             value={dist}
             onChange={(e) => {
               setDist(e.target.value);
-              if (e.target.value !== 'custom') save(Number(e.target.value), timeMs, from);
+              if (e.target.value !== 'custom') save(Number(e.target.value), timeMs, startText);
             }}
           >
             {GHOST_DISTANCES.map((d, i) => (
@@ -280,7 +287,7 @@ function PrSettings() {
               value={customKm}
               onChange={(e) => {
                 setCustomKm(e.target.value);
-                save(Number(e.target.value.replace(',', '.')) * 1000, timeMs, from);
+                save(Number(e.target.value.replace(',', '.')) * 1000, timeMs, startText);
               }}
             />
           </label>
@@ -291,24 +298,53 @@ function PrSettings() {
             className="num-input"
             type="text"
             inputMode="numeric"
-            placeholder="25:00"
+            placeholder="28:00"
             value={timeText}
             onChange={(e) => {
               setTimeText(e.target.value);
-              save(distanceM, parseClock(e.target.value), from);
+              save(distanceM, parseClock(e.target.value), startText);
             }}
+            // "2800" typed on a number pad shows as 28:00 once done
+            onBlur={() => timeMs && setTimeText(formatClock(timeMs))}
           />
         </label>
       </div>
       <label className="field">
         <span>{t('pr.start')}</span>
-        <select className="num-input" value={from} onChange={(e) => save(distanceM, timeMs, e.target.value as Pr['from'])}>
-          <option value="ride">{t('pr.startRide')}</option>
-          <option value="clip">{t('pr.startClip')}</option>
-        </select>
+        <input
+          className="num-input"
+          type="text"
+          inputMode="numeric"
+          placeholder={t('pr.startPlaceholder')}
+          value={startText}
+          onChange={(e) => {
+            setStartText(e.target.value);
+            save(distanceM, timeMs, e.target.value);
+          }}
+          onBlur={() => {
+            const off = startOffset(startText);
+            setStartText(off ? formatClock(off) : '');
+          }}
+        />
+        <span className="fine">{t('pr.startHint')}</span>
       </label>
+      {videoOffset !== null && (
+        <button
+          type="button"
+          className="chip-btn"
+          onClick={() => {
+            const text = formatClock(videoOffset);
+            setStartText(text);
+            save(distanceM, timeMs, text);
+          }}
+        >
+          {t('pr.startVideo', { time: formatClock(videoOffset) })}
+        </button>
+      )}
       {timeText && !timeMs ? (
         <p className="warn">{t('pr.badTime')}</p>
+      ) : badStart ? (
+        <p className="warn">{t('pr.badStart')}</p>
       ) : pr ? (
         <p className="fine">{t('pr.pace', { pace: `${formatPace(pr.distanceM / (pr.timeMs / 1000), STYLE.units)} ${paceUnit(STYLE.units)}` })}</p>
       ) : (

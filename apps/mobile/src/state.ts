@@ -46,17 +46,20 @@ interface Prefs {
   pr: Pr | null;
 }
 
-/** The PR: distance (m), time (ms), and whether the race starts with the activity or with the video. */
+/**
+ * The PR: distance (m) and time (ms), kept for the next videos, and when the race starts as time into the activity
+ * (ms; null = the start of the activity, as on the desktop), which belongs to one ride.
+ */
 export interface Pr {
   distanceM: number;
   timeMs: number;
-  from: 'ride' | 'clip';
+  startOffsetMs: number | null;
 }
 
 function prOf(v: unknown): Pr | null {
   const p = v as Partial<Pr> | null;
   if (!p || !(Number(p.distanceM) > 0) || !(Number(p.timeMs) > 0)) return null;
-  return { distanceM: Number(p.distanceM), timeMs: Number(p.timeMs), from: p.from === 'clip' ? 'clip' : 'ride' };
+  return { distanceM: Number(p.distanceM), timeMs: Number(p.timeMs), startOffsetMs: null };
 }
 
 function loadPrefs(): Partial<Prefs> {
@@ -89,14 +92,15 @@ function lookOf(v: Partial<Look> | undefined): Look {
 }
 
 /** The gadgets' style for this project: the shared one with the chosen look, zones, map zoom and PR. */
-export function styleOf(s: Pick<State, 'mapZoomM' | 'look'> & { pr?: Pr | null; prStartMs?: number }): OverlayStyle {
-  const ghost = s.pr ? { distanceM: s.pr.distanceM, timeMs: s.pr.timeMs, startMs: s.pr.from === 'clip' && s.prStartMs !== undefined ? s.prStartMs : null } : null;
+export function styleOf(s: Pick<State, 'mapZoomM' | 'look'> & { pr?: Pr | null; rideStart?: number }): OverlayStyle {
+  const off = s.pr?.startOffsetMs;
+  const ghost = s.pr ? { distanceM: s.pr.distanceM, timeMs: s.pr.timeMs, startMs: off != null && s.rideStart !== undefined ? s.rideStart + off : null } : null;
   return { ...STYLE, ...s.look, mapRadiusM: s.mapZoomM, ghost };
 }
 
-/** styleOf for the whole project: the PR raced "from the video" starts where the video starts. */
+/** styleOf for the whole project (the PR's start is counted from this ride's start). */
 export function projectStyle(s: State): OverlayStyle {
-  return styleOf({ ...s, prStartMs: clipStart(s) });
+  return styleOf({ ...s, rideStart: s.ride?.startTime });
 }
 
 /** Which saved layout a format uses: the clip's own shape counts as vertical or horizontal. */
@@ -204,6 +208,9 @@ export const useProject = create<State>((set, get) => {
       // The chosen gadgets this ride can show (the others stay chosen for the next ride); none: the usual four
       // (and that belong to its sport: cycling dials don't come back on a run)
       const sport = ride.sport ?? 'cycling';
+      // The PR's start belongs to the previous ride
+      const pr = get().pr;
+      if (pr?.startOffsetMs != null) set({ pr: { ...pr, startOffsetMs: null } });
       const kept = get().chosen.filter((id) => offered.includes(id) && overlaySports(id).includes(sport));
       const overlays = kept.length ? kept : defaultSelection(ride);
       const clip = get().clip;
