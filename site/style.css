@@ -147,11 +147,13 @@ p { margin: 0 0 var(--spacing-sm); }
   border: 1px solid var(--color-border); background: #1d2a35; box-shadow: 0 30px 80px rgba(0, 0, 0, 0.55);
 }
 .hero-slides img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-.hero-slides img + img { opacity: 0; animation: hero-fade 18s infinite; }
+.hero-slides img + img { opacity: 0; animation: 24s infinite; }
 .hero-slides img:nth-child(2) { animation-name: hero-fade-2; }
 .hero-slides img:nth-child(3) { animation-name: hero-fade-3; }
-@keyframes hero-fade-2 { 0%, 30% { opacity: 0; } 34%, 63% { opacity: 1; } 67%, 100% { opacity: 0; } }
-@keyframes hero-fade-3 { 0%, 63% { opacity: 0; } 67%, 96% { opacity: 1; } 100% { opacity: 0; } }
+.hero-slides img:nth-child(4) { animation-name: hero-fade-4; }
+@keyframes hero-fade-2 { 0%, 22% { opacity: 0; } 25%, 47% { opacity: 1; } 50%, 100% { opacity: 0; } }
+@keyframes hero-fade-3 { 0%, 47% { opacity: 0; } 50%, 72% { opacity: 1; } 75%, 100% { opacity: 0; } }
+@keyframes hero-fade-4 { 0%, 72% { opacity: 0; } 75%, 97% { opacity: 1; } 100% { opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .hero-slides img + img { animation: none; } }
 .hero__frame figcaption { color: var(--color-muted); font-size: 0.82rem; margin-top: var(--spacing-xs); text-align: center; }
 
@@ -194,6 +196,10 @@ p { margin: 0 0 var(--spacing-sm); }
 .shot:nth-child(4n + 2) img { background-image: url('assets/images/fundo-layers-2.webp'); }
 .shot:nth-child(4n + 3) img { background-image: url('assets/images/fundo-layers-3.webp'); }
 .shot:nth-child(4n + 4) img { background-image: url('assets/images/fundo-layers-4.webp'); }
+.layer-panel--run .shot img { background-image: url('assets/images/fundo-layers-5.webp'); }
+.layer-panel--run .shot:nth-child(even) img { background-image: url('assets/images/fundo-layers-6.webp'); }
+.layer-panel--snow .shot img { background-image: url('assets/images/fundo-layers-7.webp'); }
+.layer-panel--snow .shot:nth-child(even) img { background-image: url('assets/images/fundo-layers-8.webp'); }
 .shot:hover img { transform: translateY(-3px); border-color: rgba(255, 122, 26, 0.55); box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45); }
 @media (prefers-reduced-motion: reduce) { .shot img { transition: none; } .shot:hover img { transform: none; } }
 .gallery:not(.gallery--wide) .shot img { aspect-ratio: 16 / 10; }
@@ -236,7 +242,7 @@ p { margin: 0 0 var(--spacing-sm); }
 .video-credit strong { color: var(--color-text); }
 
 /* Download */
-.download { display: grid; gap: var(--spacing-md); margin-top: var(--spacing-md); }
+.download { display: grid; gap: var(--spacing-md); margin-top: var(--spacing-md); align-items: start; }
 .download__os { display: flex; flex-direction: column; gap: var(--spacing-sm); background: var(--color-panel); border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: var(--spacing-md); }
 .download__os h3 { margin: 0; font-size: 1.4rem; }
 .download__os .fine { margin: 0; }
@@ -472,6 +478,7 @@ p { margin: 0 0 var(--spacing-sm); }
   .gallery { grid-template-columns: repeat(3, 1fr); }
   .gallery--dials { grid-template-columns: repeat(5, 1fr); }
   .gallery--natal { grid-template-columns: repeat(4, 1fr); }
+  .layer-panel--run .gallery--dials, .layer-panel--snow .gallery--dials { grid-template-columns: repeat(4, 1fr); }
   .gallery--numbers { grid-template-columns: repeat(4, 1fr); }
   .gallery--wide { grid-template-columns: repeat(2, 1fr); }
   .download { grid-template-columns: 1fr 1fr; }
@@ -485,3 +492,26 @@ p { margin: 0 0 var(--spacing-sm); }
   .reveal { opacity: 1; transform: none; transition: none; }
   .btn, .video__icon { transition: none; }
 }
+
+/* Sports: one card per sport */
+.sports__grid { display: grid; gap: var(--spacing-md); grid-template-columns: 1fr; margin-top: var(--spacing-md); }
+.sport-card { display: flex; flex-direction: column; border-radius: var(--radius-lg); overflow: hidden; background: var(--color-panel); border: 1px solid var(--color-border); }
+.sport-card img { width: 100%; aspect-ratio: 16 / 10; object-fit: cover; display: block; }
+.sport-card__body { display: flex; flex-direction: column; gap: var(--spacing-sm); padding: var(--spacing-md); flex: 1; }
+.sport-card__body h3 { margin: 0; font-size: 1.35rem; }
+.sport-card__body ul { margin: 0; padding-left: 1.1rem; color: var(--color-muted); display: grid; gap: 6px; }
+.sport-card__link { margin-top: auto; font-weight: 700; color: var(--color-accent); text-decoration: none; }
+.sport-card__link:hover { text-decoration: underline; }
+@media (min-width: 900px) { .sports__grid { grid-template-columns: repeat(3, 1fr); } }
+
+/* Mac: first-launch instructions under the download button */
+.mac-help { margin-top: var(--spacing-md); padding: var(--spacing-md); border-radius: var(--radius-md); background: var(--color-bg-alt); border: 1px solid var(--color-border); }
+.mac-help h4 { margin: 0 0 var(--spacing-xs); font-size: 1.05rem; }
+.mac-help p { color: var(--color-muted); margin: 0 0 var(--spacing-sm); }
+.mac-help__steps { margin: 0; padding-left: 1.2rem; display: grid; gap: var(--spacing-xs); }
+.mac-help__cases { display: grid; gap: var(--spacing-sm); margin-top: var(--spacing-xs); }
+.mac-help__case { padding: var(--spacing-sm); border-radius: var(--radius-sm); background: var(--color-panel); border: 1px solid var(--color-border); }
+.mac-help__case ol { margin: 6px 0 0; padding-left: 1.2rem; display: grid; gap: 4px; color: var(--color-muted); }
+.mac-help__more { margin: var(--spacing-sm) 0 4px !important; color: var(--color-text) !important; }
+.mac-help__notes { margin: 0; padding-left: 1.1rem; color: var(--color-muted); display: grid; gap: 4px; font-size: 0.92rem; }
+@media (min-width: 640px) { .mac-help__cases { grid-template-columns: 1fr 1fr; } }

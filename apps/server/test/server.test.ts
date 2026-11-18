@@ -1,9 +1,11 @@
-import { existsSync, mkdtempSync, readFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, readdirSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
+import { loadImage, createCanvas } from '@napi-rs/canvas';
 import type { FastifyInstance } from 'fastify';
 import { encodeFit, syntheticRide } from '../../../packages/core/test/helpers/synthetic.ts';
+import { gridTile } from '../../../packages/core/test/helpers/mvt.ts';
 
 const cfg = mkdtempSync(join(tmpdir(), 'tsync-cfg-'));
 const out = mkdtempSync(join(tmpdir(), 'tsync-out-'));
@@ -100,6 +102,48 @@ describe('server API', () => {
     expect((await app.inject({ method: 'POST', url: '/api/open-folder', payload: { path: rideDir } })).statusCode).toBe(200);
     expect(opened).toContain(rideDir);
     expect((await app.inject({ method: 'POST', url: '/api/open-folder', payload: { path: tmpdir() } })).statusCode).toBe(403);
+  });
+
+  it('the round map is exported with the OpenStreetMap streets around the clip, and without them when offline', async () => {
+    const rideId = await uploadRide();
+    const start = synth.climb.startT;
+    /** Exports the round map as PNG frames and counts its light (street-coloured) pixels in the first one. */
+    const exportMap = async (rideName: string) => {
+      const res = await app.inject({
+        method: 'POST',
+        url: '/api/render',
+        payload: { rideId, rideName, clips: [{ id: 'm', fileName: 'GX010009.MP4', startUtcMs: start, durationMs: 200, fps: { num: 5, den: 1 } }], overlays: ['dialMap'], format: 'png', style: { mapRadiusM: 400 }, language: 'en' },
+      });
+      expect(res.statusCode).toBe(200);
+      expect((await waitJob(res.json().id)).status).toBe('done');
+      const find = (dir: string): string => {
+        for (const e of readdirSync(dir, { withFileTypes: true })) {
+          const p = join(dir, e.name);
+          if (e.isDirectory()) {
+            const f = find(p);
+            if (f) return f;
+          } else if (e.name.endsWith('.png')) return p;
+        }
+        return '';
+      };
+      const img = await loadImage(readFileSync(find(join(out, rideName))));
+      const c = createCanvas(img.width, img.height);
+      const ctx = c.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+      const px = ctx.getImageData(0, 0, img.width, img.height).data;
+      let light = 0;
+      for (let i = 0; i < px.length; i += 4) if (px[i + 3] > 200 && px[i] > 90 && px[i + 2] > 110 && px[i + 1] > 110) light++;
+      return light;
+    };
+    // Offline first (nothing kept in memory yet): the map is still exported, without streets.
+    vi.stubGlobal('fetch', async () => new Response('offline', { status: 503 }));
+    const without = await exportMap('offline');
+    vi.stubGlobal('fetch', async (url: string) =>
+      url === 'https://tiles.openfreemap.org/planet' ? new Response(JSON.stringify({ tiles: ['https://tiles.test/{z}/{x}/{y}.pbf'] })) : new Response(Buffer.from(gridTile())),
+    );
+    const withStreets = await exportMap('online');
+    vi.unstubAllGlobals();
+    expect(withStreets).toBeGreaterThan(without + 2000);
   });
 
   it('incomplete sync data from the app never stops the export (the report is only a help)', async () => {

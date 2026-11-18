@@ -57,6 +57,7 @@ document.addEventListener('DOMContentLoaded', () => {
   loadSupporters();
   initVisitCounter();
   initLayerTabs();
+  initMacHelp();
   initReveal();
 });
 
@@ -350,6 +351,25 @@ function initLayerTabs() {
   });
   for (const t of tabs) document.getElementById(t.getAttribute('aria-controls')).hidden = true;
   select(tabs[0]);
+  // Links elsewhere on the page (the sports cards) open a tab: data-layer-tab="corrida" → #tab-corrida.
+  document.querySelectorAll('[data-layer-tab]').forEach((a) =>
+    a.addEventListener('click', () => {
+      const tab = document.getElementById(`tab-${a.dataset.layerTab}`);
+      if (tab) select(tab);
+    }),
+  );
+}
+
+// Mac download card: the first-launch instructions open and close under the button.
+function initMacHelp() {
+  const btn = document.querySelector('.js-mac-help');
+  const box = document.getElementById('mac-help');
+  if (!btn || !box) return;
+  btn.addEventListener('click', () => {
+    box.hidden = !box.hidden;
+    btn.setAttribute('aria-expanded', String(!box.hidden));
+    if (!box.hidden) box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  });
 }
 
 // Fades sections in as they scroll into view

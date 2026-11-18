@@ -18,6 +18,10 @@ import {
   type OverlayStyle,
   type ClipSyncInfo,
   type RideData,
+  type Streets,
+  fetchStreets,
+  needsStreets,
+  streetsArea,
   syncReport,
 } from '@telemesync/core';
 import { renderInWorker, type OutputFormat } from '@telemesync/core/node';
@@ -180,6 +184,20 @@ export class Job extends EventEmitter {
     }
   }
 
+  /** Streets around each clip for the round maps (OpenStreetMap), read once per clip; null = map without streets. */
+  private streets = new Map<string, Promise<Streets | null>>();
+
+  private streetsFor(clip: RenderClipInput, overlay: OverlayId | 'composite'): Promise<Streets | null> | null {
+    if (!needsStreets(overlay === 'composite' ? this.req.overlays : [overlay])) return null;
+    let p = this.streets.get(clip.id);
+    if (!p) {
+      const box = streetsArea(this.ride, clip.startUtcMs, clip.startUtcMs + clip.durationMs, this.req.style.mapRadiusM);
+      p = box ? fetchStreets(box) : Promise.resolve(null);
+      this.streets.set(clip.id, p);
+    }
+    return p;
+  }
+
   async run(): Promise<void> {
     await this.writeSyncReport();
     const clipsById = new Map(this.req.clips.map((c) => [c.id, c]));
@@ -206,6 +224,8 @@ export class Job extends EventEmitter {
             };
           } else getOverlay(task.overlay); // validates the id
           const rate = cappedFps(clip.fps, clip.frameCount, this.req.maxFps);
+          // Without internet (or if the tiles fail) the round map is drawn as before, without streets.
+          const streets = (await this.streetsFor(clip, task.overlay)) ?? undefined;
           await renderInWorker(
             {
               ride: this.ride,
@@ -214,6 +234,7 @@ export class Job extends EventEmitter {
               style: this.req.style,
               clipStart: clip.startUtcMs,
               clipEnd: clip.startUtcMs + clip.durationMs,
+              streets,
               durationMs: clip.durationMs,
               fps: rate.fps,
               frames: rate.frames,

@@ -3,6 +3,9 @@ import type { MetricKey, RideData, RideSample } from '../telemetry/ride.ts';
 import type { Lang } from '../i18n/index.ts';
 import type { Segment } from '../segments/segments.ts';
 import type { Units } from './units.ts';
+import type { Ghost } from '../metrics/running.ts';
+import type { Sport } from '../telemetry/types.ts';
+import type { GadgetCondition } from './visibility.ts';
 
 /**
  * Minimal 2D context surface used by renderers. Satisfied by the browser's
@@ -48,6 +51,8 @@ export interface Ctx2D {
   shadowBlur: number;
   shadowOffsetX: number;
   shadowOffsetY: number;
+  /** Copies another canvas in (used to fade a gadget as a whole, see drawComposite). */
+  drawImage?(image: unknown, dx: number, dy: number): void;
 }
 
 export interface CanvasGradientLike {
@@ -107,7 +112,35 @@ export type OverlayId =
   | 'natalTemperature'
   | 'natalMap'
   | 'natalProfile'
-  | 'natalSummary';
+  | 'natalSummary'
+  // Running / trail
+  | 'pace'
+  | 'gap'
+  | 'runCadence'
+  | 'verticalSpeed'
+  | 'runDialPace'
+  | 'runDialHeartRate'
+  | 'runDialCadence'
+  | 'runDialAltitude'
+  | 'runDialGrade'
+  | 'runDialDistance'
+  | 'runDialTime'
+  | 'runDialVertical'
+  | 'runSplits'
+  | 'runGhost'
+  // Ski / snowboard
+  | 'slope'
+  | 'verticalDrop'
+  | 'maxSpeed'
+  | 'snowDialSpeed'
+  | 'snowDialAltitude'
+  | 'snowDialSlope'
+  | 'snowDialVertical'
+  | 'snowDialHeartRate'
+  | 'snowDialTime'
+  | 'snowDialTemperature'
+  | 'snowRunLive'
+  | 'snowRuns';
 
 /** Metrics that have a dashboard panel (gauge + stats + chart), and that a panel chart can show. */
 export type PanelMetric = 'speed' | 'altitude' | 'grade' | 'heartRate' | 'cadence' | 'power' | 'temperature';
@@ -142,8 +175,13 @@ export interface OverlayStyle {
   colorByZone: boolean;
   /** What speed shows inside a telemetry gap. */
   gapSpeed: 'zero' | 'dash';
-  /** Map framing: whole ride or zoom on the clip's section. */
-  mapMode: 'full' | 'clip';
+  /**
+   * Part of the ride the maps and elevation profiles show: the whole ride, each clip's own stretch,
+   * the stretch covered by all the clips, or a start and end chosen by the user (mapRange).
+   */
+  mapMode: 'full' | 'clip' | 'clips' | 'custom';
+  /** Start and end of that stretch (UTC ms): the user's choice ('custom'), or the clips' span filled in by the app ('clips'). */
+  mapRange: { startMs: number; endMs: number } | null;
   /** Round map: radius of the view around the rider (m). Missing = from the size of the ride (300 m–2.5 km). */
   mapRadiusM?: number;
   timeZone: string;
@@ -174,6 +212,10 @@ export interface OverlayStyle {
   weightKg: number;
   /** Max heart rate the zones were worked out from (0 = zones entered by hand or default). */
   hrMax: number;
+  /** Personal record raced by the PR ghost gadget (running); null = not set. */
+  ghost: Ghost | null;
+  /** When each gadget appears and disappears (see visibility.ts); gadgets not listed are always shown. */
+  conditions: Partial<Record<OverlayId, GadgetCondition>>;
 }
 
 export const DEFAULT_STYLE: OverlayStyle = {
@@ -194,6 +236,7 @@ export const DEFAULT_STYLE: OverlayStyle = {
   colorByZone: true,
   gapSpeed: 'zero',
   mapMode: 'full',
+  mapRange: null,
   timeZone: 'Europe/Lisbon',
   gradientFrom: '#ffc400',
   gradientTo: '#ff3d00',
@@ -209,6 +252,8 @@ export const DEFAULT_STYLE: OverlayStyle = {
   powerWkg: false,
   weightKg: 0,
   hrMax: 0,
+  ghost: null,
+  conditions: {},
 };
 
 /** True when W/kg should be shown (chosen and a weight entered). */
@@ -250,6 +295,8 @@ export interface OverlayDefinition {
   textOnly: boolean;
   /** Theme the overlay belongs to in the app (default = the classic designs). */
   theme?: OverlayTheme;
+  /** Sports whose catalogue lists the overlay in the app (default: cycling only). */
+  sports?: Sport[];
   /** Name in the app, for overlays whose name is not built from the metric (see overlayLabel). */
   labelFor?: (lang: Lang | undefined) => string;
   /** Slug for output file names, in the app language (see overlayFileSlug). */

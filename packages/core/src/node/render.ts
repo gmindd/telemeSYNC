@@ -5,6 +5,7 @@ import type { OutputFormat } from '../export/formats.ts';
 import type { Fps } from '../media/types.ts';
 import { changesAtTextRate, frameState, overlayPixelSize, textInstant } from '../overlays/registry.ts';
 import { compositeFrameKey, drawComposite, type GadgetPlacement } from '../overlays/layout.ts';
+import { gadgetOpacity } from '../overlays/visibility.ts';
 import type { Ctx2D, OverlayContext, OverlayDefinition, OverlayId, OverlayStyle } from '../overlays/types.ts';
 import { setNumberLang } from '../overlays/units.ts';
 import { FfmpegSink } from './ffmpeg.ts';
@@ -38,8 +39,10 @@ interface FrameSource {
   width: number;
   height: number;
   /** Frames with the same key are identical (allows reuse). */
-  key(t: number): number;
+  key(t: number): number | string;
   draw(ctx: Ctx2D, t: number): void;
+  /** Opacity of the whole frame (a gadget with a condition fading in or out); missing = 1. */
+  alpha?(t: number): number;
 }
 
 type SinkOptions = Omit<RenderOverlayOptions, 'def' | 'style'>;
@@ -57,7 +60,7 @@ async function renderFrames(src: FrameSource, o: SinkOptions): Promise<{ frames:
   await mkdir(format === 'png' ? o.outPath : dirname(o.outPath), { recursive: true });
   const sink = format !== 'png' ? new FfmpegSink({ width, height, fps: o.fps, outPath: o.outPath, format }) : undefined;
 
-  let lastKey: number | undefined;
+  let lastKey: number | string | undefined;
   let lastFrame: Uint8Array | undefined;
   const progressStep = Math.max(1, Math.floor(total / 100));
   try {
@@ -68,8 +71,15 @@ async function renderFrames(src: FrameSource, o: SinkOptions): Promise<{ frames:
       let frame: Uint8Array;
       if (lastFrame && key === lastKey) frame = lastFrame;
       else {
-        src.draw(ctx, t);
+        const alpha = src.alpha ? src.alpha(t) : 1;
+        if (alpha > 0) src.draw(ctx, t);
+        else {
+          ctx.setTransform(1, 0, 0, 1, 0, 0);
+          ctx.clearRect(0, 0, width, height);
+        }
         const data = ctx.getImageData(0, 0, width, height).data;
+        // Straight (not premultiplied) RGBA: fading is scaling the alpha channel.
+        if (alpha > 0 && alpha < 1) for (let p = 3; p < data.length; p += 4) data[p] = Math.round(data[p] * alpha);
         frame = new Uint8Array(data.buffer, data.byteOffset, data.byteLength);
         lastFrame = frame;
         lastKey = key;
@@ -103,7 +113,14 @@ export function renderOverlay(o: RenderOverlayOptions): Promise<{ frames: number
       width,
       height,
       // Overlays that change only at the text rate reuse the previous frame.
-      key: (t) => (changesAtTextRate(o.def, o.style) ? textInstant(t, o.octx.clipStart, o.style.textRateHz) : t),
+      key: (t) => {
+        const base = changesAtTextRate(o.def, o.style) ? textInstant(t, o.octx.clipStart, o.style.textRateHz) : t;
+        if (!o.style.conditions?.[o.def.id]) return base;
+        // A condition: every hidden frame is the same empty one, fading frames are all new.
+        const a = gadgetOpacity(o.def.id, t, o.style, o.octx.ride);
+        return a <= 0 ? 'hidden' : a < 1 ? t : base;
+      },
+      alpha: (t) => gadgetOpacity(o.def.id, t, o.style, o.octx.ride),
       draw: (ctx, t) => {
         ctx.setTransform(1, 0, 0, 1, 0, 0);
         ctx.clearRect(0, 0, width, height);
@@ -128,12 +145,20 @@ export interface RenderCompositeOptions extends SinkOptions {
 
 /** Renders all gadgets in their positions into one transparent video the size of the frame. */
 export function renderComposite(o: RenderCompositeOptions): Promise<{ frames: number; width: number; height: number }> {
+  // Off-screen canvases (one per size) to fade a gadget as a whole.
+  const layers = new Map<string, Ctx2D & { canvas: unknown }>();
+  const layer = (w: number, h: number) => {
+    const k = `${w}x${h}`;
+    let l = layers.get(k);
+    if (!l) layers.set(k, (l = createCanvas(Math.max(1, w), Math.max(1, h)).getContext('2d') as unknown as Ctx2D & { canvas: unknown }));
+    return l;
+  };
   return renderFrames(
     {
       width: o.width,
       height: o.height,
-      key: (t) => compositeFrameKey(o.overlays, t, o.octx.clipStart, o.style),
-      draw: (ctx, t) => drawComposite(ctx, o.overlays, o.placements, t, o.style, o.octx, o.width, o.height),
+      key: (t) => compositeFrameKey(o.overlays, t, o.octx.clipStart, o.style, o.octx.ride),
+      draw: (ctx, t) => drawComposite(ctx, o.overlays, o.placements, t, o.style, o.octx, o.width, o.height, layer),
     },
     o,
   );

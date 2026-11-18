@@ -1,4 +1,3 @@
-import { cumulativeLoss } from '../metrics/elevation.ts';
 import { sampleAt, type RideData } from '../telemetry/ride.ts';
 import { lowerIndex } from '../util/search.ts';
 
@@ -38,12 +37,9 @@ export interface SegmentStats {
   avgGrade: number;
 }
 
-const lossCache = new WeakMap<RideData, Float64Array>();
-
+/** Elevation loss so far at each sample, matched to the device's figures like the gain (see buildRide). */
 function lossArray(ride: RideData): Float64Array {
-  let l = lossCache.get(ride);
-  if (!l) lossCache.set(ride, (l = cumulativeLoss(ride.altitude)));
-  return l;
+  return ride.elevationLoss;
 }
 
 /** Cumulative loss at an instant, interpolated between samples. */

@@ -77,12 +77,84 @@ function chainring(ctx: Ctx2D, n: number) {
   ctx.stroke();
 }
 
-/** Rim, track and disc. `toothed` = BTT chainring; otherwise the plain road ring. */
-export function drawDialBase(ctx: Ctx2D, colors: DialColors, p: DialPaint, toothed: boolean) {
+/** Rim of a dial: chainring (BTT), plain ring (road), athletics track (running) or ice (snow). */
+export type DialRim = 'chainring' | 'plain' | 'track' | 'snow';
+
+/** Athletics track: terracotta ring with white lane lines and a finish line at the top. */
+function trackRim(ctx: Ctx2D) {
+  ctx.beginPath();
+  ctx.arc(CX, CY, R_TIP, 0, Math.PI * 2);
+  ctx.arc(CX, CY, R_RIM, 0, Math.PI * 2, true);
+  const g = ctx.createRadialGradient(CX - 40, CY - 50, 30, CX, CY, R_TIP);
+  g.addColorStop(0, '#d2593c');
+  g.addColorStop(1, '#8f2f1c');
+  ctx.fillStyle = g;
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(255,255,255,0.75)';
+  ctx.lineWidth = 1.1;
+  for (const r of [R_RIM + 0.5, (R_RIM + R_TIP) / 2, R_TIP - 0.5]) {
+    ctx.beginPath();
+    ctx.arc(CX, CY, r, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+  // Finish line, chequered, at the top.
+  const cw = (R_TIP - R_RIM) / 2;
+  for (let row = 0; row < 2; row++) {
+    for (let col = 0; col < 3; col++) {
+      ctx.fillStyle = (row + col) % 2 ? '#14181d' : '#ffffff';
+      ctx.fillRect(CX - 1.5 * 4 + col * 4, CY - R_TIP + row * cw, 4, cw);
+    }
+  }
+}
+
+/** Ice: frosty blue ring with small snow crystals around it. */
+function snowRim(ctx: Ctx2D) {
+  ctx.beginPath();
+  ctx.arc(CX, CY, R_TIP, 0, Math.PI * 2);
+  ctx.arc(CX, CY, R_RIM, 0, Math.PI * 2, true);
+  const g = ctx.createRadialGradient(CX - 40, CY - 60, 20, CX, CY, R_TIP);
+  g.addColorStop(0, '#dff4ff');
+  g.addColorStop(0.6, '#7cc3ea');
+  g.addColorStop(1, '#2d6f9c');
+  ctx.fillStyle = g;
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(255,255,255,0.8)';
+  ctx.lineWidth = 1.2;
+  ctx.stroke();
+  const r = (R_RIM + R_TIP) / 2;
+  const n = 16;
+  ctx.strokeStyle = 'rgba(255,255,255,0.95)';
+  ctx.lineWidth = 1.3;
+  ctx.lineCap = 'round';
+  for (let k = 0; k < n; k++) {
+    const a = (k / n) * Math.PI * 2 - Math.PI / 2;
+    const x = CX + Math.cos(a) * r;
+    const y = CY + Math.sin(a) * r;
+    const arm = k % 2 ? 2.6 : 4;
+    for (let j = 0; j < 3; j++) {
+      const b = a + (j * Math.PI) / 3;
+      ctx.beginPath();
+      ctx.moveTo(x - Math.cos(b) * arm, y - Math.sin(b) * arm);
+      ctx.lineTo(x + Math.cos(b) * arm, y + Math.sin(b) * arm);
+      ctx.stroke();
+    }
+  }
+}
+
+/** Rim, track and disc. `rim`: true = chainring (BTT), false = plain ring (road), or a named rim. */
+export function drawDialBase(ctx: Ctx2D, colors: DialColors, p: DialPaint, rim: boolean | DialRim) {
   ctx.lineJoin = 'round';
-  if (toothed) {
+  const kind: DialRim = rim === true ? 'chainring' : rim === false ? 'plain' : rim;
+  if (kind === 'chainring') {
     chainring(ctx, 34);
     // Bolt circle look: a darker band inside the teeth.
+    ctx.beginPath();
+    ctx.arc(CX, CY, R_RIM, 0, Math.PI * 2);
+    ctx.fillStyle = '#0d1116';
+    ctx.fill();
+  } else if (kind === 'track' || kind === 'snow') {
+    if (kind === 'track') trackRim(ctx);
+    else snowRim(ctx);
     ctx.beginPath();
     ctx.arc(CX, CY, R_RIM, 0, Math.PI * 2);
     ctx.fillStyle = '#0d1116';

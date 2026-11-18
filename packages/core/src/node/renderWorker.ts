@@ -11,7 +11,7 @@ parentPort!.on('message', (m) => {
 });
 
 const common = {
-  octx: { ride: job.ride, clipStart: job.clipStart, clipEnd: job.clipEnd },
+  octx: { ride: job.ride, clipStart: job.clipStart, clipEnd: job.clipEnd, streets: job.streets },
   durationMs: job.durationMs,
   fps: job.fps,
   frames: job.frames,
