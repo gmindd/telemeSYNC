@@ -161,6 +161,20 @@ export function splitAt(list: Split[], t: number): Split | undefined {
 
 // ---------------------------------------------------------------------------------------- PR ghost
 
+/** Usual race distances offered for the PR (m): 5 km, 10 km, half marathon, marathon. */
+export const GHOST_DISTANCES = [5000, 10000, 21097.5, 42195];
+
+/** "h:mm:ss", "mm:ss" or "m:ss" → ms; null when it is not a time. */
+export function parseClock(text: string): number | null {
+  const parts = text.trim().split(/[:.,]/).map((x) => x.trim());
+  if (parts.length < 2 || parts.length > 3 || parts.some((x) => !/^\d{1,3}$/.test(x))) return null;
+  const n = parts.map(Number);
+  const [h, m, sec] = n.length === 3 ? n : [0, n[0], n[1]];
+  if (sec >= 60 || (n.length === 3 && m >= 60)) return null;
+  const ms = ((h * 60 + m) * 60 + sec) * 1000;
+  return ms > 0 ? ms : null;
+}
+
 /** The runner's personal record to race against: distance, time and where the race starts. */
 export interface Ghost {
   distanceM: number;

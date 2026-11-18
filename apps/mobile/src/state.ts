@@ -42,6 +42,21 @@ interface Prefs {
   /** Radius of the round map around the rider (m): the Sync tab's map and the map gadget. */
   mapZoomM: number;
   look: Look;
+  /** Personal record raced by the PR ghost (running): kept for the next videos; the start is applied per video. */
+  pr: Pr | null;
+}
+
+/** The PR: distance (m), time (ms), and whether the race starts with the activity or with the video. */
+export interface Pr {
+  distanceM: number;
+  timeMs: number;
+  from: 'ride' | 'clip';
+}
+
+function prOf(v: unknown): Pr | null {
+  const p = v as Partial<Pr> | null;
+  if (!p || !(Number(p.distanceM) > 0) || !(Number(p.timeMs) > 0)) return null;
+  return { distanceM: Number(p.distanceM), timeMs: Number(p.timeMs), from: p.from === 'clip' ? 'clip' : 'ride' };
 }
 
 function loadPrefs(): Partial<Prefs> {
@@ -73,9 +88,15 @@ function lookOf(v: Partial<Look> | undefined): Look {
   return l;
 }
 
-/** The gadgets' style for this project: the shared one with the chosen look, zones and map zoom. */
-export function styleOf(s: Pick<State, 'mapZoomM' | 'look'>): OverlayStyle {
-  return { ...STYLE, ...s.look, mapRadiusM: s.mapZoomM };
+/** The gadgets' style for this project: the shared one with the chosen look, zones, map zoom and PR. */
+export function styleOf(s: Pick<State, 'mapZoomM' | 'look'> & { pr?: Pr | null; prStartMs?: number }): OverlayStyle {
+  const ghost = s.pr ? { distanceM: s.pr.distanceM, timeMs: s.pr.timeMs, startMs: s.pr.from === 'clip' && s.prStartMs !== undefined ? s.prStartMs : null } : null;
+  return { ...STYLE, ...s.look, mapRadiusM: s.mapZoomM, ghost };
+}
+
+/** styleOf for the whole project: the PR raced "from the video" starts where the video starts. */
+export function projectStyle(s: State): OverlayStyle {
+  return styleOf({ ...s, prStartMs: clipStart(s) });
 }
 
 /** Which saved layout a format uses: the clip's own shape counts as vertical or horizontal. */
@@ -137,6 +158,7 @@ interface State extends Omit<Prefs, 'overlays'> {
   setBlockZones(b: boolean): void;
   setShortSide(s: number): void;
   setMapZoom(m: number): void;
+  setPr(pr: Pr | null): void;
   /** Look settings; a new background opacity applies to every gadget (dropping the ones set one by one). */
   setLook(l: Partial<Look>): void;
   /** Background opacity of one gadget; undefined = the same as the others. */
@@ -169,6 +191,7 @@ export const useProject = create<State>((set, get) => {
     shortSide: saved.shortSide ?? 1080,
     mapZoomM: saved.mapZoomM ?? 200,
     look: lookOf(saved.look),
+    pr: prOf(saved.pr),
 
     setScreen: (screen) => set({ screen }),
     setTab: (tab) => set({ tab }),
@@ -251,6 +274,7 @@ export const useProject = create<State>((set, get) => {
     },
     setShortSide: (shortSide) => set({ shortSide }),
     setMapZoom: (mapZoomM) => set({ mapZoomM }),
+    setPr: (pr) => set({ pr }),
     setLook: (l) => set({ look: { ...get().look, ...(l.panelOpacity !== undefined ? { gadgetOpacity: {} } : {}), ...l } }),
     setGadgetOpacity: (id, op) => {
       const { [id]: _old, ...rest } = get().look.gadgetOpacity ?? {};
@@ -265,7 +289,7 @@ export const useProject = create<State>((set, get) => {
 
 // Remember the choices for the next video
 useProject.subscribe((s) => {
-  const prefs: Prefs = { overlays: s.chosen, layouts: s.layouts, format: s.format, platforms: s.platforms, blockZones: s.blockZones, shortSide: s.shortSide, mapZoomM: s.mapZoomM, look: s.look };
+  const prefs: Prefs = { overlays: s.chosen, layouts: s.layouts, format: s.format, platforms: s.platforms, blockZones: s.blockZones, shortSide: s.shortSide, mapZoomM: s.mapZoomM, look: s.look, pr: s.pr };
   try {
     localStorage.setItem(PREFS_KEY, JSON.stringify(prefs));
   } catch {

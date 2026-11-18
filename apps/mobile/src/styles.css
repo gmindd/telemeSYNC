@@ -300,6 +300,12 @@ input[type='range'] { width: 100%; accent-color: var(--accent); height: 28px; ma
   background: var(--accent-2); border: 1px solid #140a00; pointer-events: none;
 }
 
+/* PR ghost settings */
+.pr { display: grid; gap: 10px; padding: 12px; border-radius: 16px; background: var(--panel); border: 1px solid var(--accent); }
+.pr h3 { font-size: 1rem; }
+.pr__row { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 8px; }
+.pr select.num-input { appearance: none; -webkit-appearance: none; }
+
 /* Gadget settings (background, heart rate and power zones) */
 .look { border-radius: 16px; background: var(--panel); border: 1px solid var(--border); }
 .look > summary { list-style: none; display: flex; align-items: center; justify-content: space-between; padding: 12px; cursor: pointer; }

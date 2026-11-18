@@ -22,7 +22,7 @@ export { isDialOverlay } from './overlays/dial/index.ts';
 export { isSegmentOverlay } from './overlays/segment/segment.ts';
 export { PANEL_METRIC_INFO, PANEL_METRICS, panelMetricName, panelOptions } from './overlays/panel/series.ts';
 export * from './segments/segments.ts';
-export { formatClock, formatPace, ghostAt, paceUnit, paceUnitM, runSpeedAt, splits, type Ghost, type GhostState, type Split } from './metrics/running.ts';
+export { formatClock, formatPace, ghostAt, GHOST_DISTANCES, paceUnit, paceUnitM, parseClock, runSpeedAt, splits, type Ghost, type GhostState, type Split } from './metrics/running.ts';
 export { detectRuns, type SnowRun } from './metrics/snow.ts';
 export * from './sync/types.ts';
 export * from './sync/profiles.ts';

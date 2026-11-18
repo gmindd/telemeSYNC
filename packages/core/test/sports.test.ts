@@ -147,3 +147,15 @@ describe('sports', () => {
     }
   });
 });
+
+describe('PR time entry', () => {
+  it('reads h:mm:ss, mm:ss and m:ss, and refuses what is not a time', async () => {
+    const { parseClock } = await import('../src/index.ts');
+    expect(parseClock('25:00')).toBe(25 * 60_000);
+    expect(parseClock('1:45:30')).toBe((105 * 60 + 30) * 1000);
+    expect(parseClock('4:5')).toBe(245_000);
+    expect(parseClock('25')).toBeNull();
+    expect(parseClock('12:75')).toBeNull();
+    expect(parseClock('0:00')).toBeNull();
+  });
+});
