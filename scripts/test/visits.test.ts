@@ -111,6 +111,8 @@ describe('visits from the server log', () => {
     expect(isoWeek('2027-01-01')).toBe('2026-W53');
     expect(refName('android-app://com.instagram.android')).toBe('Instagram');
     expect(refName('https://telemesync.pereiragabriel.com/stats')).toBe('');
+    expect(refName('https://telemesync.app/en/')).toBe('');
+    expect(refName('https://www.telemesync.app/')).toBe('');
     expect(refName('https://www.btt.pt/forum')).toBe('btt.pt');
   });
 });

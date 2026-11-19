@@ -10,7 +10,7 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
-export const SITE_URL = 'https://telemesync.pereiragabriel.com';
+export const SITE_URL = 'https://telemesync.app';
 export const LANGS = ['en', 'fr', 'es', 'de'];
 /** Pages that have a version in every language: file and address of the Portuguese one. */
 export const PAGES = [
