@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isNewer, parseRelease, releaseSummary, withLang } from '../src/lib/updates.ts';
+import { checkForUpdate, isNewer, parseRelease, releaseSummary, withLang } from '../src/lib/updates.ts';
 
 describe('isNewer', () => {
   it('compares versions number by number', () => {
@@ -36,7 +36,7 @@ describe('parseRelease', () => {
 });
 
 describe('release summary and links in the app language', () => {
-  const ok = { version: '1.0.2', downloadUrl: 'https://x/a.zip', changelogUrl: 'https://telemesync.pereiragabriel.com/#novidades' };
+  const ok = { version: '1.0.2', downloadUrl: 'https://x/a.zip', changelogUrl: 'https://telemesync.app/#novidades' };
   it('picks the summary of the language, then English, then the old one', () => {
     const r = parseRelease({ ...ok, summary: 'Antigo', summaries: { en: 'New', fr: 'Nouveau', xx: 'no' } })!;
     expect(releaseSummary(r, 'fr')).toBe('Nouveau');
@@ -45,7 +45,47 @@ describe('release summary and links in the app language', () => {
     expect(r.summaries).not.toHaveProperty('xx');
   });
   it('adds the language to links to the site only', () => {
-    expect(withLang(ok.changelogUrl, 'de')).toBe('https://telemesync.pereiragabriel.com/?lang=de#novidades');
+    expect(withLang(ok.changelogUrl, 'de')).toBe('https://telemesync.app/?lang=de#novidades');
+    expect(withLang('https://telemesync.pereiragabriel.com/#novidades', 'fr')).toBe('https://telemesync.pereiragabriel.com/?lang=fr#novidades');
     expect(withLang('https://github.com/a.zip', 'de')).toBe('https://github.com/a.zip');
+  });
+});
+
+describe('checkForUpdate with the new and the old address', () => {
+  const NEW = 'https://telemesync.app/data/latest.json';
+  const OLD = 'https://telemesync.pereiragabriel.com/data/latest.json';
+  const release = { version: '1.2.2', downloadUrl: 'https://x/a.zip', changelogUrl: 'https://telemesync.app/#novidades' };
+  /** A fetch that answers per address: a JSON body, an HTTP status, or a network error. */
+  function fake(answers: Record<string, unknown | number | Error>) {
+    const asked: string[] = [];
+    const fn = (async (url: string) => {
+      asked.push(url);
+      const a = answers[url];
+      if (a instanceof Error || a === undefined) throw a ?? new Error('offline');
+      if (typeof a === 'number') return new Response('', { status: a });
+      return new Response(JSON.stringify(a), { status: 200 });
+    }) as unknown as typeof fetch;
+    return { fn, asked };
+  }
+  it('reads the new address and stops there', async () => {
+    const f = fake({ [NEW]: release, [OLD]: { ...release, version: '9.9.9' } });
+    expect((await checkForUpdate([NEW, OLD], '1.2.1', 'windows', f.fn))?.version).toBe('1.2.2');
+    expect(f.asked).toEqual([NEW]);
+  });
+  it('a valid answer with nothing newer ends the check', async () => {
+    const f = fake({ [NEW]: release, [OLD]: { ...release, version: '9.9.9' } });
+    expect(await checkForUpdate([NEW, OLD], '1.2.2', 'windows', f.fn)).toBeNull();
+    expect(f.asked).toEqual([NEW]);
+  });
+  it('falls back to the old address when the new one fails', async () => {
+    for (const broken of [new Error('dns'), 404, 502, { not: 'a release' }]) {
+      const f = fake({ [NEW]: broken, [OLD]: release });
+      expect((await checkForUpdate([NEW, OLD], '1.2.1', 'windows', f.fn))?.version).toBe('1.2.2');
+      expect(f.asked).toEqual([NEW, OLD]);
+    }
+  });
+  it('is null when every address fails, and still takes a single address', async () => {
+    expect(await checkForUpdate([NEW, OLD], '1.2.1', 'windows', fake({}).fn)).toBeNull();
+    expect((await checkForUpdate(OLD, '1.2.1', 'windows', fake({ [OLD]: release }).fn))?.version).toBe('1.2.2');
   });
 });
