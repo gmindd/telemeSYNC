@@ -1,7 +1,9 @@
 # Domínio telemesync.app
 
 O site passa de `telemesync.pereiragabriel.com` para **`telemesync.app`**. Os dois domínios servem **o mesmo
-contentor** no Coolify, para sempre: nada redireciona, nada se desliga.
+contentor** no Coolify, para sempre: nada se desliga. As **páginas** do domínio antigo e tudo o que vem pelo `www`
+redirecionam (301) para `telemesync.app`; `/data/` e `/api/` do domínio antigo continuam a responder sem redirecionar
+(ver "Redirecionamentos" no fim).
 
 ## Porque é que o domínio antigo nunca se pode desligar
 
@@ -9,7 +11,7 @@ contentor** no Coolify, para sempre: nada redireciona, nada se desliga.
 | --- | --- |
 | Aviso de atualizações do programa, versões **até à 1.2.0** | `https://telemesync.pereiragabriel.com/data/latest.json` |
 | Login no Strava da app móvel (todas as versões até agora) | `https://telemesync.pereiragabriel.com/api/strava/…` |
-| Política de privacidade aberta pela app móvel | `https://telemesync.pereiragabriel.com/legal.html#strava` |
+| Política de privacidade aberta pela app móvel (abre no browser, segue o 301) | `https://telemesync.pereiragabriel.com/legal.html#strava` |
 | Webhook do Buy Me a Coffee (configurado no BMC) | `https://telemesync.pereiragabriel.com/api/bmc-webhook` |
 
 Não redirecionar `/data/latest.json` nem `/api/*` do domínio antigo: o programa pede o ficheiro a partir de
@@ -48,9 +50,9 @@ O ficheiro é um só (`site/data/latest.json`), servido nos dois domínios; não
    não responde.
 5. **Lançar a 1.2.1** normalmente (README → "Lançar uma versão"). Não é preciso fazer nada de especial: o código desta
    mudança vai nela.
-6. **Google Search Console** (opcional): acrescentar a propriedade `telemesync.app` e submeter
-   `https://telemesync.app/sitemap.xml`. A *Change of Address* do Search Console não serve aqui porque exige 301 em
-   todo o domínio antigo.
+6. **Google Search Console**: acrescentar a propriedade `telemesync.app`, submeter
+   `https://telemesync.app/sitemap.xml` e, na propriedade antiga, fazer a *Alteração de endereço* (ver
+   "Redirecionamentos").
 
 ## O que fica de propósito no domínio antigo
 
@@ -63,18 +65,18 @@ O ficheiro é um só (`site/data/latest.json`), servido nos dois domínios; não
 - **Estatísticas**: contam os dois domínios (o log é do contentor); visitas que vêm de um para o outro não contam
   como origem externa (`refName` em `scripts/visits.mjs`).
 
-## Mais tarde (opcional, quando quase ninguém usar ≤ 1.2.0)
+## Redirecionamentos (301)
 
-Redirecionar só as **páginas** do domínio antigo para o novo, no `scripts/nginx-site.conf`, dentro do `server { }`,
-antes dos `location`:
+Em `scripts/nginx-site.conf`, antes dos `location`:
 
-```nginx
-# Páginas do domínio antigo → telemesync.app (o aviso de atualizações e as APIs continuam a responder aqui)
-set $old_page 0;
-if ($host = telemesync.pereiragabriel.com) { set $old_page 1; }
-if ($uri ~ ^/(data|api)/) { set $old_page 0; }
-if ($old_page) { return 301 https://telemesync.app$request_uri; }
-```
+- `telemesync.pereiragabriel.com/<caminho>` → `https://telemesync.app/<caminho>` (mesmo caminho e query), **exceto**
+  `/data/…` (o `latest.json` das versões até à 1.2.0, pedido de `localhost` com CORS) e `/api/…` (Strava e Buy Me a
+  Coffee, que não seguem redirecionamentos).
+- `www.telemesync.app/<caminho>` → `https://telemesync.app/<caminho>` (nada depende do `www`).
 
-`/data/` fica de fora para o `latest.json` (e as estatísticas e apoiantes lidos pelas páginas, que já estariam no
-domínio novo); `/api/` para o Strava e o Buy Me a Coffee.
+As estatísticas só contam respostas 200/304, por isso um 301 não conta como visita. O workflow **Site**
+(`.github/workflows/site.yml`) constrói a imagem, corre `nginx -t` e `scripts/test/site-redirects.sh`, que falha se o
+`latest.json` ou o `/api/` do domínio antigo alguma vez redirecionarem.
+
+Com o 301 no ar, o *Change of Address* do Search Console já se pode usar (propriedade antiga → Definições →
+Alteração de endereço → `telemesync.app`).
