@@ -1,5 +1,5 @@
 // Transport and trim: play/pause, the playhead (drag anywhere on the bar to scrub) and the two handles that choose
-// the part of the clip to export.
+// the part of the clip to export. Framing keyframes show as small diamonds.
 import { useRef } from 'react';
 import { clock, mmss, t } from '../i18n.ts';
 import { seek, togglePlay } from '../lib/player.ts';
@@ -64,6 +64,9 @@ export function Timeline() {
           <div className="timeline__sel" style={{ left: pct(s.trim.start), width: pct(len) }} />
           <span className="timeline__grip timeline__grip--start" style={{ left: pct(s.trim.start) }} onPointerDown={down('start')} />
           <span className="timeline__grip timeline__grip--end" style={{ left: pct(s.trim.end) }} onPointerDown={down('end')} />
+          {s.cropKeys.map((k) => (
+            <span key={k.t} className="timeline__key" style={{ left: pct(k.t) }} aria-hidden="true" />
+          ))}
           <span className="timeline__head" style={{ left: pct(s.playheadS) }} />
         </div>
         <div className="timeline__labels">

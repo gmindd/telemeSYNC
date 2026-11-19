@@ -38,6 +38,7 @@
           <li><a href="#aviso-legal">Aviso legal</a></li>
           <li><a href="#termos">Termos de utilização do programa</a></li>
           <li><a href="#privacidade">Política de privacidade</a></li>
+          <li><a href="#strava">Ligação ao Strava (app Android)</a></li>
           <li><a href="#cookies">Cookies</a></li>
           <li><a href="#apoios">Apoios e patrocínios</a></li>
           <li><a href="#marcas">Marcas e ligações externas</a></li>
@@ -97,12 +98,7 @@
         <p>
           <strong>Na app para Android (em testes):</strong> tal como no computador, os vídeos e a telemetria são processados no telemóvel e
           não são enviados para nenhum servidor; a app usa os mesmos mapas do OpenFreeMap e consulta este site para saber se há uma versão nova.
-          Se entrar com a conta do <a href="https://www.strava.com/" target="_blank" rel="noopener">Strava</a> para ir buscar uma atividade, a
-          autorização é dada no site do Strava, e o serviço deste site (/api/strava) troca o código de autorização pelas chaves de acesso, porque
-          isso exige uma chave secreta que não pode estar dentro da app. As chaves ficam guardadas apenas no telemóvel: o servidor mantém-nas em
-          memória no máximo dois minutos, até a app as levantar, não as escreve em disco e não regista nada sobre o atleta (o endereço IP é usado
-          só para limitar pedidos abusivos, em memória). Os dados da atividade vão diretamente do Strava para o telemóvel. Pode retirar o
-          acesso a qualquer momento nas definições do Strava (Aplicações autorizadas). Aplicam-se as regras de privacidade do Strava.
+          A ligação opcional ao Strava está descrita na <a href="#strava">secção 4</a>.
         </p>
         <p><strong>Neste site:</strong> o responsável pelo tratamento é o titular indicado no aviso legal. São tratados apenas os dados seguintes:</p>
         <ul>
@@ -142,8 +138,94 @@
         </p>
       </section>
 
+      <section id="strava" aria-labelledby="strava-titulo">
+        <h2 id="strava-titulo">4. Ligação ao Strava (app Android)</h2>
+        <p>
+          A app Android pode, se quiser, ler as suas atividades do Strava em vez de um ficheiro FIT/GPX. A ligação só acontece quando
+          carrega em <em>Connect with Strava</em> e autoriza o acesso na página do próprio Strava. O fundamento é o seu consentimento,
+          que pode retirar a qualquer momento.
+        </p>
+        <ul>
+          <li>
+            <strong>Dados lidos</strong> (através da API do Strava, com as autorizações <code>read</code> e <code>activity:read_all</code>):
+            o seu nome no perfil; a lista das suas atividades (nome, tipo, data, duração, distância), incluindo as privadas; e, só da
+            atividade que escolher, as séries de dados: tempo, posição GPS, altitude, velocidade, distância, frequência cardíaca, cadência,
+            potência e temperatura.
+          </li>
+          <li>
+            <strong>Para quê:</strong> apenas para desenhar no seu vídeo os dados da atividade que escolheu. Não são usados para
+            estatísticas, publicidade, perfis, treino ou avaliação de modelos de inteligência artificial, nem combinados com dados de outras
+            pessoas.
+          </li>
+          <li>
+            <strong>Onde ficam:</strong> no seu telemóvel, na memória da app, enquanto ela está aberta; não são guardados depois de a fechar.
+            Não são enviados para este site nem para terceiros e não são mostrados a outras pessoas pela app. O vídeo que exportar fica no
+            seu telemóvel e é seu: só sai dele se o partilhar.
+          </li>
+          <li>
+            <strong>Chaves de acesso:</strong> as chaves que o Strava dá à app (tokens) ficam guardadas no telemóvel até desligar. Para
+            obtê-las e renová-las, o pedido passa por um pequeno serviço deste site, que guarda o segredo da aplicação (não pode ir dentro
+            da app). Esse serviço mantém as chaves em memória no máximo dois minutos, só para as entregar ao telemóvel, e não as grava nem
+            regista nada sobre si.
+          </li>
+          <li>
+            <strong>Desligar e apagar:</strong> em <em>Desligar</em>, na app, o acesso é revogado no Strava e as chaves são apagadas do
+            telemóvel. Também pode revogá-lo em strava.com, em <em>Definições → As minhas aplicações</em>. Desinstalar a app apaga tudo o
+            que ela guardou. Como nenhum dado do Strava é guardado fora do seu telemóvel, não há mais nada a apagar; pode, ainda assim,
+            pedir confirmação ou informação para <a href="mailto:hello@pereiragabriel.com">hello@pereiragabriel.com</a>.
+          </li>
+          <li>
+            <strong>Dados do Strava:</strong> o Strava pode recolher dados sobre a utilização da sua API por esta app, nos termos da
+            <a href="https://www.strava.com/legal/privacy" target="_blank" rel="noopener">política de privacidade do Strava</a>.
+            O telemeSYNC não é desenvolvido, patrocinado nem aprovado pelo Strava.
+          </li>
+        </ul>
+
+        <div lang="en">
+          <h3>Strava connection (Android app), in English</h3>
+          <p>
+            The Android app can optionally read your Strava activities instead of a FIT/GPX file. It connects only when you tap
+            <em>Connect with Strava</em> and authorize access on Strava's own page. The legal basis is your consent, which you can withdraw at
+            any time.
+          </p>
+          <ul>
+            <li>
+              <strong>Data read</strong> (Strava API, scopes <code>read</code> and <code>activity:read_all</code>): your profile name; the list
+              of your activities (name, type, date, duration, distance), including private ones; and, only for the activity you pick, its
+              streams: time, GPS position, altitude, speed, distance, heart rate, cadence, power and temperature.
+            </li>
+            <li>
+              <strong>Purpose:</strong> only to draw the chosen activity's data on your video. It is not used for analytics, advertising,
+              profiling, training or evaluating AI models, nor combined with other people's data.
+            </li>
+            <li>
+              <strong>Where it stays:</strong> on your phone, in the app's memory while it is open; it is not kept after the app closes. It is
+              not sent to this website or to third parties, and the app does not show it to anyone else. The video you export stays on your
+              phone and is yours: it only leaves the phone if you share it.
+            </li>
+            <li>
+              <strong>Access tokens:</strong> the tokens Strava gives the app are stored on the phone until you disconnect. To obtain and
+              refresh them, the request goes through a small service on this website that holds the application secret (it cannot ship
+              inside the app). That service keeps the tokens in memory for at most two minutes, only to hand them to the phone, and neither
+              stores them nor logs anything about you.
+            </li>
+            <li>
+              <strong>Disconnecting and deletion:</strong> <em>Disconnect</em> in the app revokes the access on Strava and deletes the tokens
+              from the phone. You can also revoke it on strava.com under <em>Settings → My Apps</em>. Uninstalling the app deletes everything it
+              stored. Since no Strava data is kept outside your phone there is nothing else to delete; you can still ask for confirmation or
+              information at <a href="mailto:hello@pereiragabriel.com">hello@pereiragabriel.com</a>.
+            </li>
+            <li>
+              <strong>Strava's data:</strong> Strava may collect data about this app's use of its API, under
+              <a href="https://www.strava.com/legal/privacy" target="_blank" rel="noopener">Strava's privacy policy</a>.
+              telemeSYNC is not developed, sponsored or endorsed by Strava.
+            </li>
+          </ul>
+        </div>
+      </section>
+
       <section id="cookies" aria-labelledby="cookies-titulo">
-        <h2 id="cookies-titulo">4. Cookies</h2>
+        <h2 id="cookies-titulo">5. Cookies</h2>
         <p>
           Este site não usa cookies nem publicidade com seguimento. Por isso não mostra um aviso de cookies. Os serviços externos
           (YouTube, Buy Me a Coffee) só são contactados se clicar neles e regem-se pelas respetivas políticas.
@@ -151,7 +233,7 @@
       </section>
 
       <section id="apoios" aria-labelledby="apoios-titulo">
-        <h2 id="apoios-titulo">5. Apoios e patrocínios</h2>
+        <h2 id="apoios-titulo">6. Apoios e patrocínios</h2>
         <p>
           As contribuições através do Buy Me a Coffee são voluntárias, sem qualquer contrapartida, e não dão direito a funcionalidades
           extra nem a suporte garantido. Não constituem donativos para efeitos de benefícios fiscais.
@@ -163,9 +245,9 @@
       </section>
 
       <section id="marcas" aria-labelledby="marcas-titulo">
-        <h2 id="marcas-titulo">6. Marcas e ligações externas</h2>
+        <h2 id="marcas-titulo">7. Marcas e ligações externas</h2>
         <p>
-          DJI, Osmo Action, GoPro, Insta360, Garmin, Bryton, iGPSPORT, DaVinci Resolve, Premiere Pro, Final Cut Pro, CapCut, Canva,
+          DJI, Osmo Action, GoPro, Insta360, Garmin, Bryton, iGPSPORT, Strava, DaVinci Resolve, Premiere Pro, Final Cut Pro, CapCut, Canva,
           YouTube e Buy Me a Coffee são marcas dos respetivos titulares. São referidas apenas para indicar compatibilidade; o telemeSYNC
           não é afiliado, patrocinado nem aprovado por nenhuma destas empresas.
         </p>

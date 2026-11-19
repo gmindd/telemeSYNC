@@ -40,3 +40,32 @@ export function cropsSideways(format: FormatId, srcW: number, srcH: number): 'x'
 
 /** Social media safe zones are measured on 9:16 frames. */
 export const isVertical = (aspect: number) => Math.abs(aspect - 9 / 16) < 0.02;
+
+/** Framing keyframe: at `t` (seconds from the clip's start) the crop is at `pos` (0–1, as cropFor). */
+export interface CropKey {
+  t: number;
+  pos: number;
+}
+
+/**
+ * Framing at a moment: `pos` without keyframes; with them, held before the first and after the last, and sliding
+ * from one to the next in between, easing in and out (like a camera operator panning).
+ */
+export function posAt(keys: CropKey[], pos: number, sec: number): number {
+  if (!keys.length) return pos;
+  if (sec <= keys[0].t) return keys[0].pos;
+  const last = keys[keys.length - 1];
+  if (sec >= last.t) return last.pos;
+  let i = 0;
+  while (keys[i + 1].t < sec) i++;
+  const a = keys[i];
+  const b = keys[i + 1];
+  const f = b.t > a.t ? (sec - a.t) / (b.t - a.t) : 1;
+  const ease = (1 - Math.cos(Math.PI * f)) / 2;
+  return a.pos + (b.pos - a.pos) * ease;
+}
+
+/** The framing moves during the clip (two keyframes or more with different places). */
+export function framingMoves(keys: CropKey[]): boolean {
+  return keys.some((k) => Math.abs(k.pos - keys[0].pos) > 1e-4);
+}

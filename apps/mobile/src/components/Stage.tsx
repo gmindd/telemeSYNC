@@ -1,10 +1,11 @@
 // The editor's picture: the clip playing in the chosen format, the gadgets drawn on top by the core (the same
 // renderer as the export), and touch handling: tap a gadget to select it, drag to move, drag the corner or pinch with
 // two fingers to resize. With a social network's areas shown, gadgets dropped on them move to the nearest clear spot.
+// In the Format tab, dragging the picture slides it in the frame (the framing, keyframed or not).
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { drawComposite, gadgetBox, gadgetZones, overlayLabel, zonesPath, type Ctx2D, type GadgetPlacement, type OverlayId } from '@telemesync/core';
 import { LANG, t } from '../i18n.ts';
-import { cropsSideways, isVertical } from '../lib/formats.ts';
+import { cropsSideways, isVertical, posAt } from '../lib/formats.ts';
 import { FramePlayer } from '../lib/framePlayer.ts';
 import { attachFrames, attachVideo, togglePlay } from '../lib/player.ts';
 import { clipStart, frameAspect, placements, STYLE, styleOf, useProject } from '../state.ts';
@@ -13,6 +14,7 @@ const MIN_W = 0.06;
 
 type Gesture =
   | { mode: 'tap'; x: number; y: number; at: number }
+  | { mode: 'pan'; x: number; y: number; at: number; pos0: number; sec: number; moved: boolean }
   | { mode: 'move' | 'resize'; id: OverlayId; x: number; y: number; p0: GadgetPlacement }
   | { mode: 'pinch'; id: OverlayId; dist0: number; p0: GadgetPlacement; h0: number };
 
@@ -53,9 +55,11 @@ export function Stage() {
   useEffect(() => setUseFrames(false), [url]);
 
   const sideways = s.info ? cropsSideways(s.format, s.info.width, s.info.height) : null;
+  /** Framing (0–1 across the side that is cut) at a moment of the clip, keyframes included. */
+  const framing = (sec: number) => posAt(s.cropKeys, s.cropPos, sec);
   // Frame-player picture: the decoded frame scaled to cover the frame, slid like the <video>'s object-position
-  const drawBg = useRef((_f: HTMLCanvasElement | OffscreenCanvas) => {});
-  drawBg.current = (f) => {
+  const drawBg = useRef((_f: HTMLCanvasElement | OffscreenCanvas, _sec: number) => {});
+  drawBg.current = (f, sec) => {
     const c = bg.current;
     const ctx = c?.getContext('2d');
     if (!c || !ctx || !size.w) return;
@@ -69,7 +73,7 @@ export function Stage() {
     const k = Math.max(cw / f.width, ch / f.height);
     const sw = cw / k;
     const sh = ch / k;
-    const pos = (axis: 'x' | 'y') => (sideways === axis ? s.cropPos : 0.5);
+    const pos = (axis: 'x' | 'y') => (sideways === axis ? framing(sec) : 0.5);
     ctx.drawImage(f, (f.width - sw) * pos('x'), (f.height - sh) * pos('y'), sw, sh, 0, 0, cw, ch);
   };
 
@@ -90,8 +94,18 @@ export function Stage() {
     drawComposite(ctx as unknown as Ctx2D, s.overlays, pl, start + sec * 1000, styleOf(s), { ride: s.ride, clipStart: start, clipEnd: start + s.trim.end * 1000, streets: s.streets }, cw, ch);
   };
   const currentTime = () => (useFrames ? framePlayer.current?.time : video.current?.currentTime) ?? s.playheadS;
-  useEffect(() => draw.current(currentTime()), [s.overlays, s.layout, s.offsetS, s.autoStart, s.ride, s.format, s.mapZoomM, s.streets, size.w, size.h]);
-  useEffect(() => void (lastFrame.current && drawBg.current(lastFrame.current)), [s.format, s.cropPos, size.w, size.h]);
+  useEffect(() => draw.current(currentTime()), [s.overlays, s.layout, s.offsetS, s.autoStart, s.ride, s.format, s.mapZoomM, s.look, s.streets, size.w, size.h]);
+  // Slides the picture to the framing of a moment: the <video>'s object-position, or the frame player's drawing
+  const applyFraming = useRef((_sec: number) => {});
+  applyFraming.current = (sec: number) => {
+    const v = video.current;
+    if (v) {
+      const p = `${framing(sec) * 100}%`;
+      v.style.objectPosition = sideways === 'x' ? `${p} 50%` : sideways === 'y' ? `50% ${p}` : '50% 50%';
+    }
+    if (lastFrame.current) drawBg.current(lastFrame.current, sec);
+  };
+  useEffect(() => applyFraming.current(currentTime()), [s.format, s.cropPos, s.cropKeys, size.w, size.h, useFrames, url]);
 
   // Frame player, when the <video> failed
   useEffect(() => {
@@ -101,7 +115,7 @@ export function Stage() {
       s.clip.file,
       (f, sec) => {
         lastFrame.current = f;
-        drawBg.current(f);
+        drawBg.current(f, sec);
         draw.current(sec);
         const now = performance.now();
         if (now - lastStore > 100 || framePlayer.current?.paused) {
@@ -136,6 +150,7 @@ export function Stage() {
     let lastStore = 0;
     const onFrame = (sec: number) => {
       draw.current(sec);
+      applyFraming.current(sec);
       const { trim, setPlayhead } = useProject.getState();
       if (!v.paused && sec >= trim.end) {
         v.pause();
@@ -209,6 +224,9 @@ export function Stage() {
     if (id && cur[id]) {
       st.select(id);
       gesture.current = { mode: target.closest('[data-resize]') ? 'resize' : 'move', id, x: e.clientX, y: e.clientY, p0: cur[id] };
+    } else if (st.tab === 'format' && sideways) {
+      const sec = currentTime();
+      gesture.current = { mode: 'pan', x: e.clientX, y: e.clientY, at: performance.now(), pos0: posAt(st.cropKeys, st.cropPos, sec), sec, moved: false };
     } else gesture.current = { mode: 'tap', x: e.clientX, y: e.clientY, at: performance.now() };
   };
   const onMove = (e: React.PointerEvent) => {
@@ -216,6 +234,17 @@ export function Stage() {
     pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
     const g = gesture.current;
     if (!g || g.mode === 'tap' || !size.w) return;
+    if (g.mode === 'pan') {
+      const d = sideways === 'x' ? e.clientX - g.x : e.clientY - g.y;
+      if (!g.moved && Math.abs(d) < 8) return;
+      g.moved = true;
+      // Picture shown at "cover" size: how far it overhangs the frame on the side that is cut
+      const { width: vw, height: vh } = useProject.getState().info!;
+      const k = Math.max(size.w / vw, size.h / vh);
+      const over = sideways === 'x' ? vw * k - size.w : vh * k - size.h;
+      if (over > 1) useProject.getState().frameAt(g.pos0 - d / over, g.sec);
+      return;
+    }
     const { place } = useProject.getState();
     if (g.mode === 'pinch') {
       if (pointers.current.size < 2) return;
@@ -239,7 +268,8 @@ export function Stage() {
     gesture.current = null;
     if (!g) return;
     const st = useProject.getState();
-    if (g.mode === 'tap') {
+    if (g.mode === 'pan' && g.moved) return;
+    if (g.mode === 'tap' || g.mode === 'pan') {
       const still = Math.hypot(e.clientX - g.x, e.clientY - g.y) < 10 && performance.now() - g.at < 400;
       if (!still) return;
       if (st.selected) st.select(undefined);
@@ -247,12 +277,10 @@ export function Stage() {
     } else st.settle(g.id);
   };
 
-  const objectPosition = sideways === 'x' ? `${s.cropPos * 100}% 50%` : sideways === 'y' ? `50% ${s.cropPos * 100}%` : '50% 50%';
-
   return (
     <div className="stage" ref={wrap} style={{ '--aspect': aspect } as React.CSSProperties}>
       <div
-        className="frame"
+        className={`frame${s.tab === 'format' && sideways ? ' is-pannable' : ''}`}
         ref={frame}
         style={{ width: size.w, height: size.h }}
         onPointerDown={onDown}
@@ -260,7 +288,7 @@ export function Stage() {
         onPointerUp={onUp}
         onPointerCancel={onUp}
       >
-        {url && !useFrames && <video ref={video} src={url} playsInline preload="auto" style={{ objectPosition }} />}
+        {url && !useFrames && <video ref={video} src={url} playsInline preload="auto" />}
         {useFrames && <canvas ref={bg} className="frame__bg" />}
         <canvas ref={canvas} className="frame__overlay" />
         {showZones && (
