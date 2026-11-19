@@ -113,6 +113,14 @@ export const SYNC = {
     'Der Browser kann diese Datei nicht abspielen. Es werden nur die Daten angezeigt — mit dem Schieberegler durch den Clip gehen.',
   ],
   'preview.rotate': ['Rotate video 180°', 'Rodar vídeo 180°', 'Pivoter la vidéo de 180°', 'Girar vídeo 180°', 'Video um 180° drehen'],
+  'preview.rotate90': ['Rotate 90°', 'Rodar 90°', 'Pivoter de 90°', 'Girar 90°', 'Um 90° drehen'],
+  'preview.rotate90Title': [
+    'For a camera that films sideways: each click turns the picture another 90°. The frame turns with it, so the gadgets are placed on the turned picture and the "Composite" export comes out at that size. Applies to every clip of this camera.',
+    'Para câmaras que filmam de lado: cada clique roda a imagem mais 90°. A moldura roda com ela, por isso os gadgets são posicionados na imagem rodada e a exportação "Composição" sai com essas medidas. Aplica-se a todos os clips desta câmara.',
+    'Pour une caméra qui filme de côté : chaque clic pivote l’image de 90° de plus. Le cadre pivote avec elle, donc les gadgets sont placés sur l’image pivotée et l’export « Composition » sort à ces dimensions. S’applique à tous les clips de cette caméra.',
+    'Para cámaras que graban de lado: cada clic gira la imagen 90° más. El encuadre gira con ella, así que los gadgets se colocan sobre la imagen girada y la exportación «Composición» sale con esas medidas. Se aplica a todos los clips de esta cámara.',
+    'Für eine Kamera, die seitlich filmt: Jeder Klick dreht das Bild um weitere 90°. Der Rahmen dreht sich mit, die Gadgets werden also auf dem gedrehten Bild platziert und der Export „Komposition“ hat diese Maße. Gilt für alle Clips dieser Kamera.',
+  ],
   'preview.rotateTitle': [
     'For a camera that films upside down (e.g. chest mount). Only the preview turns: the overlays and the exported files stay as they are. Applies to every clip of this camera.',
     'Para câmaras que filmam de pernas para o ar (ex.: suporte de peito). Só roda a pré-visualização: os overlays e os ficheiros exportados não mudam. Aplica-se a todos os clips desta câmara.',

@@ -17,6 +17,7 @@ import {
   PROJECT_VERSION,
   readClipMetadata,
   resolveAll,
+  shownSize,
   serializeProject,
   type CameraProfileId,
   type GadgetLayout,
@@ -106,7 +107,7 @@ interface Actions {
   assignCamera(clipId: string, target: string): void;
   setCameraTimeZone(cameraId: string, tz: string): void;
   setCameraLabel(cameraId: string, label: string): void;
-  setCameraRotation(cameraId: string, rotation: 0 | 180): void;
+  setCameraRotation(cameraId: string, rotation: 0 | 90 | 180 | 270): void;
   toggleOverlay(id: OverlayId, on: boolean): void;
   setStyle(p: Partial<OverlayStyle>): void;
   setOverlayLang(v: Lang | 'auto'): void;
@@ -519,8 +520,8 @@ export const useApp = create<State & Actions>((set, get) => ({
         durationMs: c.meta.durationMs,
         fps: c.meta.fps!,
         frameCount: c.meta.frameCount,
-        width: c.meta.width,
-        height: c.meta.height,
+        // A camera turned 90° exports its composite at the turned size.
+        ...shownSize(c, cams.get(c.cameraId)),
         sync: clipSyncInfo(c, cams.get(c.cameraId)!, st.ride, overlaps.get(c.id), currentLang()),
       }))
       .filter((c) => c.startUtcMs !== undefined && c.fps);

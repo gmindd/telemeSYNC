@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   effectiveStart,
+  shownSize,
   gadgetOpacity,
   formatDuration,
   gadgetZones,
@@ -105,7 +106,10 @@ export function Preview(props: {
   const [playing, setPlaying] = useState(false);
   const localRef = useRef(0);
   // Upside-down camera: only the video turns; the native controls would turn with it, so own controls are shown.
-  const rotated = camera.videoRotation === 180;
+  const rotation = camera.videoRotation ?? 0;
+  const rotated = rotation !== 0;
+  // Sideways camera: the frame swaps width and height, the picture is turned inside it.
+  const quarter = rotation === 90 || rotation === 270;
   useEffect(() => {
     if (rotated && video.current) setLocalMs(video.current.currentTime * 1000);
   }, [rotated]);
@@ -202,7 +206,8 @@ export function Preview(props: {
     }
   }, [playhead, start, clip.meta.durationMs, state, draw]);
 
-  const aspect = clip.meta.width && clip.meta.height ? clip.meta.width / clip.meta.height : 16 / 9;
+  const shown = shownSize(clip, camera);
+  const aspect = shown.width && shown.height ? shown.width / shown.height : 16 / 9;
   const placements = resolveLayout(overlays, props.layout, aspect, style);
   const platforms = useApp((s) => s.safeZones);
   const zones = gadgetZones(overlays, placements, aspect, style, platforms);
@@ -215,7 +220,7 @@ export function Preview(props: {
 
   return (
     <div className="preview">
-      <div className="preview-box" ref={box} style={{ aspectRatio: `${clip.meta.width ?? 16} / ${clip.meta.height ?? 9}` }}>
+      <div className={`preview-box${aspect < 1 ? ' portrait' : ''}`} ref={box} style={{ aspectRatio: `${shown.width ?? 16} / ${shown.height ?? 9}` }}>
         {url && state !== 'error' ? (
           <video
             ref={video}
@@ -223,7 +228,9 @@ export function Preview(props: {
             controls={!rotated}
             muted
             playsInline
-            className={rotated ? 'rotated' : undefined}
+            className={rotated ? `rotated rot-${rotation}` : undefined}
+            // Turned a quarter: the video is laid out at the source's proportions, centred, then turned to fill the frame.
+            style={quarter && clip.meta.width && clip.meta.height ? { width: `${(clip.meta.width / clip.meta.height) * 100}%`, height: `${(clip.meta.height / clip.meta.width) * 100}%` } : undefined}
             onPlay={() => setPlaying(true)}
             onPause={() => setPlaying(false)}
             onTimeUpdate={(e) => rotated && setLocalMs(e.currentTarget.currentTime * 1000)}

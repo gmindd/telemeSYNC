@@ -75,6 +75,12 @@ export function addClips(state: SyncState, metas: ClipMetadata[], rideStartUtcMs
 }
 
 /** Start before offsets. */
+/** Size of a clip as shown and exported: a camera turned 90° or 270° swaps its width and height. */
+export function shownSize(clip: Pick<Clip, 'meta'>, camera?: Pick<Camera, 'videoRotation'>): { width?: number; height?: number } {
+  const quarter = camera?.videoRotation === 90 || camera?.videoRotation === 270;
+  return quarter ? { width: clip.meta.height, height: clip.meta.width } : { width: clip.meta.width, height: clip.meta.height };
+}
+
 export function baseStart(clip: Clip): number | undefined {
   if (clip.manualStartUtcMs !== undefined) return clip.manualStartUtcMs;
   return clip.chapterStartUtcMs ?? clip.resolved.startUtcMs;

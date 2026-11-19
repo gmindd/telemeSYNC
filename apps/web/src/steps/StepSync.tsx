@@ -14,7 +14,7 @@ import {
 } from '@telemesync/core';
 import { ClipList } from '../components/ClipList.tsx';
 import { SegmentsPanel } from '../components/SegmentsPanel.tsx';
-import { gadgetZones, PLATFORM_NAMES, SOCIAL_PLATFORMS } from '@telemesync/core';
+import { gadgetZones, PLATFORM_NAMES, shownSize, SOCIAL_PLATFORMS } from '@telemesync/core';
 import { Preview } from '../components/Preview.tsx';
 import { Timeline } from '../components/Timeline.tsx';
 import { ValuesPanel } from '../components/ValuesPanel.tsx';
@@ -73,10 +73,11 @@ function CameraRow({ cam }: { cam: Camera }) {
 }
 
 /** Social-app zones over the preview: one toggle per app, and whether any gadget sits under their buttons. */
-function SafeZoneBar({ clip }: { clip: Clip }) {
+function SafeZoneBar({ clip, cam }: { clip: Clip; cam: Camera }) {
   const { safeZones, toggleSafeZone, overlays, layout, style } = useApp();
   const t = useT();
-  const aspect = clip.meta.width && clip.meta.height ? clip.meta.width / clip.meta.height : 16 / 9;
+  const shown = shownSize(clip, cam);
+  const aspect = shown.width && shown.height ? shown.width / shown.height : 16 / 9;
   const zones = gadgetZones(overlays, resolveLayout(overlays, layout, aspect, style), aspect, style, safeZones);
   const covered = Object.values(zones).filter((z) => z === 'ui').length;
   const maybe = Object.values(zones).filter((z) => z === 'maybe').length;
@@ -210,8 +211,16 @@ export function StepSync() {
               >
                 ⟲ {t('preview.rotate')}
               </button>
+              <button
+                className={`small${cam.videoRotation === 90 || cam.videoRotation === 270 ? ' toggle-on' : ''}`}
+                aria-pressed={cam.videoRotation === 90 || cam.videoRotation === 270}
+                title={t('preview.rotate90Title')}
+                onClick={() => st.setCameraRotation(cam.id, (((cam.videoRotation ?? 0) + 90) % 360) as 0 | 90 | 180 | 270)}
+              >
+                ⟳ {t('preview.rotate90')}
+              </button>
             </div>
-            <SafeZoneBar clip={clip} />
+            <SafeZoneBar clip={clip} cam={cam} />
           </div>
           <div className="sync-side">
             <ClipDetail clip={clip} cam={cam} />
