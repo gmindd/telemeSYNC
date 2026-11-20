@@ -1,7 +1,7 @@
 // Sync: the clip's start found in its metadata, a fine adjustment, and the ride's numbers at the playhead to compare
 // with what the video shows, plus a zoomed round map to line a bend of the road up with the video.
 import { useEffect, useRef } from 'react';
-import { getOverlay, overlayPixelSize, renderOverlayFrame, sampleAt, STREETS_ATTRIBUTION, type Ctx2D, type RideData, type Streets } from '@telemesync/core';
+import { convert, getOverlay, overlayPixelSize, renderOverlayFrame, sampleAt, STREETS_ATTRIBUTION, type Ctx2D, type RideData, type Streets } from '@telemesync/core';
 import { clock, LANG, num, t } from '../i18n.ts';
 import { startSource } from '../lib/project.ts';
 import { clipStart, styleOf, useProject } from '../state.ts';
@@ -72,11 +72,12 @@ export function SyncPanel() {
   if (!s.ride) return null;
   const at = clipStart(s) + s.playheadS * 1000;
   const sample = sampleAt(s.ride, at);
+  const u = s.look.units;
   const values = [
-    s.ride.available.has('speed') && `${num(sample.speed * 3.6)} km/h`,
+    s.ride.available.has('speed') && `${num(convert.speed(sample.speed, u))} ${convert.speedUnit(u)}`,
     s.ride.available.has('heartRate') && Number.isFinite(sample.heartRate) && `${Math.round(sample.heartRate)} bpm`,
     s.ride.available.has('power') && Number.isFinite(sample.power) && `${Math.round(sample.power)} W`,
-    s.ride.available.has('altitude') && `${Math.round(sample.altitude)} m`,
+    s.ride.available.has('altitude') && `${Math.round(convert.elevation(sample.altitude, u))} ${convert.elevationUnit(u)}`,
   ].filter(Boolean);
   const offsetLabel = signed(s.offsetS);
   // The slider fine-tunes within ±5 min of the whole hours set with the ±1 h buttons.

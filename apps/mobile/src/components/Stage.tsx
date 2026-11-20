@@ -94,7 +94,7 @@ export function Stage() {
     drawComposite(ctx as unknown as Ctx2D, s.overlays, pl, start + sec * 1000, projectStyle(s), { ride: s.ride, clipStart: start, clipEnd: start + s.trim.end * 1000, streets: s.streets }, cw, ch);
   };
   const currentTime = () => (useFrames ? framePlayer.current?.time : video.current?.currentTime) ?? s.playheadS;
-  useEffect(() => draw.current(currentTime()), [s.overlays, s.layout, s.offsetS, s.autoStart, s.ride, s.format, s.mapZoomM, s.look, s.streets, size.w, size.h]);
+  useEffect(() => draw.current(currentTime()), [s.overlays, s.layout, s.offsetS, s.autoStart, s.ride, s.format, s.mapZoomM, s.look, s.streets, s.segments, s.pr, size.w, size.h]);
   // Slides the picture to the framing of a moment: the <video>'s object-position, or the frame player's drawing
   const applyFraming = useRef((_sec: number) => {});
   applyFraming.current = (sec: number) => {

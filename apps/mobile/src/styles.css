@@ -320,3 +320,26 @@ input[type='range'] { width: 100%; accent-color: var(--accent); height: 28px; ma
   color: var(--text); font: inherit; font-variant-numeric: tabular-nums; user-select: text; -webkit-user-select: text;
 }
 .zone-dot { display: inline-block; width: 8px; height: 8px; margin-right: 4px; border-radius: 50%; vertical-align: middle; }
+
+/* When a gadget appears (selected gadget) */
+.cond { display: grid; gap: 10px; }
+.cond__row { display: grid; grid-template-columns: repeat(auto-fit, minmax(96px, 1fr)); gap: 8px; }
+.cond__input { display: flex; align-items: center; gap: 6px; }
+.cond__input .num-input { min-width: 0; flex: 1; }
+.chip__tag { color: var(--accent); font-weight: 600; }
+
+/* Units at the top of the settings */
+.look__units { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
+
+/* Segments and laps */
+.segs__marks { display: flex; flex-wrap: wrap; gap: 8px; }
+.segs__list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.segs__item { display: grid; gap: 6px; padding: 10px; border-radius: 12px; background: var(--bg); border: 1px solid var(--border); }
+.segs__item--lap { border-left: 3px solid var(--accent); }
+.segs__head { display: flex; align-items: center; gap: 8px; }
+.segs__kind { font-size: 0.75rem; text-transform: uppercase; color: var(--muted); }
+.segs__name { flex: 1; min-width: 0; }
+.segs__time { font-variant-numeric: tabular-nums; }
+.segs__nudge { display: flex; align-items: center; gap: 6px; font-size: 0.82rem; color: var(--muted); }
+.segs__nudge span { flex: 1; }
+.segs__actions { display: flex; flex-wrap: wrap; gap: 8px; }

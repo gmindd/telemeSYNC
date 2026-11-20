@@ -1,6 +1,7 @@
 // Gadget picker: live thumbnails (drawn by the core at the current moment of the clip) grouped like the website,
-// the gadgets already on the video, the selected gadget's size and actions, and the gadgets' settings (background,
-// heart rate and power zones), as on the desktop.
+// the gadgets already on the video, the selected gadget's size, background and when it appears, the segments and
+// laps for the segment gadgets, and the gadgets' settings (background, heart rate and power zones, W/kg, units), as
+// on the desktop.
 import { memo, useEffect, useMemo, useRef, useState } from 'react';
 import {
   gadgetStyle,
@@ -30,6 +31,8 @@ import {
 import { LANG, t } from '../i18n.ts';
 import { offeredOverlays } from '../lib/project.ts';
 import { clipStart, DEFAULT_LOOK, placements, STYLE, styleOf, useProject } from '../state.ts';
+import { ConditionSettings } from './ConditionSettings.tsx';
+import { SegmentsSettings } from './SegmentsSettings.tsx';
 
 type Category = 'dials' | 'live' | 'panels' | 'numbers' | 'maps' | 'natal';
 const CATEGORIES: Category[] = ['dials', 'live', 'panels', 'numbers', 'maps', 'natal'];
@@ -67,15 +70,16 @@ export function GadgetsPanel() {
   // Thumbnails show the moment under the playhead, rounded to 5 s so they don't redraw while playing
   const now = clipStart(s) + s.playheadS * 1000;
   const at = Math.min(ride.endTime, Math.max(ride.startTime, Math.round(now / 5000) * 5000));
-  // Segment laps need segments chosen on the desktop: not offered here yet (splits, the PR ghost and snow runs are)
-  const offered = offeredOverlays(ride).filter((id) => !isSegmentOverlay(id) && overlaySports(id).includes(sport));
+  const offered = offeredOverlays(ride).filter((id) => overlaySports(id).includes(sport));
   const cats = CATEGORIES.filter((c) => offered.some((id) => categoryOf(id) === c));
   const current = cats.includes(cat) ? cat : (cats[0] ?? 'dials');
   const shown = offered.filter((id) => categoryOf(id) === current);
   const sel = s.selected && s.overlays.includes(s.selected) ? s.selected : undefined;
   const selP = sel ? placements(s)[sel] : undefined;
   // One style object while the settings don't change, so the thumbnails don't redraw for nothing
-  const style = useMemo(() => styleOf({ look: s.look, mapZoomM: s.mapZoomM, pr: s.pr, rideStart: s.ride?.startTime }), [s.look, s.mapZoomM, s.pr, s.ride]);
+  const style = useMemo(() => styleOf({ look: s.look, mapZoomM: s.mapZoomM, pr: s.pr, rideStart: s.ride?.startTime, segments: s.segments }), [s.look, s.mapZoomM, s.pr, s.ride, s.segments]);
+  // Segments and laps: with the segment gadgets in view or on the video (they draw nothing without them)
+  const showSegments = s.overlays.some(isSegmentOverlay) || shown.some(isSegmentOverlay);
 
   return (
     <div className="panel">
@@ -104,6 +108,7 @@ export function GadgetsPanel() {
             />
           </label>
           <GadgetBackground id={sel} />
+          <ConditionSettings id={sel} ride={ride} />
           <div className="row">
             <button type="button" className="chip-btn" onClick={() => s.resetPlace(sel)}>
               {t('gadgets.reset')}
@@ -122,6 +127,7 @@ export function GadgetsPanel() {
               {s.overlays.map((id) => (
                 <button key={id} type="button" className="chip" onClick={() => s.select(id)}>
                   {overlayLabel(id, LANG)}
+                  {s.look.conditions?.[id] && <span className="chip__tag"> · {t('cond.badge')}</span>}
                 </button>
               ))}
             </div>
@@ -133,6 +139,7 @@ export function GadgetsPanel() {
 
       {/* The PR right under the gadgets on the video: without it the ghost draws nothing */}
       {s.overlays.includes('runGhost') && <PrSettings />}
+      {showSegments && <SegmentsSettings />}
       <div className="sports" role="tablist" aria-label={t('sport.label')}>
         {SPORTS.map((sp) => (
           <button key={sp} type="button" role="tab" aria-selected={sp === sport} className={`sport${sp === sport ? ' is-on' : ''}`} onClick={() => setSport(sp)}>
@@ -160,7 +167,7 @@ export function GadgetsPanel() {
           return (
             <button key={id} type="button" className={`thumb${on ? ' is-on' : ''}`} aria-pressed={on} onClick={() => s.toggleOverlay(id)}>
               <span className="thumb__img">
-                <Thumb id={id} ride={ride} at={at} style={thumbStyle(gadgetStyle(style, id), id, ride)} />
+                <Thumb id={id} ride={ride} at={at} style={thumbStyle(gadgetStyle(style, id), id, ride, at)} />
                 {on && <span className="thumb__check" aria-hidden="true">✓</span>}
               </span>
               <span className="thumb__label">{overlayLabel(id, LANG)}</span>
@@ -225,8 +232,21 @@ function NumField({ value, min, max, onCommit, label }: { value: number | ''; mi
   );
 }
 
-/** Thumbnails of the PR ghost before a PR is entered: a 5 km PR at the activity's own pace, so it shows something. */
-function thumbStyle(style: OverlayStyle, id: OverlayId, ride: RideData): OverlayStyle {
+/**
+ * Thumbnails of the PR ghost before a PR is entered (a 5 km PR at the activity's own pace) and of the segment gadgets
+ * before any segment is marked (two laps around the moment shown), so they show something.
+ */
+function thumbStyle(style: OverlayStyle, id: OverlayId, ride: RideData, at: number): OverlayStyle {
+  if (isSegmentOverlay(id) && !style.segments.length) {
+    const a = Math.max(ride.startTime, at - 120_000);
+    return {
+      ...style,
+      segments: [
+        { id: 'demo1', name: t('seg.defaultLap', { n: 1 }), kind: 'lap', startMs: a, endMs: a + 60_000 },
+        { id: 'demo2', name: t('seg.defaultLap', { n: 2 }), kind: 'lap', startMs: a + 60_000, endMs: a + 180_000 },
+      ],
+    };
+  }
   if (id !== 'runGhost' || style.ghost) return style;
   const avg = ride.totals.distanceM / Math.max(1, (ride.endTime - ride.startTime) / 1000);
   const timeMs = Math.round(5000 / Math.max(0.5, avg)) * 1000;
@@ -238,6 +258,7 @@ const PR_NAMES = ['pr.5k', 'pr.10k', 'pr.half', 'pr.marathon'] as const;
 /** The personal record raced by the PR ghost: distance, time and where the race starts (as on the desktop). */
 function PrSettings() {
   const pr = useProject((st) => st.pr);
+  const units = useProject((st) => st.look.units);
   const setPr = useProject((st) => st.setPr);
   const ride = useProject((st) => st.ride);
   const videoStart = useProject((st) => (st.ride ? clipStart(st) : undefined));
@@ -346,7 +367,7 @@ function PrSettings() {
       ) : badStart ? (
         <p className="warn">{t('pr.badStart')}</p>
       ) : pr ? (
-        <p className="fine">{t('pr.pace', { pace: `${formatPace(pr.distanceM / (pr.timeMs / 1000), STYLE.units)} ${paceUnit(STYLE.units)}` })}</p>
+        <p className="fine">{t('pr.pace', { pace: `${formatPace(pr.distanceM / (pr.timeMs / 1000), units)} ${paceUnit(units)}` })}</p>
       ) : (
         <p className="warn">{t('pr.need')}</p>
       )}
@@ -354,7 +375,25 @@ function PrSettings() {
   );
 }
 
-/** Background opacity, heart-rate zones and FTP: the desktop's settings, kept for the next videos. */
+const LB_PER_KG = 2.2046226;
+
+/** The rider's weight for W/kg, in kg or lb as the units chosen (kept in kg). */
+function WeightField() {
+  const look = useProject((st) => st.look);
+  const setLook = useProject((st) => st.setLook);
+  const imperial = look.units.system === 'imperial';
+  const shown = look.weightKg > 0 ? Math.round(look.weightKg * (imperial ? LB_PER_KG : 1)) : '';
+  const unit = imperial ? 'lb' : 'kg';
+  return (
+    <label className="field">
+      <span>{t('look.weight', { unit })}</span>
+      <NumField label={t('look.weight', { unit })} value={shown} min={imperial ? 66 : 30} max={imperial ? 440 : 200} onCommit={(v) => setLook({ weightKg: imperial ? Math.round((v / LB_PER_KG) * 10) / 10 : v })} />
+      {!(look.weightKg > 0) && <span className="warn">{t('look.needWeight')}</span>}
+    </label>
+  );
+}
+
+/** Background opacity, heart-rate zones, power and units: the desktop's settings, kept for the next videos. */
 function LookSettings({ ride }: { ride: RideData }) {
   const look = useProject((st) => st.look);
   const setLook = useProject((st) => st.setLook);
@@ -372,6 +411,30 @@ function LookSettings({ ride }: { ride: RideData }) {
         <h3>{t('look.title')}</h3>
       </summary>
       <div className="look__body">
+        <div className="look__units">
+          <div className="field">
+            <span>{t('look.units')}</span>
+            <div className="segmented">
+              {(['metric', 'imperial'] as const).map((sys) => (
+                <button key={sys} type="button" className={look.units.system === sys ? 'is-on' : ''} aria-pressed={look.units.system === sys} onClick={() => setLook({ units: { ...look.units, system: sys } })}>
+                  {t(sys === 'metric' ? 'look.metric' : 'look.imperial')}
+                </button>
+              ))}
+            </div>
+          </div>
+          {ride.available.has('temperature') && (
+            <div className="field">
+              <span>{t('look.temp')}</span>
+              <div className="segmented">
+                {(['C', 'F'] as const).map((tu) => (
+                  <button key={tu} type="button" className={look.units.temperature === tu ? 'is-on' : ''} aria-pressed={look.units.temperature === tu} onClick={() => setLook({ units: { ...look.units, temperature: tu } })}>
+                    °{tu}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
         <label className="field">
           <span>
             {t('look.bg')} <b>{Math.round(look.panelOpacity * 100)} %</b>
@@ -423,6 +486,11 @@ function LookSettings({ ride }: { ride: RideData }) {
               ))}
             </div>
             <span className="fine">{t('look.powerHint')}</span>
+            <label className="switch">
+              <input type="checkbox" checked={look.powerWkg} onChange={(e) => setLook({ powerWkg: e.target.checked })} />
+              <span>{t('look.wkg')}</span>
+            </label>
+            {look.powerWkg && <WeightField />}
           </div>
         )}
         {hasPower && (
