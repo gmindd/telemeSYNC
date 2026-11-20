@@ -413,6 +413,19 @@ function LookSettings({ ride }: { ride: RideData }) {
         )}
 
         {hasPower && (
+          <div className="field">
+            <span>{t('look.power')}</span>
+            <div className="segmented">
+              {(['instant', '3s'] as const).map((m) => (
+                <button key={m} type="button" className={look.powerSmoothing === m ? 'is-on' : ''} aria-pressed={look.powerSmoothing === m} onClick={() => setLook({ powerSmoothing: m })}>
+                  {t(m === '3s' ? 'look.power3s' : 'look.powerInstant')}
+                </button>
+              ))}
+            </div>
+            <span className="fine">{t('look.powerHint')}</span>
+          </div>
+        )}
+        {hasPower && (
           <label className="field">
             <span>{t('look.ftp')}</span>
             <NumField label={t('look.ftp')} value={look.ftp} min={50} max={600} onCommit={(ftp) => setLook({ ftp })} />

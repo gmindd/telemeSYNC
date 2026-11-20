@@ -27,8 +27,8 @@ const PREFS_KEY = 'telemesync-mobile-prefs';
 const MAX_DEFAULT_S = 60;
 
 /** Gadget settings kept between videos (the desktop's look and zones). */
-export type Look = Pick<OverlayStyle, 'panelOpacity' | 'hrZones' | 'hrMax' | 'colorByZone' | 'ftp' | 'gadgetOpacity'>;
-const LOOK_KEYS: (keyof Look)[] = ['panelOpacity', 'hrZones', 'hrMax', 'colorByZone', 'ftp'];
+export type Look = Pick<OverlayStyle, 'panelOpacity' | 'hrZones' | 'hrMax' | 'colorByZone' | 'ftp' | 'powerSmoothing' | 'gadgetOpacity'>;
+const LOOK_KEYS: (keyof Look)[] = ['panelOpacity', 'hrZones', 'hrMax', 'colorByZone', 'ftp', 'powerSmoothing'];
 
 interface Prefs {
   /** Gadgets chosen, including ones the current ride can't show (they come back with a ride that can). */
@@ -88,6 +88,7 @@ function lookOf(v: Partial<Look> | undefined): Look {
   if (typeof v.hrMax === 'number' && v.hrMax >= 0) l.hrMax = v.hrMax;
   if (typeof v.colorByZone === 'boolean') l.colorByZone = v.colorByZone;
   if (typeof v.ftp === 'number' && v.ftp > 0) l.ftp = v.ftp;
+  if (v.powerSmoothing === 'instant' || v.powerSmoothing === '3s') l.powerSmoothing = v.powerSmoothing;
   return l;
 }
 

@@ -44,6 +44,14 @@ describe('choices remembered for the next video', () => {
     expect(JSON.parse(store.get('telemesync-mobile-prefs')!).look.panelOpacity).toBe(0);
   });
 
+  it('power shown as the 3 s average, as on the desktop, and kept for the next videos', () => {
+    expect(state.styleOf(state.useProject.getState()).powerSmoothing).toBe('instant');
+    state.useProject.getState().setLook({ powerSmoothing: '3s' });
+    expect(state.styleOf(state.useProject.getState()).powerSmoothing).toBe('3s');
+    expect(JSON.parse(store.get('telemesync-mobile-prefs')!).look.powerSmoothing).toBe('3s');
+    state.useProject.getState().setLook({ powerSmoothing: 'instant' });
+  });
+
   it('one gadget can have its own background; moving the shared one changes them all again', () => {
     const p = () => state.useProject.getState();
     p().setLook({ panelOpacity: 0.6 });
