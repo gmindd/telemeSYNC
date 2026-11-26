@@ -42,7 +42,9 @@ import { useLang, useT } from '../i18n/index.tsx';
 import { useApp } from '../lib/store.ts';
 
 const THEME_KEY = 'telemesync.overlayTheme';
-const PREVIEW_KEY = 'telemesync.previewThemes';
+// On unless switched off: the themes in testing show up from the start (marked "In testing"). A new key, so a
+// switch turned off while testing 1.3.0 doesn't hide them.
+const PREVIEW_KEY = 'telemesync.showTestingThemes';
 
 function load(key: string): string | null {
   try {
@@ -150,7 +152,7 @@ export function GadgetPicker(props: {
   const { ride, overlays, toggleOverlay, style, setStyle } = useApp();
   const tr = useT();
   const lang = useLang((s) => s.lang);
-  const [showPreview, setShowPreview] = useState(() => load(PREVIEW_KEY) === '1');
+  const [showPreview, setShowPreview] = useState(() => load(PREVIEW_KEY) !== '0');
   const [stored, setStored] = useState<ThemeId>(() => (load(THEME_KEY) as ThemeId) ?? 'default');
   if (!ride) return null;
   const themes = offeredThemes(sport, showPreview);

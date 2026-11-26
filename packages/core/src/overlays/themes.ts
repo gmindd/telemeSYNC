@@ -11,8 +11,9 @@ export type KitThemeId = 'hud' | 'minimal' | 'tv' | 'cyber' | 'ice' | 'outdoor';
 export interface ThemeInfo {
   id: ThemeId;
   /**
-   * stable = offered in the app; preview = finished but only shown with "Show themes in testing" switched on.
-   * To make a theme official, change its status here.
+   * stable = offered in the app; preview = marked "In testing" and hidden when "Show themes in testing" is switched
+   * off (it is on by default). To make a theme official, change its status here. TODO next release after 1.3.0:
+   * every preview theme becomes stable (docs/proxima-versao.md).
    */
   status: 'stable' | 'preview';
   /** Sports the theme is designed for (shown first for them); empty = any sport. */

@@ -27,14 +27,14 @@ import { LANG, t } from '../i18n.ts';
 import { offeredOverlays } from '../lib/project.ts';
 import { clipStart, DEFAULT_LOOK, placements, STYLE, styleOf, useProject } from '../state.ts';
 
-const PREVIEW_KEY = 'telemesync.previewThemes';
+const PREVIEW_KEY = 'telemesync.showTestingThemes';
 
-/** Themes in testing shown too (the same switch as on the desktop, kept on this phone). */
+/** Themes in testing shown too, on unless switched off (the same switch as on the desktop, kept on this phone). */
 function loadPreview(): boolean {
   try {
-    return localStorage.getItem(PREVIEW_KEY) === '1';
+    return localStorage.getItem(PREVIEW_KEY) !== '0';
   } catch {
-    return false;
+    return true;
   }
 }
 

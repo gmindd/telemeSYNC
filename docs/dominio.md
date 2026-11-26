@@ -21,11 +21,13 @@ o aviso deixa de aparecer sem dar erro. O Strava também não segue redirecionam
 ## Como fica o aviso de atualizações
 
 - **Até à 1.2.0**: leem só o domínio antigo → continuam a funcionar porque o domínio antigo serve o mesmo ficheiro.
-- **A partir da 1.2.1** (este código): leem primeiro `https://telemesync.app/data/latest.json`; se esse falhar (sem
-  resposta, erro HTTP ou ficheiro inválido), leem o domínio antigo (`APP_INFO.updateUrls` em `apps/web/src/config.ts`).
-  Por isso a 1.2.1 funciona mesmo que o novo domínio ainda não esteja no ar quando for lançada.
+- **A partir da 1.3.0**: leem **só** `https://telemesync.app/data/latest.json` (`APP_INFO.updateUrls` em
+  `apps/web/src/config.ts`). O domínio novo já está no ar com CORS, por isso deixou de haver recurso ao antigo (a
+  1.2.1 e a 1.2.2, que tinham esse recurso, nunca foram lançadas).
 
-Ou seja: a 1.2.1 é a última versão anunciada só pelo domínio antigo; a 1.2.2 já é procurada no `telemesync.app`.
+Ou seja: a 1.3.0 é anunciada aos utilizadores da 1.2.0 pelo domínio antigo e, daí em diante, as versões novas são
+procuradas no `telemesync.app`. O domínio antigo continua a servir o ficheiro só para quem ainda tem a 1.2.0 ou
+anterior.
 O ficheiro é um só (`site/data/latest.json`), servido nos dois domínios; não há nada a publicar duas vezes.
 
 ## Passos (por esta ordem)

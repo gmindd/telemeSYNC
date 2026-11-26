@@ -1,6 +1,6 @@
 # Temas
 
-Seis temas novos (HUD aviação, Minimal Pro, Transmissão TV, Cyberpunk, Gelo, Outdoor), a bússola e uma nova organização do passo 4. Estão **feitos mas em teste**: só aparecem com "Mostrar temas em teste" ligado.
+Seis temas novos (HUD aviação, Minimal Pro, Transmissão TV, Cyberpunk, Gelo, Outdoor), a bússola e uma nova organização do passo 4. Estão **em teste** (etiqueta "Em teste"), mas o visto "Mostrar temas em teste" vem ligado de origem, por isso aparecem logo; quem o desligar fica só com os temas oficiais. Na versão a seguir à 1.3.0 passam a oficiais (ver `docs/proxima-versao.md`).
 
 ![Render real dos seis temas](implementados.jpg)
 
