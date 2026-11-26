@@ -230,7 +230,8 @@ export const useApp = create<State & Actions>((set, get) => ({
       // Segments from an opened project stay when they fall within this ride.
       const segments = get().style.segments.filter((g) => g.endMs > ride.startTime && g.startMs < ride.endTime);
       set({
-        style: { ...get().style, segments },
+        // The sport follows the new file again (it can be changed in step 4).
+        style: { ...get().style, segments, sport: undefined },
         segAnchor: undefined,
         ride,
         rideId: id,

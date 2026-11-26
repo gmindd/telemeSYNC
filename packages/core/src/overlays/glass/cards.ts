@@ -11,7 +11,7 @@ import { PANEL_METRIC_INFO, statsUpTo } from '../panel/series.ts';
 import { hrZone } from '../text/metrics.ts';
 import type { Ctx2D, OverlayDefinition, OverlayStyle } from '../types.ts';
 import { convert, fmt } from '../units.ts';
-import { hrColor, NO_VALUE } from './colors.ts';
+import { hrColor, NO_VALUE } from '../kit/colors.ts';
 import { GLASS, SHADOW_PAD, glassDisc, glassPaint, glassRect, glowDot, hairline, hueLight, spaced, valueWithUnit, zonePills, zoneText } from './material.ts';
 import { glassNames } from './names.ts';
 

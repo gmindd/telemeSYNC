@@ -1,3 +1,5 @@
+import type { Sport } from './sport.ts';
+
 /** Metric keys that can be present in a telemetry file. */
 export type ChannelKey =
   | 'position'
@@ -30,6 +32,8 @@ export interface RawSample {
 
 export interface RawTelemetry {
   source: 'fit' | 'gpx' | 'strava';
+  /** Sport written in the file (FIT session/sport, Strava sport type, GPX <type>), when it says. */
+  sport?: Sport;
   /** Human-friendly name (file name, GPX track name, …). */
   name?: string;
   /** Device / creator description if the file provides one. */

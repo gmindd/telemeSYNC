@@ -150,6 +150,16 @@ progress { accent-color: var(--accent); height: 10px; }
   border: 2px solid #fff; cursor: nwse-resize; opacity: 0;
 }
 .gadget:hover .gadget-resize { opacity: 1; }
+/* Selected gadget: solid outline, resize handle and the × that removes it. */
+.gadget.selected { outline: 2px solid var(--accent); outline-offset: 1px; }
+.gadget.selected .gadget-resize { opacity: 1; }
+.gadget-delete {
+  position: absolute; right: -11px; top: -11px; width: 24px; height: 24px; padding: 0; border-radius: 50%;
+  border: 2px solid #fff; background: #e5484d; color: #fff; font-size: 16px; font-weight: 800; line-height: 18px;
+  cursor: pointer; opacity: 0; pointer-events: none; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+}
+.gadget:hover .gadget-delete, .gadget.selected .gadget-delete { opacity: 1; pointer-events: auto; }
+.gadget-delete:hover { background: #ff2d33; }
 .scrub { width: 100%; }
 .preview-box video.rotated { transform: rotate(180deg); }
 .video-controls { display: flex; align-items: center; gap: 10px; margin-top: 6px; }
@@ -178,6 +188,37 @@ button.tiny { padding: 0 6px; font-size: 11px; }
 .field.suggested input { border-color: var(--accent); }
 .field.zone input { width: 70px; }
 .field.required input { border-color: var(--warn); box-shadow: 0 0 0 2px rgba(255, 200, 87, 0.25); }
+/* Gadget picker: sport chips, theme gallery, gadgets in use. */
+.picker { display: flex; flex-direction: column; gap: 12px; }
+.sport-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.sport-row__label { font-weight: 700; margin-right: 4px; }
+.sport-row__note { color: var(--muted, #8a93a3); font-size: 13px; margin-left: 6px; }
+.chip-toggle { border: 1px solid var(--border); background: transparent; border-radius: 999px; padding: 5px 12px; font-weight: 600; cursor: pointer; }
+.chip-toggle.on { background: var(--accent); border-color: var(--accent); color: #1a0d00; }
+.theme-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.theme-head h3 { margin: 0; }
+.theme-gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+.theme-card { display: flex; flex-direction: column; gap: 6px; padding: 8px; border-radius: 12px; border: 1px solid var(--border); background: var(--panel); cursor: pointer; text-align: left; border-top: 4px solid var(--accent); }
+.theme-card.on { outline: 2px solid var(--accent); outline-offset: 1px; }
+.theme-card__cover { height: 104px; border-radius: 8px; display: flex; align-items: center; justify-content: center; overflow: hidden; background: repeating-conic-gradient(#3b4a3b 0% 25%, #2c382c 0% 50%) 0 0 / 16px 16px; }
+.theme-card__cover canvas { max-height: 100px; width: auto !important; }
+.theme-card__name { font-weight: 700; display: flex; align-items: center; gap: 6px; }
+.theme-card__tags { display: flex; gap: 4px; flex-wrap: wrap; min-height: 18px; }
+.tag { font-size: 11px; padding: 1px 7px; border-radius: 999px; background: rgba(255,255,255,0.08); color: var(--muted, #8a93a3); }
+.tag.preview { background: rgba(250,204,21,0.15); color: #facc15; }
+.in-use { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 8px 10px; border: 1px dashed var(--border); border-radius: 10px; }
+.in-use__label { font-weight: 700; margin-right: 4px; }
+.in-use__none { color: var(--muted, #8a93a3); font-size: 13px; }
+.chip-x { display: inline-flex; align-items: center; border: 1px solid var(--border); border-radius: 999px; overflow: hidden; }
+.chip-x__name { background: transparent; border: none; padding: 4px 4px 4px 10px; cursor: pointer; font-size: 13px; }
+.chip-x__del { background: transparent; border: none; padding: 4px 10px 4px 6px; cursor: pointer; font-size: 15px; line-height: 1; opacity: 0.7; }
+.chip-x__del:hover { opacity: 1; color: #f87171; }
+.gadget-section h3 { margin-bottom: 6px; }
+/* GPS watch options: field count, then one row per field (metric + now/average/lap/max). */
+.watch-opts { display: flex; flex-direction: column; gap: 6px; font-size: 13px; }
+.watch-field { display: grid; grid-template-columns: 62px 1fr 1fr; gap: 6px; align-items: center; }
+.watch-field__n { color: var(--muted, #8a93a3); font-weight: 600; }
+.watch-field select { min-width: 0; }
 .theme-tabs { display: flex; gap: 6px; margin: 4px 0 14px; border-bottom: 1px solid var(--border); }
 .theme-tabs button { border: 1px solid transparent; border-bottom: none; border-radius: 8px 8px 0 0; background: transparent; padding: 8px 16px; font-weight: 700; margin-bottom: -1px; }
 .theme-tabs button.active { background: var(--panel); border-color: var(--border); color: var(--accent); }
@@ -196,6 +237,7 @@ button.tiny { padding: 0 6px; font-size: 11px; }
   justify-content: center; align-items: center; min-height: 80px; overflow: hidden;
 }
 /* Glass thumbnails: over a landscape-like gradient (sky, light, ground), so the see-through glass reads. */
+.theme-card__cover.glass-backdrop,
 .checker.glass-backdrop {
   background:
     radial-gradient(120% 70% at 75% 10%, rgba(255, 236, 196, 0.65), transparent 60%),

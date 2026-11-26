@@ -31,7 +31,10 @@ function reasonText(state: PlayState, clip: Clip, t: T): string {
   return hevc ? t('preview.hevc', { help: t(currentPlatform() === 'mac' ? 'preview.hevcMac' : 'preview.hevcWin') }) : t('preview.error');
 }
 
-/** One gadget on the preview: drag to move, drag the corner to resize. Positions are fractions of the frame. */
+/**
+ * One gadget on the preview: click to select it, drag to move, drag the corner to resize, × (or Delete) to remove it.
+ * Positions are fractions of the frame.
+ */
 function Gadget(props: {
   id: OverlayId;
   p: GadgetPlacement;
@@ -39,6 +42,9 @@ function Gadget(props: {
   box: React.RefObject<HTMLDivElement | null>;
   canvasRef: (el: HTMLCanvasElement | null) => void;
   onChange: (p: GadgetPlacement) => void;
+  selected: boolean;
+  onSelect: () => void;
+  onDelete: () => void;
   /** Covered by a social app's interface ('ui') or maybe covered ('maybe'). */
   zone?: 'ui' | 'maybe';
 }) {
@@ -53,6 +59,7 @@ function Gadget(props: {
     const r = props.box.current!.getBoundingClientRect();
     (e.currentTarget as Element).setPointerCapture(e.pointerId);
     drag.current = { mode, x0: e.clientX, y0: e.clientY, p0: p, bw: r.width, bh: r.height };
+    props.onSelect();
   };
   const move = (e: React.PointerEvent) => {
     const d = drag.current;
@@ -65,7 +72,7 @@ function Gadget(props: {
   const end = () => (drag.current = null);
   return (
     <div
-      className={`gadget${props.zone ? ` zone-${props.zone}` : ''}`}
+      className={`gadget${props.zone ? ` zone-${props.zone}` : ''}${props.selected ? ' selected' : ''}`}
       style={{ left: `${p.x * 100}%`, top: `${p.y * 100}%`, width: `${p.w * 100}%` }}
       title={t('preview.gadget', { name: overlayLabel(id, lang) })}
       onPointerDown={start('move')}
@@ -74,6 +81,19 @@ function Gadget(props: {
     >
       <canvas ref={props.canvasRef} width={width} height={height} />
       <span className="gadget-resize" onPointerDown={start('resize')} onPointerMove={move} onPointerUp={end} />
+      <button
+        type="button"
+        className="gadget-delete"
+        aria-label={t('preview.remove', { name: overlayLabel(id, lang) })}
+        title={t('preview.remove', { name: overlayLabel(id, lang) })}
+        onPointerDown={(e) => e.stopPropagation()}
+        onClick={(e) => {
+          e.stopPropagation();
+          props.onDelete();
+        }}
+      >
+        ×
+      </button>
     </div>
   );
 }
@@ -90,6 +110,24 @@ export function Preview(props: {
 }) {
   const { clip, camera, file, ride, overlays, style } = props;
   const setPlayhead = useApp((s) => s.setPlayhead);
+  const toggleOverlay = useApp((s) => s.toggleOverlay);
+  // Gadget clicked last: shows its × button, and Delete / Backspace removes it.
+  const [selected, setSelected] = useState<OverlayId>();
+  const sel = selected && overlays.includes(selected) ? selected : undefined;
+  useEffect(() => {
+    if (!sel) return;
+    const onKey = (e: KeyboardEvent) => {
+      const el = e.target as HTMLElement | null;
+      if (el && (el.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName))) return;
+      if (e.key === 'Delete' || e.key === 'Backspace') {
+        e.preventDefault();
+        toggleOverlay(sel, false);
+        setSelected(undefined);
+      } else if (e.key === 'Escape') setSelected(undefined);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [sel, toggleOverlay]);
   const t = useT();
   const playhead = useApp((s) => s.playhead);
   const start = effectiveStart(clip, camera);
@@ -207,7 +245,7 @@ export function Preview(props: {
 
   return (
     <div className="preview">
-      <div className="preview-box" ref={box} style={{ aspectRatio: `${clip.meta.width ?? 16} / ${clip.meta.height ?? 9}` }}>
+      <div className="preview-box" ref={box} style={{ aspectRatio: `${clip.meta.width ?? 16} / ${clip.meta.height ?? 9}` }} onPointerDown={() => setSelected(undefined)}>
         {url && state !== 'error' ? (
           <video
             ref={video}
@@ -233,7 +271,22 @@ export function Preview(props: {
         ) : null}
         <div className="overlay-layer">
           {overlays.map((id) => (
-            <Gadget key={id} id={id} p={placements[id]} style={style} box={box} canvasRef={canvasRef(id)} onChange={(p) => props.onPlacement(id, p)} zone={zones[id]} />
+            <Gadget
+              key={id}
+              id={id}
+              p={placements[id]}
+              style={style}
+              box={box}
+              canvasRef={canvasRef(id)}
+              onChange={(p) => props.onPlacement(id, p)}
+              selected={id === sel}
+              onSelect={() => setSelected(id)}
+              onDelete={() => {
+                toggleOverlay(id, false);
+                setSelected(undefined);
+              }}
+              zone={zones[id]}
+            />
           ))}
         </div>
       </div>

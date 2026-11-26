@@ -22,8 +22,8 @@ import {
   SPEED_STOPS,
   TEMPERATURE_STOPS,
   TIME_STOPS,
-} from './colors.ts';
-import { lineIcon, type LineIcon } from './icons.ts';
+} from '../kit/colors.ts';
+import { lineIcon, type LineIcon } from '../kit/icons.ts';
 import { glassPaint, spaced, type GlassPaint } from './material.ts';
 import { glassNames } from './names.ts';
 

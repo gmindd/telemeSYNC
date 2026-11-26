@@ -3,6 +3,8 @@ import type { MetricKey, RideData, RideSample } from '../telemetry/ride.ts';
 import type { Lang } from '../i18n/index.ts';
 import type { Segment } from '../segments/segments.ts';
 import type { Units } from './units.ts';
+import type { Sport } from '../telemetry/sport.ts';
+import { THEMES, type GadgetCategory, type KitThemeId, type ThemeId } from './themes.ts';
 
 /**
  * Minimal 2D context surface used by renderers. Satisfied by the browser's
@@ -32,6 +34,8 @@ export interface Ctx2D {
   createRadialGradient(x0: number, y0: number, r0: number, x1: number, y1: number, r1: number): CanvasGradientLike;
   fill(): void;
   stroke(): void;
+  /** Dashed lines (optional: drawing works without it, just solid). */
+  setLineDash?(segments: number[]): void;
   fillText(text: string, x: number, y: number): void;
   strokeText(text: string, x: number, y: number): void;
   measureText(text: string): { width: number };
@@ -54,7 +58,11 @@ export interface CanvasGradientLike {
   addColorStop(offset: number, color: string): void;
 }
 
+/** Gadgets of the kit themes: `${theme}.${role}`, e.g. "hud.speed", "minimal.compass". */
+export type KitOverlayId = `${KitThemeId}.${string}`;
+
 export type OverlayId =
+  | KitOverlayId
   | 'speed'
   | 'altitude'
   | 'grade'
@@ -140,6 +148,36 @@ export interface PanelOptions {
   window: 'time' | 'distance';
 }
 
+/** What a field of the GPS watch shows. */
+export type WatchMetric =
+  | 'pace'
+  | 'speed'
+  | 'heartRate'
+  | 'hrZone'
+  | 'distance'
+  | 'time'
+  | 'cadence'
+  | 'power'
+  | 'altitude'
+  | 'ascent'
+  | 'grade'
+  | 'verticalSpeed'
+  | 'temperature'
+  | 'clock'
+  | 'lap';
+/** Now (instantaneous), average since the start, average of the current lap, or maximum since the start. */
+export type WatchMode = 'now' | 'avg' | 'lap' | 'max';
+export interface WatchField {
+  metric: WatchMetric;
+  mode: WatchMode;
+}
+export interface WatchOptions {
+  /** 3 or 4 fields, top to bottom (with 4, the 2nd and 3rd share the middle row). */
+  fields: WatchField[];
+  /** Heart-rate zone gauge around the top of the screen. */
+  hrGauge: boolean;
+}
+
 export interface OverlayStyle {
   fontFamily: string;
   textColor: string;
@@ -195,6 +233,15 @@ export interface OverlayStyle {
   weightKg: number;
   /** Max heart rate the zones were worked out from (0 = zones entered by hand or default). */
   hrMax: number;
+  /** Sport chosen in the app; missing = the ride's (from the file, or guessed). Decides pace vs speed and so on. */
+  sport?: Sport;
+  /** Fields of the GPS watch gadget (Minimal Pro); missing = the default running screen. */
+  watch?: WatchOptions;
+}
+
+/** Sport the gadgets follow: the one chosen in the app, else the ride's. */
+export function sportOf(style: Pick<OverlayStyle, 'sport'>, ride: { sport: Sport }): Sport {
+  return style.sport ?? ride.sport;
 }
 
 export const DEFAULT_STYLE: OverlayStyle = {
@@ -256,12 +303,9 @@ export interface FrameState {
   textSample: RideSample;
 }
 
-export type OverlayTheme = 'default' | 'glass' | 'natal';
-/**
- * Themes offered in the apps (tabs on the desktop, categories on the phone), in this order. The glass theme is
- * finished but kept back for now: add 'glass' after 'default' to offer it.
- */
-export const OVERLAY_THEMES: OverlayTheme[] = ['default', 'natal'];
+export type OverlayTheme = ThemeId;
+/** Official themes (status "stable" in THEMES); themes in testing are offered with offeredThemes(..., true). */
+export const OVERLAY_THEMES: OverlayTheme[] = THEMES.filter((t) => t.status === 'stable').map((t) => t.id);
 
 export interface OverlayDefinition {
   id: OverlayId;
@@ -275,6 +319,12 @@ export interface OverlayDefinition {
   textOnly: boolean;
   /** Theme the overlay belongs to in the app (default = the classic designs). */
   theme?: OverlayTheme;
+  /** Kind of gadget, the same in every theme (see overlayCategory for the older gadgets without it). */
+  category?: GadgetCategory;
+  /** Only offered for these sports (pace for running, runs for ski...); missing = any sport. */
+  sports?: Sport[];
+  /** Default spot in the composite: maps top-right, profiles along the bottom (others stack top-left). */
+  placement?: 'topRight' | 'bottom';
   /** Name in the app, for overlays whose name is not built from the metric (see overlayLabel). */
   labelFor?: (lang: Lang | undefined) => string;
   /** Slug for output file names, in the app language (see overlayFileSlug). */

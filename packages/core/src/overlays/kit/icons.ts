@@ -1,7 +1,7 @@
 import type { Ctx2D } from '../types.ts';
 
 // Thin outline icons of the glass dials (stroke only, rounded), centred on (cx, cy), about s px tall.
-export type LineIcon = 'grade' | 'thermo' | 'route' | 'stopwatch' | 'heart' | 'cadence' | 'gauge' | 'bolt';
+export type LineIcon = 'grade' | 'thermo' | 'route' | 'stopwatch' | 'heart' | 'cadence' | 'gauge' | 'bolt' | 'mountain';
 
 export function lineIcon(ctx: Ctx2D, icon: LineIcon, cx: number, cy: number, s: number, color: string) {
   const X = (v: number) => cx + v * s;
@@ -118,6 +118,22 @@ export function lineIcon(ctx: Ctx2D, icon: LineIcon, cx: number, cy: number, s: 
       ctx.beginPath();
       ctx.arc(X(0), Y(0.14), 0.05 * s, 0, Math.PI * 2);
       ctx.fill();
+      break;
+    case 'mountain':
+      // Two peaks, the higher one with a snow line.
+      ctx.moveTo(X(-0.62), Y(0.34));
+      ctx.lineTo(X(-0.2), Y(-0.3));
+      ctx.lineTo(X(0.02), Y(0.02));
+      ctx.lineTo(X(0.22), Y(-0.16));
+      ctx.lineTo(X(0.62), Y(0.34));
+      ctx.closePath();
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(X(-0.34), Y(-0.09));
+      ctx.lineTo(X(-0.24), Y(-0.02));
+      ctx.lineTo(X(-0.14), Y(-0.12));
+      ctx.lineTo(X(-0.06), Y(-0.06));
+      ctx.stroke();
       break;
     case 'bolt':
       ctx.moveTo(X(0.1), Y(-0.48));

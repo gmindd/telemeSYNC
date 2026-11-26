@@ -1,56 +1,33 @@
-import { useState } from 'react';
 import {
-  availableOverlays,
   DEFAULT_STYLE,
   effectiveStart,
   getOverlay,
-  isDialOverlay,
   isSegmentOverlay,
   segmentAt,
   sortedSegments,
   LANGS,
-  OVERLAY_THEMES,
-  overlayLabel,
-  overlayTheme,
-  PANEL_METRICS,
-  panelMetricName,
-  panelMetricOf,
-  panelOptions,
   type Lang,
   type OverlayId,
   type OverlayStyle,
-  type OverlayTheme,
-  type PanelMetric,
-  type PanelOptions,
 } from '@telemesync/core';
-import { OverlayCanvas } from '../components/OverlayCanvas.tsx';
+import { GadgetPicker } from '../components/GadgetPicker.tsx';
 import { langName, useLang, useT } from '../i18n/index.tsx';
 import { useApp } from '../lib/store.ts';
-
-const THEME_KEY = 'telemesync.overlayTheme';
-
-/** Tab of overlay designs last opened (Default, Glass or Christmas). */
-function storedTheme(): OverlayTheme {
-  try {
-    const v = localStorage.getItem(THEME_KEY);
-    if (v && (OVERLAY_THEMES as string[]).includes(v)) return v as OverlayTheme;
-  } catch {
-    /* ignore */
-  }
-  return 'default';
-}
 
 const LB_PER_KG = 2.20462;
 
 /** Power options, shown when a gadget with power is chosen: instantaneous or 3 s average, and W/kg with the weight. */
 /** Gadgets that colour or place values by power zone (need the FTP). */
 const POWER_ZONE_IDS: OverlayId[] = ['dialPower', 'panelPower', 'glassPower', 'glassPanelPower'];
+/** Gadgets of the kit themes that show power or heart-rate zones ("hud.power", "cyber.ecg"…). */
+const usesPowerZones = (id: OverlayId) => POWER_ZONE_IDS.includes(id) || /\.power$/.test(id);
 /** Gadgets that show heart-rate zones (need the zone limits). */
 const HR_ZONE_IDS: OverlayId[] = ['heartRate', 'dialHeartRate', 'panelHeartRate', 'natalHeartRate', 'natalHeartRateReindeer', 'glassHeartRate', 'glassPanelHeartRate', 'glassHeartRateZone'];
+const usesHrZones = (id: OverlayId) => HR_ZONE_IDS.includes(id) || /\.(heartRate|ecg)$/.test(id);
 
 function PowerOptions() {
   const { style, setStyle, overlays } = useApp();
-  const usesZones = overlays.some((o) => POWER_ZONE_IDS.includes(o));
+  const usesZones = overlays.some(usesPowerZones);
   const defaultFtp = style.ftp === DEFAULT_STYLE.ftp;
   const tr = useT();
   const imperial = style.units.system === 'imperial';
@@ -103,7 +80,7 @@ function PowerOptions() {
 function HeartRateOptions() {
   const { style, setStyle, overlays } = useApp();
   const tr = useT();
-  const usesZones = overlays.some((o) => HR_ZONE_IDS.includes(o));
+  const usesZones = overlays.some(usesHrZones);
   const defaultZones = style.hrMax <= 0 && style.hrZones.join() === DEFAULT_STYLE.hrZones.join();
   const setZone = (k: number, v: number) => {
     const z = [...style.hrZones];
@@ -156,31 +133,11 @@ function Color({ label, k }: { label: string; k: 'textColor' | 'accentColor' | '
 }
 
 export function StepOverlays() {
-  const { ride, overlays, toggleOverlay, style, setStyle, sync, activeClipId, playhead, setStep, overlayLang, setOverlayLang } = useApp();
+  const { ride, overlays, style, setStyle, sync, activeClipId, playhead, setStep, overlayLang, setOverlayLang } = useApp();
   const tr = useT();
   const lang = useLang((s) => s.lang);
-  const [theme, setTheme] = useState<OverlayTheme>(storedTheme);
-  const chooseTheme = (th: OverlayTheme) => {
-    setTheme(th);
-    try {
-      localStorage.setItem(THEME_KEY, th);
-    } catch {
-      /* ignore */
-    }
-  };
   if (!ride) return <section><p>{tr('sync.needRide')}</p></section>;
-  const all = availableOverlays(ride);
-  const natal = all.filter((d) => d.theme === 'natal');
-  const glass = all.filter((d) => d.theme === 'glass');
-  const classic = all.filter((d) => (d.theme ?? 'default') === 'default');
-  const segs = classic.filter((d) => isSegmentOverlay(d.id));
-  const defs = classic.filter((d) => !panelMetricOf(d.id) && !isDialOverlay(d.id) && !isSegmentOverlay(d.id));
-  const dials = classic.filter((d) => isDialOverlay(d.id));
-  const panels = classic.filter((d) => panelMetricOf(d.id));
-  const chartMetrics = PANEL_METRICS.filter((m) => ride.available.has(m));
   const distUnit = style.units.system === 'metric' ? 'km' : 'mi';
-  const setPanel = (m: PanelMetric, patch: Partial<PanelOptions>) =>
-    setStyle({ panels: { ...style.panels, [m]: { ...panelOptions(m, style, ride), ...patch } } });
   const clip = sync.clips.find((c) => c.id === activeClipId);
   const cam = clip ? sync.cameras.find((c) => c.id === clip.cameraId) : undefined;
   const cs = clip && cam ? effectiveStart(clip, cam) : undefined;
@@ -198,131 +155,10 @@ export function StepOverlays() {
     <section>
       <h2>{tr('ov.title')}</h2>
       <p className="lead">{tr('ov.lead')}</p>
-      <div className="theme-tabs" role="tablist">
-        {OVERLAY_THEMES.map((th) => {
-          const n = overlays.filter((o) => overlayTheme(o) === th).length;
-          return (
-            <button key={th} role="tab" aria-selected={theme === th} className={theme === th ? 'active' : ''} onClick={() => chooseTheme(th)}>
-              {tr(`ov.theme.${th}`)}
-              {n ? <span className="theme-count">{n}</span> : null}
-            </button>
-          );
-        })}
-      </div>
-
       {showPower ? <PowerOptions /> : null}
       {showHr ? <HeartRateOptions /> : null}
 
-      {theme === 'default' ? (
-        <>
-        <div className="overlay-grid">
-          {defs.map((d) => (
-            <label key={d.id} className={`overlay-card${overlays.includes(d.id) ? ' on' : ''}`}>
-              <input type="checkbox" checked={overlays.includes(d.id)} onChange={(e) => toggleOverlay(d.id, e.target.checked)} />
-              <span>{overlayLabel(d.id, lang)}</span>
-              <div className="checker">
-                <OverlayCanvas id={d.id} ride={ride} style={style} t={t} clipStart={clipStart} clipEnd={clipEnd} cssScale={0.45} fitHeight={190} />
-              </div>
-            </label>
-          ))}
-        </div>
-
-        <h3>{tr('ov.dials')}</h3>
-        <p className="lead">{tr('ov.dialsLead')}</p>
-        <div className="overlay-grid">
-          {dials.map((d) => (
-            <label key={d.id} className={`overlay-card${overlays.includes(d.id) ? ' on' : ''}`}>
-              <input type="checkbox" checked={overlays.includes(d.id)} onChange={(e) => toggleOverlay(d.id, e.target.checked)} />
-              <span>{overlayLabel(d.id, lang)}</span>
-              <div className="checker">
-                <OverlayCanvas id={d.id} ride={ride} style={style} t={t} clipStart={clipStart} clipEnd={clipEnd} cssScale={0.45} fitHeight={190} />
-              </div>
-            </label>
-          ))}
-        </div>
-
-        <h3>{tr('ov.panels')}</h3>
-        <p className="lead">{tr('ov.panelsLead')}</p>
-        <div className="overlay-grid panels">
-          {panels.map((d) => {
-            const m = panelMetricOf(d.id)!;
-            const o = panelOptions(m, style, ride);
-            const on = overlays.includes(d.id);
-            return (
-              <div key={d.id} className={`overlay-card${on ? ' on' : ''}`}>
-                <label className="overlay-card-head">
-                  <input type="checkbox" checked={on} onChange={(e) => toggleOverlay(d.id, e.target.checked)} />
-                  <span>{overlayLabel(d.id, lang)}</span>
-                </label>
-                <div className="panel-opts">
-                  <label className="field">
-                    {tr('ov.chart')}
-                    <select value={o.chart} onChange={(e) => setPanel(m, { chart: e.target.value as PanelMetric })}>
-                      {chartMetrics.map((c) => <option key={c} value={c}>{panelMetricName(c, lang)}</option>)}
-                    </select>
-                  </label>
-                  <label className="field">
-                    {tr('ov.window')}
-                    <select value={o.window} onChange={(e) => setPanel(m, { window: e.target.value as PanelOptions['window'] })}>
-                      <option value="time">{tr('ov.lastMin', { n: style.chartMinutes })}</option>
-                      <option value="distance">{tr('ov.lastDist', { n: style.chartDistance, unit: distUnit })}</option>
-                    </select>
-                  </label>
-                </div>
-                <div className="checker" onClick={() => toggleOverlay(d.id, !on)}>
-                  <OverlayCanvas id={d.id} ride={ride} style={style} t={t} clipStart={clipStart} clipEnd={clipEnd} cssScale={0.45} fitHeight={220} />
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
-          <h3>{tr('seg.section')}</h3>
-          <p className="lead">{tr('seg.sectionLead')}</p>
-          {style.segments.length === 0 ? <p className="notice">{tr('seg.noneHint')}</p> : null}
-          <div className="overlay-grid">
-            {segs.map((d) => (
-              <label key={d.id} className={`overlay-card${overlays.includes(d.id) ? ' on' : ''}`}>
-                <input type="checkbox" checked={overlays.includes(d.id)} onChange={(e) => toggleOverlay(d.id, e.target.checked)} />
-                <span>{overlayLabel(d.id, lang)}</span>
-                <div className="checker">
-                  <OverlayCanvas id={d.id} ride={ride} style={style} t={segT} clipStart={clipStart} clipEnd={clipEnd} cssScale={0.45} fitHeight={190} />
-                </div>
-              </label>
-            ))}
-          </div>
-        </>
-      ) : theme === 'glass' ? (
-        <>
-          <p className="lead">{tr('ov.glassLead')}</p>
-          <div className="overlay-grid glass">
-            {glass.map((d) => (
-              <label key={d.id} className={`overlay-card${overlays.includes(d.id) ? ' on' : ''}`}>
-                <input type="checkbox" checked={overlays.includes(d.id)} onChange={(e) => toggleOverlay(d.id, e.target.checked)} />
-                <span>{overlayLabel(d.id, lang)}</span>
-                <div className="checker glass-backdrop">
-                  <OverlayCanvas id={d.id} ride={ride} style={style} t={t} clipStart={clipStart} clipEnd={clipEnd} cssScale={0.45} fitHeight={190} />
-                </div>
-              </label>
-            ))}
-          </div>
-        </>
-      ) : (
-        <>
-          <p className="lead">{tr('ov.natalLead')}</p>
-          <div className="overlay-grid">
-            {natal.map((d) => (
-              <label key={d.id} className={`overlay-card${overlays.includes(d.id) ? ' on' : ''}`}>
-                <input type="checkbox" checked={overlays.includes(d.id)} onChange={(e) => toggleOverlay(d.id, e.target.checked)} />
-                <span>{overlayLabel(d.id, lang)}</span>
-                <div className="checker">
-                  <OverlayCanvas id={d.id} ride={ride} style={style} t={t} clipStart={clipStart} clipEnd={clipEnd} cssScale={0.45} fitHeight={190} />
-                </div>
-              </label>
-            ))}
-          </div>
-        </>
-      )}
+      <GadgetPicker times={{ t, segT, clipStart, clipEnd }} />
 
       <h3>{tr('ov.style')}</h3>
       <div className="style-form">
@@ -411,7 +247,7 @@ export function StepOverlays() {
           {tr('ov.distWindow', { unit: distUnit })}
           <input type="number" min={0.5} max={200} step={0.5} value={style.chartDistance} onChange={(e) => Number(e.target.value) > 0 && setStyle({ chartDistance: Number(e.target.value) })} />
         </label>
-        <button className="small" onClick={() => setStyle({ ...DEFAULT_STYLE, language: style.language, segments: style.segments, weightKg: style.weightKg, ftp: style.ftp, hrZones: style.hrZones, hrMax: style.hrMax })}>{tr('ov.resetStyle')}</button>
+        <button className="small" onClick={() => setStyle({ ...DEFAULT_STYLE, language: style.language, segments: style.segments, weightKg: style.weightKg, ftp: style.ftp, hrZones: style.hrZones, hrMax: style.hrMax, sport: style.sport })}>{tr('ov.resetStyle')}</button>
       </div>
       <button className="primary" onClick={() => setStep('render')} disabled={!overlays.length}>{tr('ov.next')}</button>
     </section>

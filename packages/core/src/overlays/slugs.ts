@@ -20,4 +20,10 @@ export const METRIC_SLUGS: Record<string, Translations> = {
   segmentLive: ['segment', 'segmento', 'segment', 'segmento', 'segment'],
   segmentLaps: ['laps', 'voltas', 'tours', 'vueltas', 'runden'],
   dialSummary: ['compact-panel', 'painel-compacto', 'panneau-compact', 'panel-compacto', 'kompakt-panel'],
+  pace: ['pace', 'ritmo', 'allure', 'ritmo', 'pace'],
+  steps: ['steps', 'passos', 'pas', 'pasos', 'schritte'],
+  verticalSpeed: ['vertical-speed', 'velocidade-vertical', 'vitesse-verticale', 'velocidad-vertical', 'vertikal'],
+  slope: ['slope', 'declive', 'pente-degres', 'pendiente-grados', 'hangneigung'],
+  runs: ['runs', 'descidas', 'descentes', 'bajadas', 'abfahrten'],
+  compass: ['compass', 'bussola', 'boussole', 'brujula', 'kompass'],
 };

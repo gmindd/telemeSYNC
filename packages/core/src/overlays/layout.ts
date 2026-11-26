@@ -37,8 +37,9 @@ export function resolveLayout(ids: OverlayId[], layout: GadgetLayout, aspect: nu
     const w = s.width / frameW;
     const hFrac = s.height / frameH;
     let p: GadgetPlacement;
-    if (id === 'map' || id === 'dialMap' || id === 'natalMap' || id === 'glassMap') p = { x: 1 - w - MARGIN, y: MARGIN, w };
-    else if (id === 'elevationProfile' || id === 'dialProfile' || id === 'natalProfile' || id === 'glassProfile' || id === 'glassProfileStrip') p = { x: (1 - w) / 2, y: 1 - hFrac - MARGIN, w };
+    const spot = getOverlay(id).placement;
+    if (spot === 'topRight' || id === 'map' || id === 'dialMap' || id === 'natalMap' || id === 'glassMap') p = { x: 1 - w - MARGIN, y: MARGIN, w };
+    else if (spot === 'bottom' || id === 'elevationProfile' || id === 'dialProfile' || id === 'natalProfile' || id === 'glassProfile' || id === 'glassProfileStrip') p = { x: (1 - w) / 2, y: 1 - hFrac - MARGIN, w };
     else {
       if (y + hFrac > 1 - MARGIN && y > MARGIN) {
         colX += colW + MARGIN / 2;

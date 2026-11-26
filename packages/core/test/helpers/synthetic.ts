@@ -78,7 +78,10 @@ export function syntheticRide(start = Date.UTC(2024, 5, 15, 8, 0, 0)): Synthetic
 const DEG_TO_SC = 2 ** 31 / 180;
 
 /** Encodes samples as a FIT activity. `enhanced` = write enhanced fields (Garmin) or legacy ones (older devices). */
-export function encodeFit(samples: RawSample[], opts: { enhanced?: boolean; localOffsetMs?: number; laps?: { startMs: number; endMs: number }[] } = {}): Uint8Array {
+export function encodeFit(
+  samples: RawSample[],
+  opts: { enhanced?: boolean; localOffsetMs?: number; laps?: { startMs: number; endMs: number }[]; sport?: string } = {},
+): Uint8Array {
   const enc = new Encoder();
   const start = new Date(samples[0].t);
   enc.writeMesg({
@@ -122,6 +125,18 @@ export function encodeFit(samples: RawSample[], opts: { enhanced?: boolean; loca
     } as any);
   }
   const last = new Date(samples[samples.length - 1].t);
+  if (opts.sport) {
+    enc.writeMesg({
+      mesgNum: Profile.MesgNum.SESSION,
+      timestamp: last,
+      startTime: start,
+      totalElapsedTime: (last.getTime() - start.getTime()) / 1000,
+      totalTimerTime: (last.getTime() - start.getTime()) / 1000,
+      sport: opts.sport,
+      event: 'session',
+      eventType: 'stop',
+    } as any);
+  }
   const FIT_EPOCH_MS = Date.UTC(1989, 11, 31);
   enc.writeMesg({
     mesgNum: Profile.MesgNum.ACTIVITY,
@@ -135,7 +150,7 @@ export function encodeFit(samples: RawSample[], opts: { enhanced?: boolean; loca
   return enc.close();
 }
 
-export function encodeGpx(samples: RawSample[], opts: { extensions?: boolean } = {}): string {
+export function encodeGpx(samples: RawSample[], opts: { extensions?: boolean; type?: string } = {}): string {
   const pts = samples
     .map((s) => {
       const ext = opts.extensions ?? true
@@ -146,7 +161,7 @@ export function encodeGpx(samples: RawSample[], opts: { extensions?: boolean } =
     .join('\n');
   return `<?xml version="1.0" encoding="UTF-8"?>
 <gpx creator="Synthetic" version="1.1" xmlns="http://www.topografix.com/GPX/1/1" xmlns:gpxtpx="http://www.garmin.com/xmlschemas/TrackPointExtension/v1">
-<trk><name>Volta sintética</name><trkseg>
+<trk><name>Volta sintética</name>${opts.type ? `<type>${opts.type}</type>` : ''}<trkseg>
 ${pts}
 </trkseg></trk></gpx>`;
 }

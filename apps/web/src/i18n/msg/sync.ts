@@ -103,12 +103,13 @@ export const SYNC = {
   'preview.play': ['Play', 'Reproduzir', 'Lire', 'Reproducir', 'Abspielen'],
   'preview.pause': ['Pause', 'Pausa', 'Pause', 'Pausa', 'Pause'],
   'preview.gadget': [
-    '{name}: drag to move, bottom-right corner to resize',
-    '{name}: arraste para mover, canto inferior direito para redimensionar',
-    '{name} : glissez pour déplacer, coin inférieur droit pour redimensionner',
-    '{name}: arrastra para mover, esquina inferior derecha para redimensionar',
-    '{name}: ziehen zum Verschieben, untere rechte Ecke zum Ändern der Größe',
+    '{name}: drag to move, bottom-right corner to resize, × (or Delete) to remove',
+    '{name}: arraste para mover, canto inferior direito para redimensionar, × (ou Delete) para apagar',
+    '{name} : glissez pour déplacer, coin inférieur droit pour redimensionner, × (ou Suppr) pour retirer',
+    '{name}: arrastra para mover, esquina inferior derecha para redimensionar, × (o Supr) para quitar',
+    '{name}: ziehen zum Verschieben, untere rechte Ecke zum Ändern der Größe, × (oder Entf) zum Entfernen',
   ],
+  'preview.remove': ['Remove {name}', 'Apagar {name}', 'Retirer {name}', 'Quitar {name}', '{name} entfernen'],
 
   'sz.title': ['Social media zones:', 'Zonas das redes sociais:', 'Zones des réseaux sociaux :', 'Zonas de las redes sociales:', 'Zonen der sozialen Netzwerke:'],
   'sz.help': [

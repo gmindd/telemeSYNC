@@ -4,7 +4,7 @@ import { fitSize } from '../dial/common.ts';
 import { drawText } from '../draw.ts';
 import { POWER_ZONE_COLORS, POWER_ZONES } from '../panel/panel.ts';
 import { mixColor, withAlpha } from '../panel/paint.ts';
-import { metricColor, NO_VALUE } from './colors.ts';
+import { metricColor, NO_VALUE } from '../kit/colors.ts';
 import {
   accelerationAt,
   chartRange,

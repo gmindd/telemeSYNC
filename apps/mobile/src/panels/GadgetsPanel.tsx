@@ -3,37 +3,39 @@
 // heart rate and power zones), as on the desktop.
 import { memo, useEffect, useMemo, useRef, useState } from 'react';
 import {
+  categoryName,
+  GADGET_CATEGORIES,
   getOverlay,
-  isDialOverlay,
   isSegmentOverlay,
+  offeredThemes,
+  overlayCategory,
   overlayLabel,
   overlayPixelSize,
-  OVERLAY_THEMES,
   overlayTheme,
-  PANEL_IDS,
   POWER_ZONES,
   renderOverlayFrame,
+  suitsSport,
+  themeName,
   type Ctx2D,
+  type GadgetCategory,
   type OverlayId,
   type OverlayStyle,
   type RideData,
+  type ThemeId,
 } from '@telemesync/core';
 import { LANG, t } from '../i18n.ts';
 import { offeredOverlays } from '../lib/project.ts';
 import { clipStart, DEFAULT_LOOK, placements, STYLE, styleOf, useProject } from '../state.ts';
 
-type Category = 'dials' | 'panels' | 'numbers' | 'maps' | 'glass' | 'natal';
-/** Gadget categories; the glass one only while its theme is offered (see OVERLAY_THEMES). */
-const CATEGORIES = (['dials', 'panels', 'numbers', 'maps', 'glass', 'natal'] as Category[]).filter((c) => c !== 'glass' || OVERLAY_THEMES.includes('glass'));
-const PANELS = new Set<OverlayId>(Object.values(PANEL_IDS));
+const PREVIEW_KEY = 'telemesync.previewThemes';
 
-function categoryOf(id: OverlayId): Category {
-  const theme = overlayTheme(id);
-  if (theme === 'natal' || theme === 'glass') return theme;
-  if (isDialOverlay(id)) return 'dials';
-  if (PANELS.has(id)) return 'panels';
-  if (id === 'map' || id === 'elevationProfile') return 'maps';
-  return 'numbers';
+/** Themes in testing shown too (the same switch as on the desktop, kept on this phone). */
+function loadPreview(): boolean {
+  try {
+    return localStorage.getItem(PREVIEW_KEY) === '1';
+  } catch {
+    return false;
+  }
 }
 
 /** One gadget drawn at a moment of the ride (UTC ms). */
@@ -50,15 +52,22 @@ const Thumb = memo(function Thumb({ id, ride, at, style }: { id: OverlayId; ride
 
 export function GadgetsPanel() {
   const s = useProject();
-  const [cat, setCat] = useState<Category>('dials');
+  const [cat, setCat] = useState<GadgetCategory>('dials');
+  const [themePick, setThemePick] = useState<ThemeId>('default');
+  const [preview, setPreview] = useState(loadPreview);
   if (!s.ride) return null;
   const ride = s.ride;
   // Thumbnails show the moment under the playhead, rounded to 5 s so they don't redraw while playing
   const now = clipStart(s) + s.playheadS * 1000;
   const at = Math.min(ride.endTime, Math.max(ride.startTime, Math.round(now / 5000) * 5000));
-  const offered = offeredOverlays(ride).filter((id) => !isSegmentOverlay(id));
-  const cats = CATEGORIES.filter((c) => offered.some((id) => categoryOf(id) === c));
-  const shown = offered.filter((id) => categoryOf(id) === cat);
+  // Same organisation as the desktop: theme (the look), then the category (the kind of gadget), for the ride's sport.
+  const themes = offeredThemes(ride.sport, preview);
+  const theme: ThemeId = themes.includes(themePick) ? themePick : 'default';
+  const offered = offeredOverlays(ride).filter((id) => !isSegmentOverlay(id) && suitsSport(getOverlay(id), ride.sport));
+  const inTheme = offered.filter((id) => overlayTheme(id) === theme);
+  const cats = GADGET_CATEGORIES.filter((c) => inTheme.some((id) => overlayCategory(id) === c));
+  const curCat: GadgetCategory = cats.includes(cat) ? cat : (cats[0] ?? 'dials');
+  const shown = inTheme.filter((id) => overlayCategory(id) === curCat);
   const sel = s.selected && s.overlays.includes(s.selected) ? s.selected : undefined;
   const selP = sel ? placements(s)[sel] : undefined;
   // One style object while the settings don't change, so the thumbnails don't redraw for nothing
@@ -117,20 +126,46 @@ export function GadgetsPanel() {
         </div>
       )}
 
-      {/* Every category in view (they wrap): a sideways-scrolling bar hid the last ones on phones */}
+      {/* Themes, then categories: every chip in view (they wrap); a sideways-scrolling bar hid the last ones on phones */}
+      <div className="cats cats--themes" role="tablist">
+        {themes.map((th) => {
+          const used = s.overlays.filter((id) => overlayTheme(id) === th).length;
+          return (
+            <button key={th} type="button" role="tab" aria-selected={th === theme} className={`cat${th === theme ? ' is-on' : ''}`} onClick={() => setThemePick(th)}>
+              {themeName(th, LANG)}
+              {used ? <span className="cat__n">{used}</span> : null}
+            </button>
+          );
+        })}
+      </div>
       <div className="cats" role="tablist">
         {cats.map((c) => {
-          const n = offered.filter((id) => categoryOf(id) === c).length;
-          const used = s.overlays.filter((id) => categoryOf(id) === c).length;
+          const n = inTheme.filter((id) => overlayCategory(id) === c).length;
+          const used = s.overlays.filter((id) => overlayTheme(id) === theme && overlayCategory(id) === c).length;
           return (
-            <button key={c} type="button" role="tab" aria-selected={c === cat} className={`cat${c === cat ? ' is-on' : ''}`} onClick={() => setCat(c)}>
-              {t(`cat.${c}`)}
+            <button key={c} type="button" role="tab" aria-selected={c === curCat} className={`cat${c === curCat ? ' is-on' : ''}`} onClick={() => setCat(c)}>
+              {categoryName(c, LANG)}
               <span className="cat__n">{used ? `${used}/${n}` : n}</span>
             </button>
           );
         })}
       </div>
-      <div className={`thumbs thumbs--${cat}`}>
+      <label className="switch">
+        <input
+          type="checkbox"
+          checked={preview}
+          onChange={(e) => {
+            setPreview(e.target.checked);
+            try {
+              localStorage.setItem(PREVIEW_KEY, e.target.checked ? '1' : '0');
+            } catch {
+              /* ignore */
+            }
+          }}
+        />
+        <span>{t('gadgets.preview')}</span>
+      </label>
+      <div className={`thumbs thumbs--${curCat}`}>
         {shown.map((id) => {
           const on = s.overlays.includes(id);
           return (

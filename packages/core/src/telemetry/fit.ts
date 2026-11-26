@@ -1,12 +1,13 @@
 import { decodeFit } from './fitDecoder.ts';
 import type { RawSample, RawTelemetry } from './types.ts';
+import { sportFromFit } from './sport.ts';
 import { LocalizedError } from '../i18n/index.ts';
 
 const SEMICIRCLE_TO_DEG = 180 / 2 ** 31;
 /** FIT timestamps are seconds since 1989-12-31T00:00:00Z. */
 export const FIT_EPOCH_MS = Date.UTC(1989, 11, 31);
 
-const MSG = { fileId: 0, lap: 19, record: 20, activity: 34 } as const;
+const MSG = { fileId: 0, sport: 12, session: 18, lap: 19, record: 20, activity: 34 } as const;
 
 /** record message field numbers and scales (FIT profile). */
 const REC = {
@@ -46,7 +47,7 @@ const num = (v: number | string | undefined) => (typeof v === 'number' && Number
  */
 export function parseFit(data: ArrayBuffer | Uint8Array, name?: string): RawTelemetry {
   const bytes = data instanceof Uint8Array ? data : new Uint8Array(data);
-  const messages = decodeFit(bytes, new Set([MSG.fileId, MSG.lap, MSG.record, MSG.activity]));
+  const messages = decodeFit(bytes, new Set([MSG.fileId, MSG.sport, MSG.session, MSG.lap, MSG.record, MSG.activity]));
   const records = messages.filter((m) => m.num === MSG.record);
   if (records.length === 0) throw new LocalizedError('err.fitNoRecords');
 
@@ -110,5 +111,12 @@ export function parseFit(data: ArrayBuffer | Uint8Array, name?: string): RawTele
   }
   laps.sort((a, b) => a.startMs - b.startMs);
 
-  return { source: 'fit', name, device, localOffsetMs, samples, recordFields: [...recordFields].sort(), laps: laps.length ? laps : undefined };
+  // Sport: session field 5, or the sport message's field 0.
+  let sport = undefined as RawTelemetry['sport'];
+  for (const m of messages) {
+    if (m.num === MSG.session) sport ??= sportFromFit(num(m.fields.get(5)));
+    else if (m.num === MSG.sport) sport ??= sportFromFit(num(m.fields.get(0)));
+  }
+
+  return { source: 'fit', sport, name, device, localOffsetMs, samples, recordFields: [...recordFields].sort(), laps: laps.length ? laps : undefined };
 }
