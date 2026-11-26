@@ -19,8 +19,6 @@ interface Local {
   n: Float64Array;
   /** View radius in metres (from the size of the ride). */
   viewM: number;
-  /** Path length from the start to each sample (m, carried over samples without position). */
-  cum: Float64Array;
   /** Origin and east metres per degree of longitude, to place other things (streets) in the same frame. */
   lat0: number;
   lon0: number;
@@ -58,15 +56,7 @@ function localOf(ride: RideData): Local {
     maxN = Math.max(maxN, n[i]);
   }
   const extent = Number.isFinite(minE) ? Math.max(maxE - minE, maxN - minN) : 1000;
-  const cum = new Float64Array(len);
-  let last = -1;
-  for (let i = 0; i < len; i++) {
-    cum[i] = i > 0 ? cum[i - 1] : 0;
-    if (Number.isNaN(e[i])) continue;
-    if (last >= 0) cum[i] += Math.hypot(e[i] - e[last], n[i] - n[last]);
-    last = i;
-  }
-  l = { e, n, viewM: Math.max(300, Math.min(2500, extent * 0.3)), cum, lat0, lon0, k };
+  l = { e, n, viewM: Math.max(300, Math.min(2500, extent * 0.3)), lat0, lon0, k };
   localCache.set(ride, l);
   return l;
 }
@@ -271,7 +261,10 @@ export function drawRoundMap(ctx: Ctx2D, frame: FrameState, style: OverlayStyle,
   bg.addColorStop(0, '#1d3a3a');
   bg.addColorStop(1, '#0a1619');
   ctx.fillStyle = bg;
+  // The map's background follows the background opacity (the streets and the route stay)
+  ctx.globalAlpha = p.rimAlpha;
   ctx.fillRect(CX - MAP_R, CY - MAP_R, MAP_R * 2, MAP_R * 2);
+  ctx.globalAlpha = 1;
 
   const streets = pos && octx.streets?.ways.length ? localStreets(octx.streets, ride, l) : undefined;
   if (pos && streets) {
@@ -367,7 +360,9 @@ export function drawRoundMap(ctx: Ctx2D, frame: FrameState, style: OverlayStyle,
   shade.addColorStop(0, 'rgba(0,0,0,0)');
   shade.addColorStop(1, 'rgba(0,0,0,0.45)');
   ctx.fillStyle = shade;
+  ctx.globalAlpha = p.rimAlpha;
   ctx.fillRect(CX - MAP_R, CY - MAP_R, MAP_R * 2, MAP_R * 2);
+  ctx.globalAlpha = 1;
   ctx.restore();
 
   if (streets) drawText(ctx, STREETS_ATTRIBUTION, CX, CY + MAP_R - 12, p.ts, { size: 11, weight: 600, color: 'rgba(255,255,255,0.6)', align: 'center', tabular: false });
@@ -396,7 +391,7 @@ export function drawRoundMap(ctx: Ctx2D, frame: FrameState, style: OverlayStyle,
   const ny = CY - Math.cos(theta) * (MAP_R + 2);
   ctx.beginPath();
   ctx.arc(nx, ny, 15, 0, Math.PI * 2);
-  ctx.fillStyle = '#0d1116';
+  ctx.fillStyle = p.rim;
   ctx.fill();
   ctx.strokeStyle = 'rgba(255,255,255,0.85)';
   ctx.lineWidth = 2;
@@ -418,6 +413,5 @@ export const dialMapOverlay: OverlayDefinition = {
 export function mapHeadingAt(ride: RideData, t: number): number {
   const l = localOf(ride);
   const s = sampleAt(ride, t);
-  const pos = positionAt(ride, l, s);
-  return pos ? headingAt(ride, l, s) : NaN;
+  return positionAt(ride, l, s) ? headingAt(ride, l, s) : NaN;
 }

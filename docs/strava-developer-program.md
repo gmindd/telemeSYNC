@@ -49,7 +49,8 @@ Condições do Strava (formulário e https://developers.strava.com/docs/rate-lim
 >
 > Data handling: everything is processed on the athlete's phone, in memory, only while the app is open. No Strava data
 > is stored on our servers or kept on the phone after the app closes, and it is never shown to other users, combined
-> with other athletes' data, used for analytics or advertising, or used with AI/ML. Our server only runs a small OAuth
+> with other athletes' data, used for analytics or advertising, or used with AI/ML. To draw streets on the round
+> map, the app requests OpenStreetMap tiles of the route's area from OpenFreeMap (only the tile area, never the activity). Our server only runs a small OAuth
 > helper that keeps the client secret out of the app: it holds the tokens in memory for at most two minutes to hand them
 > to the phone and logs nothing. Tokens are stored on the phone until the athlete taps "Disconnect", which also calls
 > /oauth/deauthorize. We use `id_str` for activity and athlete IDs (ready for 64-bit IDs). Privacy policy (Strava

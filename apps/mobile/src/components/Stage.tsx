@@ -8,7 +8,7 @@ import { LANG, t } from '../i18n.ts';
 import { cropsSideways, isVertical, posAt } from '../lib/formats.ts';
 import { FramePlayer } from '../lib/framePlayer.ts';
 import { attachFrames, attachVideo, togglePlay } from '../lib/player.ts';
-import { clipStart, frameAspect, placements, STYLE, styleOf, useProject } from '../state.ts';
+import { clipStart, frameAspect, placements, projectStyle, STYLE, useProject } from '../state.ts';
 
 const MIN_W = 0.06;
 
@@ -91,10 +91,10 @@ export function Stage() {
       c.height = ch;
     }
     const start = clipStart(s);
-    drawComposite(ctx as unknown as Ctx2D, s.overlays, pl, start + sec * 1000, styleOf(s), { ride: s.ride, clipStart: start, clipEnd: start + s.trim.end * 1000, streets: s.streets }, cw, ch);
+    drawComposite(ctx as unknown as Ctx2D, s.overlays, pl, start + sec * 1000, projectStyle(s), { ride: s.ride, clipStart: start, clipEnd: start + s.trim.end * 1000, streets: s.streets }, cw, ch);
   };
   const currentTime = () => (useFrames ? framePlayer.current?.time : video.current?.currentTime) ?? s.playheadS;
-  useEffect(() => draw.current(currentTime()), [s.overlays, s.layout, s.offsetS, s.autoStart, s.ride, s.format, s.mapZoomM, s.look, s.streets, size.w, size.h]);
+  useEffect(() => draw.current(currentTime()), [s.overlays, s.layout, s.offsetS, s.autoStart, s.ride, s.format, s.mapZoomM, s.look, s.streets, s.segments, s.pr, size.w, size.h]);
   // Slides the picture to the framing of a moment: the <video>'s object-position, or the frame player's drawing
   const applyFraming = useRef((_sec: number) => {});
   applyFraming.current = (sec: number) => {

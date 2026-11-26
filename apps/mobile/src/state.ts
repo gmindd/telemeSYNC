@@ -1,20 +1,26 @@
-// The project being edited: clip, ride, gadgets and their places, sync, trim and format. The choices worth keeping
-// for the next video (gadgets, places, format, safe zones, look and zones, map zoom) are remembered on the phone.
+// The project being edited: clip, ride, gadgets and their places, sync, trim, format and the segments and laps marked
+// on the ride. The choices worth keeping for the next video (gadgets, places, format, safe zones, look, zones, units,
+// W/kg, when each gadget appears, map zoom) are remembered on the phone.
 import { create } from 'zustand';
 import {
   avoidZones,
   DEFAULT_STYLE,
   gadgetBox,
+  newSegmentId,
+  overlaySports,
   resolveLayout,
+  validCondition,
+  type GadgetCondition,
   type GadgetLayout,
   type GadgetPlacement,
   type OverlayId,
   type OverlayStyle,
   type RideData,
+  type Segment,
   type SocialPlatform,
   type Streets,
 } from '@telemesync/core';
-import { LANG } from './i18n.ts';
+import { LANG, t } from './i18n.ts';
 import { cropFor, formatAspect, isVertical, posAt, type Crop, type CropKey, type FormatId } from './lib/formats.ts';
 import { defaultSelection, detectedStart, offeredOverlays, type LoadedClip } from './lib/project.ts';
 import type { VideoInfo } from './lib/render.ts';
@@ -25,9 +31,12 @@ export type Tab = 'gadgets' | 'sync' | 'format';
 const PREFS_KEY = 'telemesync-mobile-prefs';
 const MAX_DEFAULT_S = 60;
 
-/** Gadget settings kept between videos (the desktop's look and zones). */
-export type Look = Pick<OverlayStyle, 'panelOpacity' | 'hrZones' | 'hrMax' | 'colorByZone' | 'ftp'>;
-const LOOK_KEYS: (keyof Look)[] = ['panelOpacity', 'hrZones', 'hrMax', 'colorByZone', 'ftp'];
+/** Gadget settings kept between videos (the desktop's look, zones, units, W/kg and when each gadget appears). */
+export type Look = Pick<
+  OverlayStyle,
+  'panelOpacity' | 'hrZones' | 'hrMax' | 'colorByZone' | 'ftp' | 'powerSmoothing' | 'gadgetOpacity' | 'powerWkg' | 'weightKg' | 'units' | 'conditions'
+>;
+const LOOK_KEYS: (keyof Look)[] = ['panelOpacity', 'hrZones', 'hrMax', 'colorByZone', 'ftp', 'powerSmoothing', 'powerWkg', 'weightKg', 'units', 'conditions'];
 
 interface Prefs {
   /** Gadgets chosen, including ones the current ride can't show (they come back with a ride that can). */
@@ -41,6 +50,24 @@ interface Prefs {
   /** Radius of the round map around the rider (m): the Sync tab's map and the map gadget. */
   mapZoomM: number;
   look: Look;
+  /** Personal record raced by the PR ghost (running): kept for the next videos; the start is applied per video. */
+  pr: Pr | null;
+}
+
+/**
+ * The PR: distance (m) and time (ms), kept for the next videos, and when the race starts as time into the activity
+ * (ms; null = the start of the activity, as on the desktop), which belongs to one ride.
+ */
+export interface Pr {
+  distanceM: number;
+  timeMs: number;
+  startOffsetMs: number | null;
+}
+
+function prOf(v: unknown): Pr | null {
+  const p = v as Partial<Pr> | null;
+  if (!p || !(Number(p.distanceM) > 0) || !(Number(p.timeMs) > 0)) return null;
+  return { distanceM: Number(p.distanceM), timeMs: Number(p.timeMs), startOffsetMs: null };
 }
 
 function loadPrefs(): Partial<Prefs> {
@@ -53,23 +80,48 @@ function loadPrefs(): Partial<Prefs> {
 
 export const STYLE: OverlayStyle = { ...DEFAULT_STYLE, language: LANG };
 
-export const DEFAULT_LOOK: Look = Object.fromEntries(LOOK_KEYS.map((k) => [k, DEFAULT_STYLE[k]])) as Look;
+export const DEFAULT_LOOK: Look = { ...(Object.fromEntries(LOOK_KEYS.map((k) => [k, DEFAULT_STYLE[k]])) as Look), gadgetOpacity: {} };
+
+const isOpacity = (v: unknown): v is number => typeof v === 'number' && v >= 0 && v <= 1;
 
 /** Saved look, keeping only valid values (an older or damaged save falls back to the defaults). */
 function lookOf(v: Partial<Look> | undefined): Look {
   const l = { ...DEFAULT_LOOK };
   if (!v) return l;
-  if (typeof v.panelOpacity === 'number' && v.panelOpacity >= 0 && v.panelOpacity <= 1) l.panelOpacity = v.panelOpacity;
+  if (isOpacity(v.panelOpacity)) l.panelOpacity = v.panelOpacity;
+  if (v.gadgetOpacity && typeof v.gadgetOpacity === 'object') {
+    l.gadgetOpacity = Object.fromEntries(Object.entries(v.gadgetOpacity).filter(([, o]) => isOpacity(o)));
+  }
   if (Array.isArray(v.hrZones) && v.hrZones.length === 4 && v.hrZones.every((z) => typeof z === 'number' && z > 0)) l.hrZones = v.hrZones;
   if (typeof v.hrMax === 'number' && v.hrMax >= 0) l.hrMax = v.hrMax;
   if (typeof v.colorByZone === 'boolean') l.colorByZone = v.colorByZone;
   if (typeof v.ftp === 'number' && v.ftp > 0) l.ftp = v.ftp;
+  if (v.powerSmoothing === 'instant' || v.powerSmoothing === '3s') l.powerSmoothing = v.powerSmoothing;
+  if (typeof v.powerWkg === 'boolean') l.powerWkg = v.powerWkg;
+  if (typeof v.weightKg === 'number' && v.weightKg >= 0 && v.weightKg <= 300) l.weightKg = v.weightKg;
+  const u = v.units;
+  if (u && (u.system === 'metric' || u.system === 'imperial') && (u.temperature === 'C' || u.temperature === 'F')) l.units = { system: u.system, temperature: u.temperature };
+  if (v.conditions && typeof v.conditions === 'object') {
+    const conditions: Look['conditions'] = {};
+    for (const [id, c] of Object.entries(v.conditions)) {
+      const ok = validCondition(c);
+      if (ok) conditions[id as OverlayId] = ok;
+    }
+    l.conditions = conditions;
+  }
   return l;
 }
 
-/** The gadgets' style for this project: the shared one with the chosen look, zones and map zoom. */
-export function styleOf(s: Pick<State, 'mapZoomM' | 'look'>): OverlayStyle {
-  return { ...STYLE, ...s.look, mapRadiusM: s.mapZoomM };
+/** The gadgets' style for this project: the shared one with the chosen look, zones, map zoom, PR and segments. */
+export function styleOf(s: Pick<State, 'mapZoomM' | 'look'> & { pr?: Pr | null; rideStart?: number; segments?: Segment[] }): OverlayStyle {
+  const off = s.pr?.startOffsetMs;
+  const ghost = s.pr ? { distanceM: s.pr.distanceM, timeMs: s.pr.timeMs, startMs: off != null && s.rideStart !== undefined ? s.rideStart + off : null } : null;
+  return { ...STYLE, ...s.look, mapRadiusM: s.mapZoomM, ghost, segments: s.segments ?? [] };
+}
+
+/** styleOf for the whole project (the PR's start is counted from this ride's start). */
+export function projectStyle(s: State): OverlayStyle {
+  return styleOf({ ...s, rideStart: s.ride?.startTime });
 }
 
 /** Which saved layout a format uses: the clip's own shape counts as vertical or horizontal. */
@@ -105,6 +157,10 @@ interface State extends Omit<Prefs, 'overlays'> {
   streetsState: 'idle' | 'loading' | 'ok' | 'failed';
   /** Bumped by "try again" to ask for the streets once more. */
   streetsRetry: number;
+  /** Segments and laps marked on this ride (UTC ms), for the segment gadgets; they belong to the ride. */
+  segments: Segment[];
+  /** Start marked, waiting for the end (or the next lap), UTC ms. */
+  segAnchor?: number;
 
   setScreen(s: Screen): void;
   setTab(t: Tab): void;
@@ -131,9 +187,24 @@ interface State extends Omit<Prefs, 'overlays'> {
   setBlockZones(b: boolean): void;
   setShortSide(s: number): void;
   setMapZoom(m: number): void;
+  setPr(pr: Pr | null): void;
+  /** Look settings; a new background opacity applies to every gadget (dropping the ones set one by one). */
   setLook(l: Partial<Look>): void;
+  /** Background opacity of one gadget; undefined = the same as the others. */
+  setGadgetOpacity(id: OverlayId, op: number | undefined): void;
   setStreets(s: Streets | undefined, state: 'loading' | 'ok' | 'failed'): void;
   retryStreets(): void;
+  /** When a gadget appears (undefined = always), as on the desktop. */
+  setCondition(id: OverlayId, c: GadgetCondition | undefined): void;
+  markSegmentStart(t: number): void;
+  markSegmentEnd(t: number): void;
+  markLap(t: number): void;
+  cancelSegmentAnchor(): void;
+  updateSegment(id: string, patch: Partial<Segment>): void;
+  removeSegment(id: string): void;
+  clearSegments(): void;
+  /** The laps recorded by the bike computer, in place of the laps marked. */
+  importDeviceLaps(): void;
 }
 
 const saved = loadPrefs();
@@ -160,6 +231,7 @@ export const useProject = create<State>((set, get) => {
     shortSide: saved.shortSide ?? 1080,
     mapZoomM: saved.mapZoomM ?? 200,
     look: lookOf(saved.look),
+    pr: prOf(saved.pr),
 
     setScreen: (screen) => set({ screen }),
     setTab: (tab) => set({ tab }),
@@ -170,10 +242,15 @@ export const useProject = create<State>((set, get) => {
     setRide: (ride) => {
       const offered = offeredOverlays(ride);
       // The chosen gadgets this ride can show (the others stay chosen for the next ride); none: the usual four
-      const kept = get().chosen.filter((id) => offered.includes(id));
+      // (and that belong to its sport: cycling dials don't come back on a run)
+      const sport = ride.sport ?? 'cycling';
+      // The PR's start belongs to the previous ride
+      const pr = get().pr;
+      if (pr?.startOffsetMs != null) set({ pr: { ...pr, startOffsetMs: null } });
+      const kept = get().chosen.filter((id) => offered.includes(id) && overlaySports(id).includes(sport));
       const overlays = kept.length ? kept : defaultSelection(ride);
       const clip = get().clip;
-      set({ ride, streets: undefined, streetsState: 'idle', overlays, chosen: kept.length ? get().chosen : overlays, autoStart: clip ? detectedStart(clip, ride) : undefined });
+      set({ ride, streets: undefined, streetsState: 'idle', overlays, chosen: kept.length ? get().chosen : overlays, autoStart: clip ? detectedStart(clip, ride) : undefined, segments: [], segAnchor: undefined });
     },
     toggleOverlay: (id) => {
       const on = get().overlays.includes(id);
@@ -240,17 +317,57 @@ export const useProject = create<State>((set, get) => {
     },
     setShortSide: (shortSide) => set({ shortSide }),
     setMapZoom: (mapZoomM) => set({ mapZoomM }),
-    setLook: (l) => set({ look: { ...get().look, ...l } }),
+    setPr: (pr) => set({ pr }),
+    setLook: (l) => set({ look: { ...get().look, ...(l.panelOpacity !== undefined ? { gadgetOpacity: {} } : {}), ...l } }),
+    setGadgetOpacity: (id, op) => {
+      const { [id]: _old, ...rest } = get().look.gadgetOpacity ?? {};
+      set({ look: { ...get().look, gadgetOpacity: op === undefined ? rest : { ...rest, [id]: op } } });
+    },
     streetsState: 'idle',
     streetsRetry: 0,
     setStreets: (streets, streetsState) => set({ streets, streetsState }),
     retryStreets: () => set({ streetsRetry: get().streetsRetry + 1 }),
+    setCondition: (id, c) => {
+      const { [id]: _old, ...rest } = get().look.conditions ?? {};
+      set({ look: { ...get().look, conditions: c ? { ...rest, [id]: c } : rest } });
+    },
+    segments: [],
+    markSegmentStart: (t0) => set({ segAnchor: t0 }),
+    markSegmentEnd: (t1) => {
+      const a = get().segAnchor;
+      if (a === undefined || !(t1 > a + 500)) return;
+      const n = get().segments.filter((g) => g.kind === 'segment').length + 1;
+      set({ segments: [...get().segments, { id: newSegmentId(), name: t('seg.defaultSegment', { n }), kind: 'segment', startMs: a, endMs: t1 }], segAnchor: undefined });
+    },
+    markLap: (t1) => {
+      const a = get().segAnchor;
+      if (a === undefined) return set({ segAnchor: t1 });
+      if (!(t1 > a + 500)) return;
+      const n = get().segments.filter((g) => g.kind === 'lap').length + 1;
+      set({ segments: [...get().segments, { id: newSegmentId(), name: t('seg.defaultLap', { n }), kind: 'lap', startMs: a, endMs: t1 }], segAnchor: t1 });
+    },
+    cancelSegmentAnchor: () => set({ segAnchor: undefined }),
+    updateSegment: (id, patch) =>
+      set({
+        segments: get().segments.map((g) => {
+          if (g.id !== id) return g;
+          const next = { ...g, ...patch };
+          return next.endMs > next.startMs + 500 ? next : g;
+        }),
+      }),
+    removeSegment: (id) => set({ segments: get().segments.filter((g) => g.id !== id) }),
+    clearSegments: () => set({ segments: [], segAnchor: undefined }),
+    importDeviceLaps: () => {
+      const laps = get().ride?.laps ?? [];
+      const kept = get().segments.filter((g) => g.kind !== 'lap');
+      set({ segments: [...kept, ...laps.map((l, i) => ({ id: newSegmentId(), name: t('seg.defaultLap', { n: i + 1 }), kind: 'lap' as const, startMs: l.startMs, endMs: l.endMs }))] });
+    },
   };
 });
 
 // Remember the choices for the next video
 useProject.subscribe((s) => {
-  const prefs: Prefs = { overlays: s.chosen, layouts: s.layouts, format: s.format, platforms: s.platforms, blockZones: s.blockZones, shortSide: s.shortSide, mapZoomM: s.mapZoomM, look: s.look };
+  const prefs: Prefs = { overlays: s.chosen, layouts: s.layouts, format: s.format, platforms: s.platforms, blockZones: s.blockZones, shortSide: s.shortSide, mapZoomM: s.mapZoomM, look: s.look, pr: s.pr };
   try {
     localStorage.setItem(PREFS_KEY, JSON.stringify(prefs));
   } catch {

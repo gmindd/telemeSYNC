@@ -190,6 +190,8 @@ export interface OverlayStyle {
   gradientTo: string;
   /** Opacity of the dark panel background (0 = no background). */
   panelOpacity: number;
+  /** Background opacity of single gadgets, instead of panelOpacity (composites only). */
+  gadgetOpacity?: Partial<Record<OverlayId, number>>;
   /** Panel chart time window, minutes. */
   chartMinutes: number;
   /** Panel chart distance window, km (mi in imperial). */

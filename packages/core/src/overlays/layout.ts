@@ -24,8 +24,15 @@ export function compositeSize(clipWidth: number | undefined, clipHeight: number 
 }
 
 const MARGIN = 0.025;
+/** Default width (px at 1×) of a map: no larger than a dial, so a new 2D map doesn't cover the rest of the frame. */
+const MAP_DEFAULT_PX = 300;
+const MAPS: OverlayId[] = ['map', 'dialMap', 'natalMap'];
+const PROFILES: OverlayId[] = ['elevationProfile', 'dialProfile', 'natalProfile'];
 
-/** Fills missing placements with a default arrangement: numbers top-left, map top-right, profile bottom. */
+/**
+ * Fills missing placements with a default arrangement: numbers top-left, maps top-right, profiles bottom. Several
+ * maps go one under the other (and profiles one above the other) instead of all in the same corner.
+ */
 export function resolveLayout(ids: OverlayId[], layout: GadgetLayout, aspect: number, style: OverlayStyle): Record<OverlayId, GadgetPlacement> {
   const out = {} as Record<OverlayId, GadgetPlacement>;
   // Default: gadget shown at its 1× size on a frame whose short side is 1080 px.
@@ -34,14 +41,32 @@ export function resolveLayout(ids: OverlayId[], layout: GadgetLayout, aspect: nu
   let colX = MARGIN;
   let y = MARGIN;
   let colW = 0;
+  let mapY = MARGIN;
+  let profileBottom = 1 - MARGIN;
+  // New maps go under the maps already placed, new profiles above the profiles already placed
+  for (const id of ids) {
+    const placed = layout[id];
+    if (!placed) continue;
+    const s = getOverlay(id).size(style);
+    const h = placed.w * (s.height / s.width) * aspect;
+    if (MAPS.includes(id)) mapY = Math.max(mapY, placed.y + h + MARGIN / 2);
+    else if (PROFILES.includes(id)) profileBottom = Math.min(profileBottom, placed.y - MARGIN / 2);
+  }
   for (const id of ids) {
     const s = getOverlay(id).size(style);
-    const w = s.width / frameW;
-    const hFrac = s.height / frameH;
+    let w = s.width / frameW;
+    let hFrac = s.height / frameH;
     let p: GadgetPlacement;
-    if (id === 'map' || id === 'dialMap' || id === 'natalMap') p = { x: 1 - w - MARGIN, y: MARGIN, w };
-    else if (id === 'elevationProfile' || id === 'dialProfile' || id === 'natalProfile') p = { x: (1 - w) / 2, y: 1 - hFrac - MARGIN, w };
-    else {
+    if (MAPS.includes(id)) {
+      const k = Math.min(1, MAP_DEFAULT_PX / s.width);
+      w *= k;
+      hFrac *= k;
+      p = { x: 1 - w - MARGIN, y: Math.min(mapY, Math.max(MARGIN, 1 - hFrac - MARGIN)), w };
+      if (!layout[id]) mapY += hFrac + MARGIN / 2;
+    } else if (PROFILES.includes(id)) {
+      p = { x: (1 - w) / 2, y: Math.max(MARGIN, profileBottom - hFrac), w };
+      if (!layout[id]) profileBottom -= hFrac + MARGIN / 2;
+    } else {
       if (y + hFrac > 1 - MARGIN && y > MARGIN) {
         colX += colW + MARGIN / 2;
         y = MARGIN;
@@ -54,6 +79,19 @@ export function resolveLayout(ids: OverlayId[], layout: GadgetLayout, aspect: nu
     out[id] = layout[id] ?? p;
   }
   return out;
+}
+
+const ownStyles = new WeakMap<OverlayStyle, Map<OverlayId, OverlayStyle>>();
+
+/** The style a gadget is drawn with: the shared one, or with its own background opacity (one object per gadget, kept). */
+export function gadgetStyle(style: OverlayStyle, id: OverlayId): OverlayStyle {
+  const op = style.gadgetOpacity?.[id];
+  if (op === undefined || op === style.panelOpacity) return style;
+  let m = ownStyles.get(style);
+  if (!m) ownStyles.set(style, (m = new Map()));
+  let s = m.get(id);
+  if (!s) m.set(id, (s = { ...style, panelOpacity: op }));
+  return s;
 }
 
 /** Draws several gadgets into one frame of size width × height (transparent background). */
@@ -99,7 +137,7 @@ export function drawComposite(
     ctx.save();
     if (alpha < 1) ctx.globalAlpha = alpha;
     ctx.setTransform(k, 0, 0, k, p.x * width, p.y * height);
-    def.draw(ctx, fs, style, octx);
+    def.draw(ctx, fs, gadgetStyle(style, id), octx);
     ctx.restore();
   }
 }

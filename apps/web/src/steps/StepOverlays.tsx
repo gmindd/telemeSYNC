@@ -3,6 +3,8 @@ import {
   DEFAULT_STYLE,
   detectRuns,
   formatClock,
+  GHOST_DISTANCES,
+  parseClock,
   formatPace,
   overlayGroup,
   overlaySports,
@@ -157,19 +159,7 @@ function HeartRateOptions() {
   );
 }
 
-const GHOST_DISTANCES = [5000, 10000, 21097.5, 42195];
 const GHOST_NAMES = ['ov.ghost.5k', 'ov.ghost.10k', 'ov.ghost.half', 'ov.ghost.marathon'] as const;
-
-/** "h:mm:ss", "mm:ss" or "m:ss" → ms; null when it is not a time. */
-function parseClock(text: string): number | null {
-  const parts = text.trim().split(/[:.,]/).map((x) => x.trim());
-  if (parts.length < 2 || parts.length > 3 || parts.some((x) => !/^\d{1,3}$/.test(x))) return null;
-  const n = parts.map(Number);
-  const [h, m, sec] = n.length === 3 ? n : [0, n[0], n[1]];
-  if (sec >= 60 || (n.length === 3 && m >= 60)) return null;
-  const ms = ((h * 60 + m) * 60 + sec) * 1000;
-  return ms > 0 ? ms : null;
-}
 
 /** The personal record raced by the PR ghost gadget: distance, time and where the race starts. */
 function GhostOptions({ clipStart }: { clipStart?: number }) {

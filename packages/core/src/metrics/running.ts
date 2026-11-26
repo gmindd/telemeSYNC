@@ -161,6 +161,30 @@ export function splitAt(list: Split[], t: number): Split | undefined {
 
 // ---------------------------------------------------------------------------------------- PR ghost
 
+/** Usual race distances offered for the PR (m): 5 km, 10 km, half marathon, marathon. */
+export const GHOST_DISTANCES = [5000, 10000, 21097.5, 42195];
+
+/**
+ * "h:mm:ss", "mm:ss" or "m:ss" → ms; null when it is not a time. Digits alone work too, for number pads without ":":
+ * "28" = 28 minutes, "2830" = 28:30, "13015" = 1:30:15.
+ */
+export function parseClock(text: string): number | null {
+  const raw = text.trim();
+  if (/^\d{1,6}$/.test(raw)) {
+    if (raw.length <= 2) return parseClock(`${raw}:00`);
+    const sec = raw.slice(-2);
+    const rest = raw.slice(0, -2);
+    return parseClock(rest.length <= 2 ? `${rest}:${sec}` : `${rest.slice(0, -2)}:${rest.slice(-2)}:${sec}`);
+  }
+  const parts = raw.split(/[:.,]/).map((x) => x.trim());
+  if (parts.length < 2 || parts.length > 3 || parts.some((x) => !/^\d{1,3}$/.test(x))) return null;
+  const n = parts.map(Number);
+  const [h, m, sec] = n.length === 3 ? n : [0, n[0], n[1]];
+  if (sec >= 60 || (n.length === 3 && m >= 60)) return null;
+  const ms = ((h * 60 + m) * 60 + sec) * 1000;
+  return ms > 0 ? ms : null;
+}
+
 /** The runner's personal record to race against: distance, time and where the race starts. */
 export interface Ghost {
   distanceM: number;

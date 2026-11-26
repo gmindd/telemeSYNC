@@ -260,8 +260,8 @@ export const natalDistanceGlobeOverlay: OverlayDefinition = {
     ctx.beginPath();
     ctx.arc(cx, cy, GR, 0, Math.PI * 2);
     const g = ctx.createRadialGradient(cx - 30, cy - 40, 10, cx, cy, GR);
-    g.addColorStop(0, `rgba(40,70,110,${Math.max(0.55, opacity(style))})`);
-    g.addColorStop(1, `rgba(8,16,30,${Math.max(0.7, opacity(style))})`);
+    g.addColorStop(0, `rgba(40,70,110,${opacity(style)})`);
+    g.addColorStop(1, `rgba(8,16,30,${opacity(style)})`);
     ctx.fillStyle = g;
     ctx.fill();
     ctx.save();

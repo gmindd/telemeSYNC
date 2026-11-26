@@ -71,7 +71,7 @@ export function natalIcon(ctx: Ctx2D, icon: NatalIcon, cx: number, cy: number, s
 function trackAndDisc(ctx: Ctx2D, p: DialPaint) {
   ctx.beginPath();
   ctx.arc(CX, CY, ARC_R + ARC_W / 2 + 4, 0, Math.PI * 2);
-  ctx.fillStyle = '#0d1116';
+  ctx.fillStyle = p.rim;
   ctx.fill();
   ctx.beginPath();
   ctx.arc(CX, CY, ARC_R, angleAt(0), angleAt(1));
@@ -82,7 +82,7 @@ function trackAndDisc(ctx: Ctx2D, p: DialPaint) {
   ctx.beginPath();
   ctx.arc(CX, CY, R_INNER, 0, Math.PI * 2);
   const g = ctx.createRadialGradient(CX, CY - 30, 10, CX, CY, R_INNER);
-  g.addColorStop(0, withAlpha('#1b2430', 0.98));
+  g.addColorStop(0, p.discCore);
   g.addColorStop(1, p.disc);
   ctx.fillStyle = g;
   ctx.fill();

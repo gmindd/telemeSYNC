@@ -24,21 +24,39 @@ export interface DialColors {
 }
 
 export interface DialPaint {
-  /** Text style inside the dial: no outline/shadow when the disc is dark enough. */
+  /** Text style inside the dial: no outline/shadow when the disc is dark enough, outlined over a light one. */
   ts: OverlayStyle;
+  /** Edge of the disc (and the pills under the dial). */
   disc: string;
+  /** Centre of the disc. */
+  discCore: string;
+  /** Dark band of the rim, behind the arc. */
+  rim: string;
+  /** Opacity of the rim's metal (chainring, map background). */
+  rimAlpha: number;
   label: string;
 }
 
+/**
+ * Background of the round gadgets, following the background opacity setting: at the default (80 %) the
+ * dials look as they always did, lower makes the disc, rim and map see-through, 0 % leaves only the arc,
+ * the numbers (outlined, so they read over the video) and the route.
+ */
 export function dialPaint(style: OverlayStyle): DialPaint {
   const op = Math.max(0, Math.min(1, style.panelOpacity ?? 0.8));
-  // The disc stays fairly dark even with a light panel background, or the numbers lose contrast.
-  const discOp = Math.max(0.35, op);
+  const rimAlpha = Math.min(1, op * 1.25);
   return {
-    ts: discOp >= 0.35 ? { ...style, outlineWidth: 0, shadow: false } : style,
-    disc: `rgba(9,12,17,${Math.min(0.96, discOp + 0.12)})`,
+    ts: op >= 0.35 ? { ...style, outlineWidth: 0, shadow: false } : style,
+    disc: `rgba(9,12,17,${round3(Math.min(0.96, op * 1.15))})`,
+    discCore: withAlpha('#1b2430', round3(Math.min(0.98, op * 1.225))),
+    rim: `rgba(13,17,22,${round3(rimAlpha)})`,
+    rimAlpha,
     label: 'rgba(255,255,255,0.62)',
   };
+}
+
+function round3(v: number): number {
+  return Math.round(v * 1000) / 1000;
 }
 
 export function angleAt(f: number): number {
@@ -146,23 +164,28 @@ export function drawDialBase(ctx: Ctx2D, colors: DialColors, p: DialPaint, rim: 
   ctx.lineJoin = 'round';
   const kind: DialRim = rim === true ? 'chainring' : rim === false ? 'plain' : rim;
   if (kind === 'chainring') {
+    ctx.globalAlpha = p.rimAlpha;
     chainring(ctx, 34);
+    ctx.globalAlpha = 1;
     // Bolt circle look: a darker band inside the teeth.
     ctx.beginPath();
     ctx.arc(CX, CY, R_RIM, 0, Math.PI * 2);
-    ctx.fillStyle = '#0d1116';
+    ctx.fillStyle = p.rim;
     ctx.fill();
   } else if (kind === 'track' || kind === 'snow') {
+    // The background opacity fades the running/snow rims like the chainring
+    ctx.globalAlpha = p.rimAlpha;
     if (kind === 'track') trackRim(ctx);
     else snowRim(ctx);
+    ctx.globalAlpha = 1;
     ctx.beginPath();
     ctx.arc(CX, CY, R_RIM, 0, Math.PI * 2);
-    ctx.fillStyle = '#0d1116';
+    ctx.fillStyle = p.rim;
     ctx.fill();
   } else {
     ctx.beginPath();
     ctx.arc(CX, CY, R_ROOT, 0, Math.PI * 2);
-    ctx.fillStyle = '#0d1116';
+    ctx.fillStyle = p.rim;
     ctx.fill();
     ctx.strokeStyle = withAlpha(colors.from, 0.5);
     ctx.lineWidth = 2;
@@ -179,7 +202,7 @@ export function drawDialBase(ctx: Ctx2D, colors: DialColors, p: DialPaint, rim: 
   ctx.beginPath();
   ctx.arc(CX, CY, R_INNER, 0, Math.PI * 2);
   const g = ctx.createRadialGradient(CX, CY - 30, 10, CX, CY, R_INNER);
-  g.addColorStop(0, withAlpha('#1b2430', 0.98));
+  g.addColorStop(0, p.discCore);
   g.addColorStop(1, p.disc);
   ctx.fillStyle = g;
   ctx.fill();

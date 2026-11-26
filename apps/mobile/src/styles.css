@@ -111,7 +111,12 @@ input[type='range'] { width: 100%; accent-color: var(--accent); height: 28px; ma
 }
 .bar__title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 700; font-size: 0.95rem; text-align: center; }
 
-.stage { flex: none; height: min(50dvh, calc(100vw / var(--aspect, 0.5625))); display: grid; place-items: center; background: #000; overflow: hidden; }
+.stage {
+  flex: none; height: min(50dvh, calc(100vw / var(--aspect, 0.5625))); display: grid; place-items: center; background: #000; overflow: hidden;
+  transition: height 0.25s ease;
+}
+/* Scrolling the tools down: the picture stays in view but takes at most a third of the screen */
+.editor.is-compact .stage { height: min(33dvh, calc(100vw / var(--aspect, 0.5625))); }
 .frame { position: relative; overflow: hidden; touch-action: none; background: #05080b; }
 .frame video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
 .frame__overlay { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
@@ -163,6 +168,8 @@ input[type='range'] { width: 100%; accent-color: var(--accent); height: 28px; ma
 /* Gadgets panel */
 .selected { display: grid; gap: 10px; padding: 12px; border-radius: 16px; background: var(--panel); border: 1px solid var(--accent); }
 .selected__head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.gadget-bg { display: grid; gap: 6px; justify-items: start; }
+.gadget-bg .field { justify-self: stretch; }
 .onvideo { display: grid; gap: 8px; }
 .onvideo .chips { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin: 0 -14px; padding: 0 14px; }
 .onvideo .chips::-webkit-scrollbar { display: none; }
@@ -174,7 +181,10 @@ input[type='range'] { width: 100%; accent-color: var(--accent); height: 28px; ma
   background: radial-gradient(circle at 30% 20%, #2a3846, #121a22); border: 2px solid transparent;
 }
 .thumbs--panels .thumb__img, .thumbs--maps .thumb__img { aspect-ratio: 16 / 9; }
-.thumb__img canvas { max-width: 100%; max-height: 100%; width: auto; height: auto; }
+/* Absolutely placed: a percentage max-height inside an aspect-ratio box isn't resolved by every Android WebView,
+   and the canvas then showed at its own size (420 px for the 2D map) over the rest of the panel */
+.thumb__img { overflow: hidden; }
+.thumb__img canvas { position: absolute; inset: 8px; margin: auto; max-width: calc(100% - 16px); max-height: calc(100% - 16px); width: auto; height: auto; }
 .thumb.is-on .thumb__img { border-color: var(--accent); }
 .thumb__check { position: absolute; top: 6px; right: 6px; display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: var(--accent); color: #140a00; font-size: 0.8rem; font-weight: 800; }
 .thumb__label { font-size: 0.74rem; color: var(--muted); line-height: 1.25; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
@@ -239,6 +249,15 @@ input[type='range'] { width: 100%; accent-color: var(--accent); height: 28px; ma
 .cat__n { font-size: 0.72rem; padding: 1px 7px; border-radius: 999px; background: rgba(255, 255, 255, 0.08); }
 .cat.is-on .cat__n { background: rgba(0, 0, 0, 0.18); }
 
+/* Sport tabs above the gadget categories */
+.sports { display: flex; gap: 6px; margin-bottom: 8px; }
+.sport {
+  flex: 1; min-height: 40px; display: grid; place-items: center; gap: 0; padding: 4px 6px; border-radius: 12px;
+  border: 1px solid var(--border); background: var(--panel); color: var(--text); font-size: 0.8rem; font-weight: 700; line-height: 1.15;
+}
+.sport.is-on { background: var(--gradient); color: #140a00; border-color: transparent; }
+.sport__file { font-size: 0.66rem; font-weight: 600; opacity: 0.8; }
+
 /* Strava */
 .pickcard__actions { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .pickcard__actions .pick { grid-column: auto; }
@@ -281,6 +300,12 @@ input[type='range'] { width: 100%; accent-color: var(--accent); height: 28px; ma
   background: var(--accent-2); border: 1px solid #140a00; pointer-events: none;
 }
 
+/* PR ghost settings */
+.pr { display: grid; gap: 10px; padding: 12px; border-radius: 16px; background: var(--panel); border: 1px solid var(--accent); }
+.pr h3 { font-size: 1rem; }
+.pr__row { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 8px; }
+.pr select.num-input { appearance: none; -webkit-appearance: none; }
+
 /* Gadget settings (background, heart rate and power zones) */
 .look { border-radius: 16px; background: var(--panel); border: 1px solid var(--border); }
 .look > summary { list-style: none; display: flex; align-items: center; justify-content: space-between; padding: 12px; cursor: pointer; }
@@ -295,3 +320,26 @@ input[type='range'] { width: 100%; accent-color: var(--accent); height: 28px; ma
   color: var(--text); font: inherit; font-variant-numeric: tabular-nums; user-select: text; -webkit-user-select: text;
 }
 .zone-dot { display: inline-block; width: 8px; height: 8px; margin-right: 4px; border-radius: 50%; vertical-align: middle; }
+
+/* When a gadget appears (selected gadget) */
+.cond { display: grid; gap: 10px; }
+.cond__row { display: grid; grid-template-columns: repeat(auto-fit, minmax(96px, 1fr)); gap: 8px; }
+.cond__input { display: flex; align-items: center; gap: 6px; }
+.cond__input .num-input { min-width: 0; flex: 1; }
+.chip__tag { color: var(--accent); font-weight: 600; }
+
+/* Units at the top of the settings */
+.look__units { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
+
+/* Segments and laps */
+.segs__marks { display: flex; flex-wrap: wrap; gap: 8px; }
+.segs__list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.segs__item { display: grid; gap: 6px; padding: 10px; border-radius: 12px; background: var(--bg); border: 1px solid var(--border); }
+.segs__item--lap { border-left: 3px solid var(--accent); }
+.segs__head { display: flex; align-items: center; gap: 8px; }
+.segs__kind { font-size: 0.75rem; text-transform: uppercase; color: var(--muted); }
+.segs__name { flex: 1; min-width: 0; }
+.segs__time { font-variant-numeric: tabular-nums; }
+.segs__nudge { display: flex; align-items: center; gap: 6px; font-size: 0.82rem; color: var(--muted); }
+.segs__nudge span { flex: 1; }
+.segs__actions { display: flex; flex-wrap: wrap; gap: 8px; }
