@@ -292,7 +292,7 @@ const watch = g({
     const ride = octx.ride;
     const f = effectiveFrame(frame, style);
     const sport = sportOf(style, ride);
-    const running = sport === 'running' || sport === 'hiking';
+    const running = sport === 'running';
     const main = metricRole(running ? 'pace' : 'speed');
     watchFace(ctx, 200, 200, 190, dialData(main, f, style, ride), true);
     const subs = [running ? 'steps' : 'cadence', 'heartRate', 'altitude', 'distance']

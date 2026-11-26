@@ -1,6 +1,5 @@
 import { XMLParser } from 'fast-xml-parser';
-import type { RawSample, RawTelemetry } from './types.ts';
-import { sportFromName } from './sport.ts';
+import { sportFromText, type RawSample, type RawTelemetry, type Sport } from './types.ts';
 import { LocalizedError } from '../i18n/index.ts';
 
 function toNum(v: unknown): number | undefined {
@@ -49,10 +48,10 @@ export function parseGpx(xml: string, name?: string): RawTelemetry {
 
   const samples: RawSample[] = [];
   let trackName: string | undefined;
-  let trackType: string | undefined;
+  let sport: Sport | undefined;
   for (const trk of asArray<any>(gpx.trk)) {
     trackName ??= typeof trk.name === 'string' ? trk.name : undefined;
-    trackType ??= typeof trk.type === 'string' ? trk.type : undefined;
+    sport ??= sportFromText(typeof trk.type === 'string' ? trk.type : undefined);
     for (const seg of asArray<any>(trk.trkseg)) {
       for (const p of asArray<any>(seg.trkpt)) {
         const t = p.time ? Date.parse(String(p.time)) : NaN;
@@ -80,5 +79,5 @@ export function parseGpx(xml: string, name?: string): RawTelemetry {
   if (samples.length === 0) throw new LocalizedError('err.gpxNoTime');
   samples.sort((a, b) => a.t - b.t);
   const creator = typeof gpx['@creator'] === 'string' ? gpx['@creator'] : undefined;
-  return { source: 'gpx', sport: sportFromName(trackType), name: trackName ?? name, device: creator, samples };
+  return { source: 'gpx', name: trackName ?? name, device: creator, samples, sport };
 }

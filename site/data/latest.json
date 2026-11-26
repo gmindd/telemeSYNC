@@ -1,18 +1,18 @@
 {
-  "version": "1.1.1",
-  "date": "2026-11-12",
-  "summary": "W/kg e potência média de 3 s, zonas das redes sociais na pré-visualização e definições junto aos gadgets.",
+  "version": "1.2.0",
+  "date": "2026-11-19",
+  "summary": "Corrida e trail, ski e snowboard; gadgets que aparecem só quando interessa; mapa com ruas na sincronização; rodar o vídeo 90°; desnível igual ao do ciclocomputador.",
   "summaries": {
-    "en": "W/kg and 3-second power, social media zones in the preview and settings next to the gadgets.",
-    "pt": "W/kg e potência média de 3 s, zonas das redes sociais na pré-visualização e definições junto aos gadgets.",
-    "fr": "W/kg et puissance sur 3 s, zones des réseaux sociaux dans l’aperçu et réglages à côté des gadgets.",
-    "es": "W/kg y potencia media de 3 s, zonas de las redes sociales en la vista previa y ajustes junto a los gadgets.",
-    "de": "W/kg und 3-Sekunden-Leistung, Zonen der sozialen Netzwerke in der Vorschau und Einstellungen bei den Gadgets."
+    "en": "Running and trail, skiing and snowboarding; gadgets that appear only when it matters; a map with streets in the sync step; video rotated 90°; elevation gain matching the bike computer.",
+    "pt": "Corrida e trail, ski e snowboard; gadgets que aparecem só quando interessa; mapa com ruas na sincronização; rodar o vídeo 90°; desnível igual ao do ciclocomputador.",
+    "fr": "Course et trail, ski et snowboard ; des gadgets qui n’apparaissent que quand ça compte ; une carte avec les rues à la synchronisation ; vidéo pivotée de 90° ; dénivelé identique à celui du compteur.",
+    "es": "Running y trail, esquí y snowboard; gadgets que aparecen solo cuando importa; mapa con calles en la sincronización; girar el vídeo 90°; desnivel igual al del ciclocomputador.",
+    "de": "Laufen und Trail, Ski und Snowboard; Gadgets, die nur erscheinen, wenn es zählt; Karte mit Straßen beim Synchronisieren; Video um 90° drehen; Höhenmeter wie beim Radcomputer."
   },
-  "downloadUrl": "https://github.com/gmindd/telemeSYNC/releases/download/v1.1.1/telemeSYNC-1.1.1-windows.zip",
+  "downloadUrl": "https://github.com/gmindd/telemeSYNC/releases/download/v1.2.0/telemeSYNC-1.2.0-windows.zip",
   "downloads": {
-    "windows": "https://github.com/gmindd/telemeSYNC/releases/download/v1.1.1/telemeSYNC-1.1.1-windows.zip",
-    "mac": "https://github.com/gmindd/telemeSYNC/releases/download/v1.1.1/telemeSYNC-1.1.1-macos.zip"
+    "windows": "https://github.com/gmindd/telemeSYNC/releases/download/v1.2.0/telemeSYNC-1.2.0-windows.zip",
+    "mac": "https://github.com/gmindd/telemeSYNC/releases/download/v1.2.0/telemeSYNC-1.2.0-macos.zip"
   },
-  "changelogUrl": "https://telemesync.pereiragabriel.com/#novidades"
+  "changelogUrl": "https://telemesync.app/#novidades"
 }

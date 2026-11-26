@@ -1,5 +1,5 @@
 import { pick, type Lang, type Translations } from '../i18n/index.ts';
-import type { Sport } from '../telemetry/sport.ts';
+import type { Sport } from '../telemetry/types.ts';
 
 // Overlay themes: the look of the gadgets. The app organises gadgets on three axes that are the same everywhere:
 // the sport (which metrics), the theme (the look) and the category (the kind of gadget).
@@ -55,7 +55,7 @@ export const THEMES: ThemeInfo[] = [
   {
     id: 'minimal',
     status: 'preview',
-    sports: ['running', 'hiking'],
+    sports: ['running'],
     name: ['Minimal Pro', 'Minimal Pro', 'Minimal Pro', 'Minimal Pro', 'Minimal Pro'],
     lead: [
       'Sports-watch faces: matte black, white ticks, one orange accent, big numbers. Made for running and trail.',
@@ -69,7 +69,7 @@ export const THEMES: ThemeInfo[] = [
   {
     id: 'ice',
     status: 'preview',
-    sports: ['ski'],
+    sports: ['snow'],
     name: ['Ice', 'Gelo', 'Glace', 'Hielo', 'Eis'],
     lead: [
       'Frosted ice and frozen glass, cyan and white, the run as a glacier, runs and vertical drop. Made for ski and snowboard.',
@@ -83,7 +83,7 @@ export const THEMES: ThemeInfo[] = [
   {
     id: 'outdoor',
     status: 'preview',
-    sports: ['hiking', 'cycling', 'running'],
+    sports: ['running', 'cycling'],
     name: ['Outdoor', 'Outdoor', 'Outdoor', 'Outdoor', 'Outdoor'],
     lead: [
       'Expedition gear: brass, leather, kraft paper with contour lines, road signs and trail markers. For mountain bike, gravel and hiking.',
@@ -111,7 +111,7 @@ export const THEMES: ThemeInfo[] = [
   {
     id: 'hud',
     status: 'preview',
-    sports: ['cycling', 'ski'],
+    sports: ['cycling', 'snow'],
     name: ['Aviation HUD', 'HUD aviação', 'HUD aviation', 'HUD de aviación', 'Flug-HUD'],
     lead: [
       'Thin green lines like a fighter jet’s head-up display: pitch ladder for the grade, heading tape, speed and altitude tapes.',
@@ -192,10 +192,8 @@ export const categoryName = (c: GadgetCategory, lang: Lang | undefined) => pick(
 
 const SPORT_NAMES: Record<Sport, Translations> = {
   cycling: ['Cycling', 'Ciclismo', 'Vélo', 'Ciclismo', 'Radfahren'],
-  running: ['Running and trail', 'Corrida e trail', 'Course et trail', 'Running y trail', 'Laufen und Trail'],
-  ski: ['Ski and snowboard', 'Ski e snowboard', 'Ski et snowboard', 'Esquí y snowboard', 'Ski und Snowboard'],
-  hiking: ['Hiking', 'Caminhada', 'Randonnée', 'Senderismo', 'Wandern'],
-  other: ['Other', 'Outro', 'Autre', 'Otro', 'Andere'],
+  running: ['Running, trail and hiking', 'Corrida, trail e caminhada', 'Course, trail et randonnée', 'Running, trail y senderismo', 'Laufen, Trail und Wandern'],
+  snow: ['Ski and snowboard', 'Ski e snowboard', 'Ski et snowboard', 'Esquí y snowboard', 'Ski und Snowboard'],
 };
 
 export const sportName = (s: Sport, lang: Lang | undefined) => pick(SPORT_NAMES[s], lang);

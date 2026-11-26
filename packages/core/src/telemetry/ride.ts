@@ -1,10 +1,9 @@
 import { haversine } from '../util/geo.ts';
 import { lowerIndex } from '../util/search.ts';
-import { cumulativeGain, filterAltitude } from '../metrics/elevation.ts';
+import { elevationChange, filterAltitude, matchDeviceTotals } from '../metrics/elevation.ts';
 import { gradeOverDistance } from '../metrics/grade.ts';
 import { movingAverageByTime, trailingAverageByTime } from '../metrics/smoothing.ts';
-import type { ChannelKey, RawSample, RawTelemetry } from './types.ts';
-import { guessSport, type Sport } from './sport.ts';
+import type { ChannelKey, RawSample, RawTelemetry, Sport } from './types.ts';
 import { LocalizedError } from '../i18n/index.ts';
 
 export type MetricKey =
@@ -39,8 +38,6 @@ export interface RideOptions {
   gradeWindowM?: number;
   /** Absolute grade limit (%). */
   gradeMaxAbs?: number;
-  /** Elevation gain hysteresis (m). */
-  gainThresholdM?: number;
   /** How long a sensor reading is kept when the next records have no value (ms). */
   sensorHoldMs?: number;
 }
@@ -68,15 +65,13 @@ export function holdLast(t: Float64Array, arr: Float64Array, maxHoldMs: number, 
 /** Normalised, derived telemetry for a whole ride. All arrays share the same index. */
 export interface RideData {
   source: RawTelemetry['source'];
-  /** Sport from the file, or guessed from the speed when the file does not say. */
-  sport: Sport;
-  /** True when the sport was written in the file (not guessed). */
-  sportFromFile: boolean;
   name?: string;
   device?: string;
   localOffsetMs?: number;
   /** Laps recorded by the device, if any (UTC ms). */
   laps?: { startMs: number; endMs: number }[];
+  /** Sport the file says it is, when it says (running cadence is then in steps per minute). */
+  sport?: Sport;
   startTime: number;
   endTime: number;
   gapThresholdMs: number;
@@ -89,7 +84,9 @@ export interface RideData {
   speed: Float64Array;
   /** Cumulative metres from ride start. */
   distance: Float64Array;
+  /** Elevation gain and loss so far (m): matched to the device's own totals when the file has them. */
   elevationGain: Float64Array;
+  elevationLoss: Float64Array;
   /** Percent. */
   grade: Float64Array;
   heartRate: Float64Array;
@@ -106,6 +103,7 @@ export interface RideData {
     durationMs: number;
     distanceM: number;
     elevationGainM: number;
+    elevationLossM: number;
     maxSpeed: number;
     avgMovingSpeed: number;
   };
@@ -214,7 +212,17 @@ export function buildRide(raw: RawTelemetry, opts: RideOptions = {}): RideData {
 
   const hasAlt = channels.has('altitude');
   const altitude = hasAlt ? filterAltitude(t, altitudeRaw) : new Float64Array(n).fill(NaN);
-  const elevationGain = hasAlt ? cumulativeGain(altitude, opts.gainThresholdM ?? 2.5) : new Float64Array(n);
+  // Climb and descent: counted on the recorded altitude, then matched to what the device measured (its laps and the
+  // whole activity), so the numbers in the video are the ones the bike computer and its app show.
+  let elevationGain: Float64Array = new Float64Array(n);
+  let elevationLoss: Float64Array = new Float64Array(n);
+  if (hasAlt) {
+    const ch = elevationChange(t, altitudeRaw);
+    const lapTotals = (key: 'ascentM' | 'descentM') =>
+      (raw.laps ?? []).filter((l) => Number.isFinite(l[key])).map((l) => ({ startMs: l.startMs, endMs: l.endMs, total: l[key]! }));
+    elevationGain = matchDeviceTotals(t, ch.gain, lapTotals('ascentM'), raw.deviceTotals?.ascentM);
+    elevationLoss = matchDeviceTotals(t, ch.loss, lapTotals('descentM'), raw.deviceTotals?.descentM);
+  }
   const hasDist = channels.has('distance') || hasPos;
   const grade = hasAlt && hasDist
     ? gradeOverDistance(distance, altitude, opts.gradeWindowM ?? 40, opts.gradeMaxAbs ?? 35)
@@ -241,12 +249,11 @@ export function buildRide(raw: RawTelemetry, opts: RideOptions = {}): RideData {
   const avgMovingSpeed = movingMs > 0 ? distance[n - 1] / (movingMs / 1000) : 0;
   return {
     source: raw.source,
-    sport: raw.sport ?? guessSport(avgMovingSpeed, channels.has('power')),
-    sportFromFile: !!raw.sport,
     name: raw.name,
     device: raw.device,
     localOffsetMs: raw.localOffsetMs,
     laps: raw.laps,
+    sport: raw.sport,
     startTime: t[0],
     endTime: t[n - 1],
     gapThresholdMs,
@@ -258,6 +265,7 @@ export function buildRide(raw: RawTelemetry, opts: RideOptions = {}): RideData {
     speed,
     distance,
     elevationGain,
+    elevationLoss,
     grade,
     heartRate,
     cadence,
@@ -270,6 +278,7 @@ export function buildRide(raw: RawTelemetry, opts: RideOptions = {}): RideData {
       durationMs: t[n - 1] - t[0],
       distanceM: distance[n - 1],
       elevationGainM: elevationGain[n - 1],
+      elevationLossM: elevationLoss[n - 1],
       maxSpeed,
       avgMovingSpeed,
     },

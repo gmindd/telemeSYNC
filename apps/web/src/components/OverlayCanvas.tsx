@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { getOverlay, overlayPixelSize, renderOverlayFrame, type Ctx2D, type OverlayId, type OverlayStyle, type RideData } from '@telemesync/core';
+import { getOverlay, overlayPixelSize, renderOverlayFrame, type Ctx2D, type OverlayId, type OverlayStyle, type RideData, type Streets } from '@telemesync/core';
 
 /** Draws one overlay with the exact same renderer used for export. */
 export function OverlayCanvas(props: {
@@ -9,6 +9,8 @@ export function OverlayCanvas(props: {
   t: number;
   clipStart: number;
   clipEnd: number;
+  /** Streets for the round maps (OpenStreetMap), when read. */
+  streets?: Streets;
   /** CSS width multiplier relative to the overlay pixel size. */
   cssScale?: number;
   /** Fit inside the parent (max width 100 %, max height in px) keeping the aspect ratio. */
@@ -23,7 +25,7 @@ export function OverlayCanvas(props: {
     if (!c) return;
     const ctx = c.getContext('2d');
     if (!ctx) return;
-    renderOverlayFrame(ctx as unknown as Ctx2D, def, props.t, props.style, { ride: props.ride, clipStart: props.clipStart, clipEnd: props.clipEnd });
+    renderOverlayFrame(ctx as unknown as Ctx2D, def, props.t, props.style, { ride: props.ride, clipStart: props.clipStart, clipEnd: props.clipEnd, streets: props.streets });
   });
   const k = props.cssScale ?? 1;
   const css = props.fitHeight

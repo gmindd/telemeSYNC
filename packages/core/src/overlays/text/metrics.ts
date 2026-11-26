@@ -1,18 +1,26 @@
-import type { MetricKey, RideSample } from '../../telemetry/ride.ts';
+import type { MetricKey, RideData, RideSample } from '../../telemetry/ride.ts';
 import { formatDuration, formatTime } from '../../util/timezone.ts';
 import { drawText, labelSize } from '../draw.ts';
 import { showsWkg, type Ctx2D, type OverlayDefinition, type OverlayId, type OverlayStyle } from '../types.ts';
 import { convert, fmt } from '../units.ts';
-import { tr } from '../../i18n/index.ts';
+import { tr, type CoreKey } from '../../i18n/index.ts';
+import type { Sport } from '../../telemetry/types.ts';
 
-interface TextMetric {
-  id: Exclude<Extract<OverlayId, MetricKey>, 'map' | 'elevationProfile'>;
+export interface TextMetric {
+  /** Overlay id; also the metric label key (`metric.<id>`). */
+  id: OverlayId;
+  /** Metric the ride must have (default: the id). */
+  requires?: MetricKey;
+  /** Sports whose catalogue lists it (default cycling). */
+  sports?: Sport[];
   /** Widest expected value, used for a fixed layout (unit never moves). */
   template: (s: OverlayStyle) => string;
-  value: (s: RideSample, style: OverlayStyle) => { text: string; color?: string };
+  value: (s: RideSample, style: OverlayStyle, ride: RideData) => { text: string; color?: string };
   unit: (style: OverlayStyle) => string;
-  /** Smaller second line under the value (power: W/kg), when the style asks for it. */
-  second?: (s: RideSample, style: OverlayStyle) => { text: string; unit: string } | null;
+  /** Smaller second line under the value (power: W/kg, slope: %), when shown. */
+  second?: (s: RideSample, style: OverlayStyle, ride: RideData) => { text: string; unit: string } | null;
+  /** True when the second line is shown with this style (default: W/kg on). */
+  hasSecond?: (style: OverlayStyle) => boolean;
   /** Extra drawing after the unit (e.g. grade wedge); returns used width. */
   extra?: { width: number; draw: (ctx: Ctx2D, x: number, baseline: number, s: RideSample, style: OverlayStyle) => void };
 }
@@ -152,7 +160,7 @@ function layout(m: TextMetric, style: OverlayStyle) {
   const unit = style.showUnit ? m.unit(style) : '';
   const unitW = unit ? unit.length * UNIT_SIZE * 0.62 + 10 : 0;
   const extraW = m.extra?.width ?? 0;
-  const hasSecond = !!m.second && showsWkg(style);
+  const hasSecond = !!m.second && (m.hasSecond ? m.hasSecond(style) : showsWkg(style));
   // The second line's unit ("W/kg") is wider than the first one's ("W").
   const secondUnitW = hasSecond && style.showUnit ? 4 * UNIT_SIZE * 0.8 * 0.62 + 12 : 0;
   const width = Math.ceil(PAD * 2 + valueW + Math.max(unitW, secondUnitW) + extraW);
@@ -164,25 +172,26 @@ function layout(m: TextMetric, style: OverlayStyle) {
   return { valueW, unit, unitW, width, height, baseline, hasSecond, secondBaseline };
 }
 
-function makeOverlay(m: TextMetric): OverlayDefinition {
+export function makeTextOverlay(m: TextMetric): OverlayDefinition {
   return {
     id: m.id,
-    label: tr('en', `metric.${m.id}`),
-    requires: m.id,
+    label: tr('en', `metric.${m.id}` as CoreKey),
+    requires: m.requires ?? (m.id as MetricKey),
+    sports: m.sports,
     textOnly: true,
     size: (style) => {
       const l = layout(m, style);
       return { width: l.width, height: l.height };
     },
-    draw: (ctx, frame, style) => {
+    draw: (ctx, frame, style, octx) => {
       const l = layout(m, style);
       const s = frame.textSample;
       if (style.showLabel) {
-        const label = tr(style.language, `metric.${m.id}`).toLocaleUpperCase(style.language);
+        const label = tr(style.language, `metric.${m.id}` as CoreKey).toLocaleUpperCase(style.language);
         const size = labelSize(ctx, style, label, LABEL_SIZE, 600, l.width - PAD * 2);
         drawText(ctx, label, PAD, PAD + LABEL_SIZE * 0.8, style, { size, weight: 600, tabular: false });
       }
-      const v = m.value(s, style);
+      const v = m.value(s, style, octx.ride);
       const valueRight = PAD + l.valueW;
       drawText(ctx, v.text, valueRight, l.baseline, style, { size: VALUE_SIZE, weight: 800, align: 'right', color: v.color });
       let x = valueRight;
@@ -191,7 +200,7 @@ function makeOverlay(m: TextMetric): OverlayDefinition {
         x += l.unitW;
       }
       m.extra?.draw(ctx, x, l.baseline, s, style);
-      const second = l.hasSecond ? m.second?.(s, style) : null;
+      const second = l.hasSecond ? m.second?.(s, style, octx.ride) : null;
       if (second) {
         const w = drawText(ctx, second.text, valueRight, l.secondBaseline, style, { size: SECOND_SIZE, weight: 800, align: 'right' });
         if (style.showUnit && w) drawText(ctx, second.unit, valueRight + 8, l.secondBaseline, style, { size: UNIT_SIZE * 0.8, weight: 600, tabular: false });
@@ -200,4 +209,4 @@ function makeOverlay(m: TextMetric): OverlayDefinition {
   };
 }
 
-export const textOverlays: OverlayDefinition[] = metrics.map(makeOverlay);
+export const textOverlays: OverlayDefinition[] = metrics.map(makeTextOverlay);

@@ -1,29 +1,68 @@
+import { useState } from 'react';
 import {
   DEFAULT_STYLE,
+  detectRuns,
+  formatClock,
+  formatPace,
+  overlayGroup,
+  overlaySports,
+  overlaysForSport,
+  paceUnit,
+  paceUnitM,
+  SPORTS,
+  type OverlayDefinition,
+  type RideData,
+  type Sport,
   effectiveStart,
   getOverlay,
+  isDialOverlay,
   isSegmentOverlay,
   segmentAt,
   sortedSegments,
   LANGS,
+  OVERLAY_THEMES,
+  overlayLabel,
+  overlayTheme,
+  PANEL_METRICS,
+  panelMetricName,
+  panelMetricOf,
+  panelOptions,
   type Lang,
   type OverlayId,
   type OverlayStyle,
+  type OverlayTheme,
+  type PanelMetric,
+  type PanelOptions,
 } from '@telemesync/core';
+import { OverlayCanvas } from '../components/OverlayCanvas.tsx';
+import { ConditionsPanel } from '../components/ConditionsPanel.tsx';
 import { GadgetPicker } from '../components/GadgetPicker.tsx';
 import { langName, useLang, useT } from '../i18n/index.tsx';
-import { useApp } from '../lib/store.ts';
+import { clipsSpan, drawStyle, useApp } from '../lib/store.ts';
+import { RoutePicker } from '../components/RoutePicker.tsx';
+
+const THEME_KEY = 'telemesync.overlayTheme';
+
+/** Tab of overlay designs last opened (Default or Christmas). */
+function storedTheme(): OverlayTheme {
+  try {
+    const v = localStorage.getItem(THEME_KEY);
+    if (v && (OVERLAY_THEMES as string[]).includes(v)) return v as OverlayTheme;
+  } catch {
+    /* ignore */
+  }
+  return 'default';
+}
 
 const LB_PER_KG = 2.20462;
 
 /** Power options, shown when a gadget with power is chosen: instantaneous or 3 s average, and W/kg with the weight. */
 /** Gadgets that colour or place values by power zone (need the FTP). */
-const POWER_ZONE_IDS: OverlayId[] = ['dialPower', 'panelPower', 'glassPower', 'glassPanelPower'];
-/** Gadgets of the kit themes that show power or heart-rate zones ("hud.power", "cyber.ecg"…). */
-const usesPowerZones = (id: OverlayId) => POWER_ZONE_IDS.includes(id) || /\.power$/.test(id);
+const POWER_ZONE_IDS: OverlayId[] = ['dialPower', 'panelPower'];
+const usesPowerZones = (id: OverlayId) => POWER_ZONE_IDS.includes(id) || id === 'glassPower' || id === 'glassPanelPower' || /\.power$/.test(id);
 /** Gadgets that show heart-rate zones (need the zone limits). */
-const HR_ZONE_IDS: OverlayId[] = ['heartRate', 'dialHeartRate', 'panelHeartRate', 'natalHeartRate', 'natalHeartRateReindeer', 'glassHeartRate', 'glassPanelHeartRate', 'glassHeartRateZone'];
-const usesHrZones = (id: OverlayId) => HR_ZONE_IDS.includes(id) || /\.(heartRate|ecg)$/.test(id);
+const HR_ZONE_IDS: OverlayId[] = ['heartRate', 'dialHeartRate', 'panelHeartRate', 'natalHeartRate', 'natalHeartRateReindeer'];
+const usesHrZones = (id: OverlayId) => HR_ZONE_IDS.includes(id) || id.startsWith('glass') && /HeartRate/.test(id) || /\.(heartRate|ecg|gpsWatch)$/.test(id);
 
 function PowerOptions() {
   const { style, setStyle, overlays } = useApp();
@@ -121,6 +160,164 @@ function HeartRateOptions() {
   );
 }
 
+const GHOST_DISTANCES = [5000, 10000, 21097.5, 42195];
+const GHOST_NAMES = ['ov.ghost.5k', 'ov.ghost.10k', 'ov.ghost.half', 'ov.ghost.marathon'] as const;
+
+/** "h:mm:ss", "mm:ss" or "m:ss" → ms; null when it is not a time. */
+function parseClock(text: string): number | null {
+  const parts = text.trim().split(/[:.,]/).map((x) => x.trim());
+  if (parts.length < 2 || parts.length > 3 || parts.some((x) => !/^\d{1,3}$/.test(x))) return null;
+  const n = parts.map(Number);
+  const [h, m, sec] = n.length === 3 ? n : [0, n[0], n[1]];
+  if (sec >= 60 || (n.length === 3 && m >= 60)) return null;
+  const ms = ((h * 60 + m) * 60 + sec) * 1000;
+  return ms > 0 ? ms : null;
+}
+
+/** The personal record raced by the PR ghost gadget: distance, time and where the race starts. */
+function GhostOptions({ clipStart }: { clipStart?: number }) {
+  const { style, setStyle } = useApp();
+  const tr = useT();
+  const g = style.ghost;
+  const unitM = paceUnitM(style.units);
+  const unit = style.units.system === 'metric' ? 'km' : 'mi';
+  const known = g ? GHOST_DISTANCES.findIndex((d) => Math.abs(d - g.distanceM) < 1) : 1;
+  const [distSel, setDistSel] = useState(known >= 0 ? String(GHOST_DISTANCES[known]) : 'custom');
+  const [custom, setCustom] = useState(g && known < 0 ? String(Math.round((g.distanceM / unitM) * 100) / 100) : '');
+  const [timeText, setTimeText] = useState(g ? formatClock(g.timeMs) : '');
+  const distanceM = distSel === 'custom' ? Number(custom.replace(',', '.')) * unitM : Number(distSel);
+  const timeMs = parseClock(timeText);
+  const save = (d: number, ms: number | null, startMs: number | null) =>
+    setStyle({ ghost: d > 0 && ms ? { distanceM: d, timeMs: ms, startMs } : null });
+  const segs = sortedSegments(style.segments);
+  const startValue =
+    g?.startMs == null ? 'ride' : segs.find((x) => x.startMs === g.startMs) ? `seg:${segs.find((x) => x.startMs === g.startMs)!.id}` : 'clip';
+  const chooseStart = (v: string) => {
+    const startMs = v === 'ride' ? null : v === 'clip' ? clipStart ?? null : segs.find((x) => `seg:${x.id}` === v)?.startMs ?? null;
+    save(distanceM, timeMs, startMs);
+  };
+  return (
+    <div className="card power-options ghost-options">
+      <h3>{tr('ov.ghost.title')}</h3>
+      <p className="lead small">{tr('ov.ghost.lead')}</p>
+      <div className="row">
+        <label className="field">
+          {tr('ov.ghost.distance')}
+          <select
+            value={distSel}
+            onChange={(e) => {
+              setDistSel(e.target.value);
+              if (e.target.value !== 'custom') save(Number(e.target.value), timeMs, g?.startMs ?? null);
+            }}
+          >
+            {GHOST_DISTANCES.map((d, i) => <option key={d} value={String(d)}>{tr(GHOST_NAMES[i])}</option>)}
+            <option value="custom">{tr('ov.ghost.custom')}</option>
+          </select>
+        </label>
+        {distSel === 'custom' ? (
+          <label className="field">
+            {tr('ov.ghost.customDist', { unit })}
+            <input
+              type="number"
+              min={0.1}
+              max={300}
+              step={0.01}
+              value={custom}
+              onChange={(e) => {
+                setCustom(e.target.value);
+                save(Number(e.target.value.replace(',', '.')) * unitM, timeMs, g?.startMs ?? null);
+              }}
+            />
+          </label>
+        ) : null}
+        <label className={`field${!g ? ' suggested' : ''}`}>
+          {tr('ov.ghost.time')}
+          <input
+            type="text"
+            inputMode="numeric"
+            placeholder="45:00"
+            value={timeText}
+            onChange={(e) => {
+              setTimeText(e.target.value);
+              save(distanceM, parseClock(e.target.value), g?.startMs ?? null);
+            }}
+          />
+        </label>
+        <label className="field">
+          {tr('ov.ghost.start')}
+          <select value={startValue} onChange={(e) => chooseStart(e.target.value)}>
+            <option value="ride">{tr('ov.ghost.startRide')}</option>
+            {segs.map((x) => <option key={x.id} value={`seg:${x.id}`}>{tr('ov.ghost.startSegment', { name: x.name })}</option>)}
+            {clipStart !== undefined || startValue === 'clip' ? <option value="clip">{tr('ov.ghost.startClip')}</option> : null}
+          </select>
+        </label>
+      </div>
+      {timeText && !timeMs ? <p className="notice small">{tr('ov.ghost.badTime')}</p> : null}
+      {g ? (
+        <p className="small muted">{tr('ov.ghost.pace', { pace: `${formatPace(g.distanceM / (g.timeMs / 1000), style.units)} ${paceUnit(style.units)}` })}</p>
+      ) : (
+        <p className="notice small">{tr('ov.ghost.need')}</p>
+      )}
+    </div>
+  );
+}
+
+/** Gadgets that draw the route or the elevation profile (the area option applies to them). */
+const ROUTE_IDS: OverlayId[] = ['map', 'elevationProfile', 'dialMap', 'dialProfile', 'natalMap', 'natalProfile'];
+const AREA_MODES: OverlayStyle['mapMode'][] = ['full', 'clips', 'clip', 'custom'];
+
+/** What the maps and profiles show: whole ride, the clips, clip by clip, or a stretch picked on the map. */
+function AreaOptions() {
+  const { style, setStyle, ride, sync } = useApp();
+  const tr = useT();
+  if (!ride) return null;
+  const span = clipsSpan(sync);
+  const clips = sync.clips
+    .map((c) => {
+      const cam = sync.cameras.find((x) => x.id === c.cameraId);
+      const start = cam ? effectiveStart(c, cam) : undefined;
+      return start === undefined ? null : { startMs: start, endMs: start + c.meta.durationMs };
+    })
+    .filter((c): c is { startMs: number; endMs: number } => !!c);
+  const choose = (mode: OverlayStyle['mapMode']) => {
+    // Picking on the map starts from the clips' stretch (or the whole ride) when nothing is chosen yet.
+    if (mode === 'custom' && !style.mapRange) setStyle({ mapMode: mode, mapRange: span ?? { startMs: ride.startTime, endMs: ride.endTime } });
+    else setStyle({ mapMode: mode });
+  };
+  const help = style.mapMode === 'clips' ? (span ? 'ov.area.clipsHelp' : 'ov.area.noClips') : style.mapMode === 'clip' ? (clips.length ? 'ov.area.clipHelp' : 'ov.area.noClips') : style.mapMode === 'custom' ? 'ov.area.customHelp' : null;
+  return (
+    <div className="card power-options area-options">
+      <h3>{tr('ov.area.title')}</h3>
+      <p className="lead small">{tr('ov.area.lead')}</p>
+      <div className="segmented" role="radiogroup">
+        {AREA_MODES.map((m) => (
+          <button key={m} role="radio" aria-checked={style.mapMode === m} className={style.mapMode === m ? 'active' : ''} onClick={() => choose(m)}>
+            {tr(`ov.area.${m}`)}
+          </button>
+        ))}
+      </div>
+      {help ? <p className={`small${help === 'ov.area.noClips' ? ' notice' : ' muted'}`}>{tr(help)}</p> : null}
+      {style.mapMode === 'custom' ? (
+        <RoutePicker
+          ride={ride}
+          value={style.mapRange ?? { startMs: ride.startTime, endMs: ride.endTime }}
+          clips={clips}
+          units={style.units}
+          onChange={(r) => setStyle({ mapRange: r })}
+        />
+      ) : null}
+    </div>
+  );
+}
+
+/** A preview instant inside the ski runs (the second run when the playhead is not in one). */
+function snowPreviewT(ride: RideData, t: number): number {
+  const runs = detectRuns(ride);
+  if (!runs.length || runs.some((r) => t >= r.startMs && t < r.endMs + 15_000)) return t;
+  const r = runs[Math.min(1, runs.length - 1)];
+  return r.startMs + (r.endMs - r.startMs) * 0.6;
+}
+
 function Color({ label, k }: { label: string; k: 'textColor' | 'accentColor' | 'outlineColor' | 'gradientFrom' | 'gradientTo' }) {
   const { style, setStyle } = useApp();
   const hex = /^#[0-9a-f]{6}$/i.test(style[k]) ? style[k] : '#000000';
@@ -133,11 +330,17 @@ function Color({ label, k }: { label: string; k: 'textColor' | 'accentColor' | '
 }
 
 export function StepOverlays() {
-  const { ride, overlays, style, setStyle, sync, activeClipId, playhead, setStep, overlayLang, setOverlayLang } = useApp();
+  const { ride, overlays, toggleOverlay, style, setStyle, sync, activeClipId, playhead, setStep, overlayLang, setOverlayLang, sport, setSport, streets } = useApp();
   const tr = useT();
   const lang = useLang((s) => s.lang);
   if (!ride) return <section><p>{tr('sync.needRide')}</p></section>;
+  // Maps on "only the clips": the stretch the clips cover.
+  const viewStyle = drawStyle(style, sync);
+  const showArea = overlays.some((o) => ROUTE_IDS.includes(o) || o === 'glassMap' || o === 'glassProfile' || /\.(map|profile)$/.test(o));
+  const chartMetrics = PANEL_METRICS.filter((m) => ride.available.has(m));
   const distUnit = style.units.system === 'metric' ? 'km' : 'mi';
+  const setPanel = (m: PanelMetric, patch: Partial<PanelOptions>) =>
+    setStyle({ panels: { ...style.panels, [m]: { ...panelOptions(m, style, ride), ...patch } } });
   const clip = sync.clips.find((c) => c.id === activeClipId);
   const cam = clip ? sync.cameras.find((c) => c.id === clip.cameraId) : undefined;
   const cs = clip && cam ? effectiveStart(clip, cam) : undefined;
@@ -150,15 +353,61 @@ export function StepOverlays() {
   const sortedSegs = sortedSegments(style.segments);
   const sample = sortedSegs[Math.min(1, sortedSegs.length - 1)];
   const segT = segmentAt(style.segments, t) || !sample ? t : sample.startMs + (sample.endMs - sample.startMs) * 0.6;
+  // The PR ghost is previewed during the race (40 % of the PR time in, when the playhead is outside it).
+  const ghostStart = style.ghost?.startMs ?? ride.startTime;
+  const ghostT = style.ghost && (t < ghostStart || t > ghostStart + style.ghost.timeMs * 1.1) ? ghostStart + style.ghost.timeMs * 0.4 : t;
+  const previewT = (d: OverlayDefinition) =>
+    isSegmentOverlay(d.id) ? segT : d.id === 'runGhost' ? ghostT : d.id === 'snowRunLive' || d.id === 'snowRuns' ? snowPreviewT(ride, t) : t;
 
   return (
     <section>
       <h2>{tr('ov.title')}</h2>
       <p className="lead">{tr('ov.lead')}</p>
+      <div className="sport-tabs" role="tablist">
+        {SPORTS.map((sp: Sport) => {
+          const n = overlays.filter((o) => overlaySports(o).includes(sp)).length;
+          return (
+            <button key={sp} role="tab" aria-selected={sport === sp} className={sport === sp ? 'active' : ''} onClick={() => setSport(sp)}>
+              {tr(`ov.sport.${sp}`)}
+              {n ? <span className="theme-count">{n}</span> : null}
+              {ride.sport === sp ? <span className="sport-file">{tr('ov.sportFromFile')}</span> : null}
+            </button>
+          );
+        })}
+      </div>
+
       {showPower ? <PowerOptions /> : null}
       {showHr ? <HeartRateOptions /> : null}
+      {showArea ? <AreaOptions /> : null}
+      <ConditionsPanel />
 
-      <GadgetPicker times={{ t, segT, clipStart, clipEnd }} />
+      <GadgetPicker
+        sport={sport}
+        previewStyle={viewStyle}
+        streets={streets}
+        times={{ t, clipStart, clipEnd }}
+        previewT={previewT}
+        defaultLead={sport === 'running' ? tr('ov.run.lead') : sport === 'snow' ? tr('ov.snow.lead') : undefined}
+        sectionNote={(c) =>
+          c !== 'segments' ? null : sport === 'running' ? (
+            <>
+              <p className="lead">{tr('ov.run.liveLead')}</p>
+              <GhostOptions clipStart={cs} />
+              {style.segments.length === 0 ? <p className="notice">{tr('seg.noneHint')}</p> : null}
+            </>
+          ) : sport === 'snow' ? (
+            <>
+              <p className="lead">{tr('ov.snow.liveLead')}</p>
+              {detectRuns(ride).length === 0 ? <p className="notice">{tr('ov.snow.noRuns')}</p> : null}
+            </>
+          ) : (
+            <>
+              <p className="lead">{tr('seg.sectionLead')}</p>
+              {style.segments.length === 0 ? <p className="notice">{tr('seg.noneHint')}</p> : null}
+            </>
+          )
+        }
+      />
 
       <h3>{tr('ov.style')}</h3>
       <div className="style-form">
@@ -213,13 +462,6 @@ export function StepOverlays() {
           </select>
         </label>
         <label className="field">
-          {tr('ov.map')}
-          <select value={style.mapMode} onChange={(e) => setStyle({ mapMode: e.target.value as 'full' | 'clip' })}>
-            <option value="full">{tr('ov.mapFull')}</option>
-            <option value="clip">{tr('ov.mapClip')}</option>
-          </select>
-        </label>
-        <label className="field">
           {tr('ov.gapSpeed')}
           <select value={style.gapSpeed} onChange={(e) => setStyle({ gapSpeed: e.target.value as 'zero' | 'dash' })}>
             <option value="zero">0</option>
@@ -247,7 +489,7 @@ export function StepOverlays() {
           {tr('ov.distWindow', { unit: distUnit })}
           <input type="number" min={0.5} max={200} step={0.5} value={style.chartDistance} onChange={(e) => Number(e.target.value) > 0 && setStyle({ chartDistance: Number(e.target.value) })} />
         </label>
-        <button className="small" onClick={() => setStyle({ ...DEFAULT_STYLE, language: style.language, segments: style.segments, weightKg: style.weightKg, ftp: style.ftp, hrZones: style.hrZones, hrMax: style.hrMax, sport: style.sport })}>{tr('ov.resetStyle')}</button>
+        <button className="small" onClick={() => setStyle({ ...DEFAULT_STYLE, language: style.language, segments: style.segments, weightKg: style.weightKg, ftp: style.ftp, hrZones: style.hrZones, hrMax: style.hrMax, sport: style.sport, watch: style.watch })}>{tr('ov.resetStyle')}</button>
       </div>
       <button className="primary" onClick={() => setStep('render')} disabled={!overlays.length}>{tr('ov.next')}</button>
     </section>

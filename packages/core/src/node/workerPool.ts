@@ -3,6 +3,7 @@ import type { Fps } from '../media/types.ts';
 import type { OverlayId, OverlayStyle } from '../overlays/types.ts';
 import type { GadgetPlacement } from '../overlays/layout.ts';
 import type { RideData } from '../telemetry/ride.ts';
+import type { Streets } from '../map/streets.ts';
 import type { OutputFormat } from './render.ts';
 
 export interface WorkerJob {
@@ -16,6 +17,8 @@ export interface WorkerJob {
   style: OverlayStyle;
   clipStart: number;
   clipEnd: number;
+  /** Streets around the clip for the round maps (OpenStreetMap), when they could be read. */
+  streets?: Streets;
   durationMs: number;
   fps: Fps;
   frames?: number;

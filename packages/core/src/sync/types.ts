@@ -60,8 +60,12 @@ export interface Camera {
   offsetMs: number;
   /** Time zone used to interpret local wall-clock timestamps. */
   timeZone: string;
-  /** Preview only: 180 = the camera films upside down (e.g. chest mount). Overlays and exports are not rotated. */
-  videoRotation?: 0 | 180;
+  /**
+   * How the camera's picture is turned (clockwise). 180 = it films upside down (e.g. chest mount): only the preview
+   * turns. 90 / 270 = it films sideways: the picture is shown turned and the frame swaps width and height, so the
+   * gadgets are placed on it and the composite is exported at that size (see shownSize).
+   */
+  videoRotation?: 0 | 90 | 180 | 270;
 }
 
 export interface Clip {

@@ -1,6 +1,5 @@
 import { decodeFit } from './fitDecoder.ts';
-import type { RawSample, RawTelemetry } from './types.ts';
-import { sportFromFit } from './sport.ts';
+import type { RawSample, RawTelemetry, Sport } from './types.ts';
 import { LocalizedError } from '../i18n/index.ts';
 
 const SEMICIRCLE_TO_DEG = 180 / 2 ** 31;
@@ -23,7 +22,21 @@ const REC = {
   temperature: 13, // sint8
   enhancedSpeed: 73, // uint32, scale 1000
   enhancedAltitude: 78, // uint32, scale 5, offset 500
+  fractionalCadence: 53, // uint8, scale 128
 } as const;
+
+/**
+ * FIT sport enum → the app's sports: running (1), walking (11), mountaineering (16), hiking (17) →
+ * running; cross-country skiing (12), alpine skiing (13), snowboarding (14) → snow; cycling (2) and
+ * e-biking (21) → cycling.
+ */
+export function sportFromFit(code: number | undefined): Sport | undefined {
+  if (code === undefined) return undefined;
+  if ([1, 11, 16, 17].includes(code)) return 'running';
+  if ([12, 13, 14].includes(code)) return 'snow';
+  if ([2, 21].includes(code)) return 'cycling';
+  return undefined;
+}
 
 const MANUFACTURERS: Record<number, string> = {
   1: 'garmin',
@@ -75,12 +88,21 @@ export function parseFit(data: ArrayBuffer | Uint8Array, name?: string): RawTele
     const d = num(f.get(REC.distance));
     s.distance = d !== undefined ? d / 100 : undefined;
     s.heartRate = num(f.get(REC.heartRate));
-    s.cadence = num(f.get(REC.cadence));
+    const cad = num(f.get(REC.cadence));
+    const frac = num(f.get(REC.fractionalCadence));
+    s.cadence = cad !== undefined && frac !== undefined ? cad + frac / 128 : cad;
     s.power = num(f.get(REC.power));
     s.temperature = num(f.get(REC.temperature));
     samples.push(s);
   }
   if (samples.length === 0) throw new LocalizedError('err.fitNoTime');
+
+  // Sport: session.sport (field 5), else sport.sport (field 0).
+  const sessionSport = num(messages.find((m) => m.num === MSG.session)?.fields.get(5));
+  const sportMsg = num(messages.find((m) => m.num === MSG.sport)?.fields.get(0));
+  const sport = sportFromFit(sessionSport) ?? sportFromFit(sportMsg);
+  // Running cadence is written per leg (strides per minute): steps per minute are twice that.
+  if (sport === 'running') for (const smp of samples) if (smp.cadence !== undefined) smp.cadence *= 2;
 
   // Local time offset: activity.local_timestamp (field 5) − activity.timestamp (field 253).
   let localOffsetMs: number | undefined;
@@ -98,7 +120,8 @@ export function parseFit(data: ArrayBuffer | Uint8Array, name?: string): RawTele
   const device = manu !== undefined ? [MANUFACTURERS[manu] ?? `manufacturer ${manu}`, product].filter((x) => x !== undefined).join(' ') : undefined;
 
   // Laps: start_time (field 2) and total_elapsed_time (field 7, ms × 1000), or the lap's timestamp as its end.
-  const laps: { startMs: number; endMs: number }[] = [];
+  // Also total_ascent (field 21) and total_descent (field 22), in metres, when the device measured them.
+  const laps: { startMs: number; endMs: number; ascentM?: number; descentM?: number }[] = [];
   for (const m of messages) {
     if (m.num !== MSG.lap) continue;
     const st = num(m.fields.get(2));
@@ -107,16 +130,15 @@ export function parseFit(data: ArrayBuffer | Uint8Array, name?: string): RawTele
     if (st === undefined) continue;
     const startMs = FIT_EPOCH_MS + st * 1000;
     const endMs = elapsed !== undefined ? startMs + elapsed : ts !== undefined ? FIT_EPOCH_MS + ts * 1000 : NaN;
-    if (endMs > startMs) laps.push({ startMs, endMs });
+    if (endMs > startMs) laps.push({ startMs, endMs, ascentM: num(m.fields.get(21)), descentM: num(m.fields.get(22)) });
   }
   laps.sort((a, b) => a.startMs - b.startMs);
 
-  // Sport: session field 5, or the sport message's field 0.
-  let sport = undefined as RawTelemetry['sport'];
-  for (const m of messages) {
-    if (m.num === MSG.session) sport ??= sportFromFit(num(m.fields.get(5)));
-    else if (m.num === MSG.sport) sport ??= sportFromFit(num(m.fields.get(0)));
-  }
+  // The device's own climb and descent for the whole activity: session total_ascent (22) and total_descent (23).
+  const session = messages.find((m) => m.num === MSG.session);
+  const ascentM = num(session?.fields.get(22));
+  const descentM = num(session?.fields.get(23));
+  const deviceTotals = ascentM !== undefined || descentM !== undefined ? { ascentM, descentM } : undefined;
 
-  return { source: 'fit', sport, name, device, localOffsetMs, samples, recordFields: [...recordFields].sort(), laps: laps.length ? laps : undefined };
+  return { source: 'fit', name, device, localOffsetMs, samples, recordFields: [...recordFields].sort(), laps: laps.length ? laps : undefined, sport, deviceTotals };
 }

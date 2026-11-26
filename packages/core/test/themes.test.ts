@@ -8,7 +8,6 @@ import { offeredThemes, THEMES, type KitThemeId } from '../src/overlays/themes.t
 import { resolveLayout } from '../src/overlays/layout.ts';
 import { DEFAULT_STYLE, sportOf, type Ctx2D } from '../src/overlays/types.ts';
 import { sampleAt, type RideData } from '../src/telemetry/ride.ts';
-import { guessSport, sportFromFit, sportFromName } from '../src/telemetry/sport.ts';
 import { registerEmbeddedFonts } from '../src/node/index.ts';
 import { encodeFit, encodeGpx, syntheticRide } from './helpers/synthetic.ts';
 import { DEFAULT_WATCH, fieldValue, lapStarts, watchOptions } from '../src/overlays/minimal/gpsWatch.ts';
@@ -27,7 +26,7 @@ describe('theme registry and organisation', () => {
 
   it('offers Default first, then the themes made for the sport, and themes in testing only on request', () => {
     expect(offeredThemes('running', false)).toEqual(THEMES.filter((t) => t.status === 'stable').map((t) => t.id).sort((a, b) => (a === 'default' ? -1 : b === 'default' ? 1 : 0)));
-    const all = offeredThemes('ski', true);
+    const all = offeredThemes('snow', true);
     expect(all[0]).toBe('default');
     expect(all[1]).toBe('ice');
     expect(all).toContain('glass');
@@ -62,9 +61,11 @@ describe('theme registry and organisation', () => {
     expect(running).toContain('minimal.pace');
     expect(running).toContain('minimal.steps');
     expect(running).not.toContain('minimal.cadence');
-    expect(themeOverlays(ride, 'ice', 'ski').map((d) => d.id)).toContain('ice.runs');
+    expect(themeOverlays(ride, 'ice', 'snow').map((d) => d.id)).toContain('ice.runs');
     expect(suitsSport(getOverlay('ice.runs'), 'cycling')).toBe(false);
-    expect(suitsSport(getOverlay('dialSpeed'), 'running')).toBe(true);
+    // Gadgets without a sport list are in the cycling catalogue only (main's rule).
+    expect(suitsSport(getOverlay('dialSpeed'), 'running')).toBe(false);
+    expect(suitsSport(getOverlay('hud.heartRate'), 'snow')).toBe(true);
   });
 
   it('names and file names are unique in every language', () => {
@@ -104,10 +105,6 @@ describe('kit themes draw', () => {
     }
   });
 
-  it('the chosen sport reaches the gadgets (the summary shows pace when running)', () => {
-    expect(sportOf({}, ride)).toBe(ride.sport);
-    expect(sportOf({ sport: 'running' }, ride)).toBe('running');
-  });
 });
 
 describe('GPS watch (Minimal Pro)', () => {
@@ -152,22 +149,14 @@ describe('GPS watch (Minimal Pro)', () => {
 });
 
 describe('sport', () => {
-  it('reads the sport from FIT sessions and GPX types, and guesses it otherwise', () => {
+  it('follows the sport the file says (main’s three sports), and the one chosen in step 4', () => {
     expect(buildRide(parseFit(encodeFit(synth.samples, { sport: 'running' }))).sport).toBe('running');
-    expect(buildRide(parseFit(encodeFit(synth.samples, { sport: 'alpineSkiing' }))).sport).toBe('ski');
-    const fromFile = buildRide(parseFit(encodeFit(synth.samples, { sport: 'cycling' })));
-    expect(fromFile.sport).toBe('cycling');
-    expect(fromFile.sportFromFile).toBe(true);
+    expect(buildRide(parseFit(encodeFit(synth.samples, { sport: 'alpineSkiing' }))).sport).toBe('snow');
+    expect(buildRide(parseFit(encodeFit(synth.samples, { sport: 'cycling' }))).sport).toBe('cycling');
     expect(buildRide(parseGpx(encodeGpx(synth.samples, { type: 'TrailRun' }))).sport).toBe('running');
-    expect(ride.sportFromFile).toBe(false);
-    expect(sportFromFit(14)).toBe('ski');
-    expect(sportFromFit(17)).toBe('hiking');
-    expect(sportFromFit(0)).toBeUndefined();
-    expect(sportFromName('AlpineSki')).toBe('ski');
-    expect(sportFromName('Ride')).toBe('cycling');
-    expect(guessSport(3, false)).toBe('running');
-    expect(guessSport(8, false)).toBe('cycling');
-    expect(guessSport(3, true)).toBe('cycling');
+    expect(ride.sport).toBeUndefined();
+    expect(sportOf({}, ride)).toBe('cycling');
+    expect(sportOf({ sport: 'snow' }, ride)).toBe('snow');
   });
 });
 
@@ -176,7 +165,8 @@ describe('derived metrics', () => {
     const metric = { system: 'metric' as const, temperature: 'C' as const };
     expect(formatPace(1000 / 292, metric)).toBe(`4'52"`);
     expect(formatPace(0.2, metric)).toBe('—');
-    expect(stepsPerMin(88)).toBe(176);
+    expect(stepsPerMin(88, {})).toBe(176);
+    expect(stepsPerMin(176, { sport: 'running' })).toBe(176);
     expect(slopeDegrees(100)).toBeCloseTo(45, 5);
   });
 

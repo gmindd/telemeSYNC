@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   effectiveStart,
+  shownSize,
+  gadgetOpacity,
   formatDuration,
   gadgetZones,
   resolveLayout,
@@ -128,6 +130,7 @@ export function Preview(props: {
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [sel, toggleOverlay]);
+  const streets = useApp((s) => s.streets);
   const t = useT();
   const playhead = useApp((s) => s.playhead);
   const start = effectiveStart(clip, camera);
@@ -141,7 +144,10 @@ export function Preview(props: {
   const [playing, setPlaying] = useState(false);
   const localRef = useRef(0);
   // Upside-down camera: only the video turns; the native controls would turn with it, so own controls are shown.
-  const rotated = camera.videoRotation === 180;
+  const rotation = camera.videoRotation ?? 0;
+  const rotated = rotation !== 0;
+  // Sideways camera: the frame swaps width and height, the picture is turned inside it.
+  const quarter = rotation === 90 || rotation === 270;
   useEffect(() => {
     if (rotated && video.current) setLocalMs(video.current.currentTime * 1000);
   }, [rotated]);
@@ -162,11 +168,17 @@ export function Preview(props: {
       const s = startRef.current;
       if (s === undefined) return;
       const t = s + ms;
-      const octx = { ride, clipStart: s, clipEnd: s + clip.meta.durationMs };
+      const octx = { ride, clipStart: s, clipEnd: s + clip.meta.durationMs, streets };
       for (const id of overlays) {
         const c = canvases.current.get(id);
         const ctx = c?.getContext('2d');
         if (ctx) renderOverlayFrame(ctx as unknown as Ctx2D, getOverlay(id), t, style, octx);
+        if (c) {
+          // Gadget with a condition: as it will look in the video; while hidden, a faint outline so it can still be placed.
+          const a = gadgetOpacity(id, t, style, ride);
+          c.style.opacity = String(a > 0 ? a : 0.12);
+          c.parentElement?.classList.toggle('is-hidden', a <= 0);
+        }
       }
       const now = performance.now();
       if (now - lastStoreUpdate.current > 100) {
@@ -174,7 +186,7 @@ export function Preview(props: {
         setPlayhead({ t, source: 'video' });
       }
     },
-    [ride, overlays, style, clip.meta.durationMs, setPlayhead],
+    [ride, overlays, style, clip.meta.durationMs, setPlayhead, streets],
   );
 
   // Redraw when anything that affects the image changes.
@@ -232,7 +244,8 @@ export function Preview(props: {
     }
   }, [playhead, start, clip.meta.durationMs, state, draw]);
 
-  const aspect = clip.meta.width && clip.meta.height ? clip.meta.width / clip.meta.height : 16 / 9;
+  const shown = shownSize(clip, camera);
+  const aspect = shown.width && shown.height ? shown.width / shown.height : 16 / 9;
   const placements = resolveLayout(overlays, props.layout, aspect, style);
   const platforms = useApp((s) => s.safeZones);
   const zones = gadgetZones(overlays, placements, aspect, style, platforms);
@@ -245,7 +258,7 @@ export function Preview(props: {
 
   return (
     <div className="preview">
-      <div className="preview-box" ref={box} style={{ aspectRatio: `${clip.meta.width ?? 16} / ${clip.meta.height ?? 9}` }} onPointerDown={() => setSelected(undefined)}>
+      <div className={`preview-box${aspect < 1 ? ' portrait' : ''}`} ref={box} style={{ aspectRatio: `${shown.width ?? 16} / ${shown.height ?? 9}` }} onPointerDown={() => setSelected(undefined)}>
         {url && state !== 'error' ? (
           <video
             ref={video}
@@ -253,7 +266,9 @@ export function Preview(props: {
             controls={!rotated}
             muted
             playsInline
-            className={rotated ? 'rotated' : undefined}
+            className={rotated ? `rotated rot-${rotation}` : undefined}
+            // Turned a quarter: the video is laid out at the source's proportions, centred, then turned to fill the frame.
+            style={quarter && clip.meta.width && clip.meta.height ? { width: `${(clip.meta.width / clip.meta.height) * 100}%`, height: `${(clip.meta.height / clip.meta.width) * 100}%` } : undefined}
             onPlay={() => setPlaying(true)}
             onPause={() => setPlaying(false)}
             onTimeUpdate={(e) => rotated && setLocalMs(e.currentTarget.currentTime * 1000)}

@@ -107,7 +107,7 @@ export const natalProfileOverlay: OverlayDefinition = {
     ctx.translate(PROF_PAD_X, PROF_PAD_Y);
     dialProfileOverlay.draw(ctx, frame, st, octx);
     candyFrame(ctx, 6, 6, PROFILE_W - 12, PROFILE_H - 12, 16, 10);
-    const peak = profilePeak(octx.ride, st);
+    const peak = profilePeak(octx.ride, st, octx);
     tree(ctx, peak.x, peak.y - 4, 46, frame.textSample.t);
     snowOnEdge(ctx, 14, 2, 170, 14, 71);
     snowOnEdge(ctx, PROFILE_W - 210, 2, 120, 12, 73);

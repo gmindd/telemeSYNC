@@ -17,6 +17,7 @@ import {
   PROJECT_VERSION,
   readClipMetadata,
   resolveAll,
+  shownSize,
   serializeProject,
   type CameraProfileId,
   type GadgetLayout,
@@ -32,6 +33,10 @@ import {
   type Segment,
   newSegmentId,
   type SyncState,
+  SPORTS,
+  overlaySports,
+  type Sport,
+  type Streets,
 } from '@telemesync/core';
 import { currentLang, t, t as tr, useLang } from '../i18n/index.tsx';
 import { api, type JobSnapshot } from './api.ts';
@@ -80,6 +85,13 @@ interface State {
   segAnchor?: number;
   /** Social apps whose covered areas are shaded over the preview. */
   safeZones: SocialPlatform[];
+  /** Sport whose gadgets step 4 shows (from the file when it says, else the last one chosen). */
+  sport: Sport;
+  /** Streets and paths around the active clip (OpenStreetMap) for the round maps, see lib/streets.ts. */
+  streets?: Streets;
+  streetsState: 'idle' | 'loading' | 'ok' | 'failed';
+  /** Bumped by "try again" to ask for the streets once more. */
+  streetsRetry: number;
 }
 
 interface Actions {
@@ -95,7 +107,7 @@ interface Actions {
   assignCamera(clipId: string, target: string): void;
   setCameraTimeZone(cameraId: string, tz: string): void;
   setCameraLabel(cameraId: string, label: string): void;
-  setCameraRotation(cameraId: string, rotation: 0 | 180): void;
+  setCameraRotation(cameraId: string, rotation: 0 | 90 | 180 | 270): void;
   toggleOverlay(id: OverlayId, on: boolean): void;
   setStyle(p: Partial<OverlayStyle>): void;
   setOverlayLang(v: Lang | 'auto'): void;
@@ -108,6 +120,9 @@ interface Actions {
   clearSegments(): void;
   importDeviceLaps(): void;
   toggleSafeZone(p: SocialPlatform): void;
+  setSport(s: Sport): void;
+  setStreets(streets: Streets | undefined, state: State['streetsState']): void;
+  retryStreets(): void;
   setFormat(f: OutputFormat): void;
   setMaxFps(fps: number): void;
   setOutputDir(d: string): void;
@@ -133,6 +148,10 @@ const OVERLAY_LANG_KEY = 'telemesync.overlayLang';
 const OVERLAYS_KEY = 'telemesync.overlays';
 const EXPORT_KEY = 'telemesync.export';
 const SAFE_ZONES_KEY = 'telemesync.safeZones';
+const SPORT_KEY = 'telemesync.sport';
+
+/** First gadget chosen for a new ride with nothing chosen yet, per sport. */
+const FIRST_OVERLAY: Record<Sport, OverlayId[]> = { cycling: ['speed'], running: ['pace'], snow: ['speed'] };
 
 const DEFAULT_OVERLAYS: OverlayId[] = ['speed', 'grade', 'map', 'elevationProfile'];
 
@@ -181,6 +200,26 @@ function loadStoredStyle(overlayLang: Lang | 'auto'): OverlayStyle {
 
 const initialOverlayLang = loadStored<Lang | 'auto'>(OVERLAY_LANG_KEY, 'auto');
 
+/** Stretch of the ride the video clips cover (first clip start to last clip end), or null without clips. */
+export function clipsSpan(sync: SyncState): { startMs: number; endMs: number } | null {
+  let a = Infinity;
+  let b = -Infinity;
+  for (const c of sync.clips) {
+    const cam = sync.cameras.find((x) => x.id === c.cameraId);
+    const start = cam ? effectiveStart(c, cam) : undefined;
+    if (start === undefined) continue;
+    a = Math.min(a, start);
+    b = Math.max(b, start + c.meta.durationMs);
+  }
+  return Number.isFinite(a) && b > a ? { startMs: a, endMs: b } : null;
+}
+
+/** The style as the gadgets draw it: with the maps on "only the clips", the stretch the clips cover. */
+export function drawStyle(style: OverlayStyle, sync: SyncState): OverlayStyle {
+  if (style.mapMode !== 'clips') return style;
+  return { ...style, mapRange: clipsSpan(sync) };
+}
+
 function rideNameFrom(ride: RideData, fileName: string): string {
   const d = new Date(ride.startTime);
   const date = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -196,6 +235,9 @@ export const useApp = create<State & Actions>((set, get) => ({
   clipErrors: [],
   overlays: loadStoredOverlays(),
   safeZones: loadStored<SocialPlatform[]>(SAFE_ZONES_KEY, []).filter((p) => SOCIAL_PLATFORMS.includes(p)),
+  sport: ((s) => (SPORTS.includes(s) ? s : 'cycling'))(loadStored<Sport>(SPORT_KEY, 'cycling')),
+  streetsState: 'idle',
+  streetsRetry: 0,
   style: loadStoredStyle(initialOverlayLang),
   overlayLang: initialOverlayLang,
   format: loadStored<OutputFormat>(FORMAT_KEY, DEFAULT_OUTPUT_FORMAT),
@@ -225,20 +267,33 @@ export const useApp = create<State & Actions>((set, get) => ({
       const ride = buildRide(parseTelemetryFile(file.name, buf));
       const { id } = await api.uploadTelemetry(file);
       const sync = resolveAll(get().sync, ride.startTime, ride);
-      // Keep only overlays that this ride supports.
-      const overlays = get().overlays.filter((o) => ride.available.has(getOverlay(o).requires));
+      // The file's sport, when it says, opens that sport's gadgets.
+      const sport = ride.sport ?? get().sport;
+      if (ride.sport) store(SPORT_KEY, sport);
+      // Keep only overlays that this ride supports (and, when the file says its sport, that sport's).
+      const overlays = get().overlays.filter((o) => ride.available.has(getOverlay(o).requires) && (!ride.sport || overlaySports(o).includes(ride.sport)));
       // Segments from an opened project stay when they fall within this ride.
       const segments = get().style.segments.filter((g) => g.endMs > ride.startTime && g.startMs < ride.endTime);
+      // A PR race starting at a point of another ride starts at this one's beginning instead.
+      const ghost = get().style.ghost;
+      const ghostStart = ghost?.startMs != null && (ghost.startMs < ride.startTime || ghost.startMs > ride.endTime) ? null : ghost?.startMs ?? null;
+      // A stretch chosen for the maps on another ride does not fit this one.
+      const range = get().style.mapRange;
+      const mapRange = range && range.startMs >= ride.startTime && range.endMs <= ride.endTime ? range : null;
+      const mapMode = get().style.mapMode === 'custom' && !mapRange ? 'full' : get().style.mapMode;
       set({
-        // The sport follows the new file again (it can be changed in step 4).
-        style: { ...get().style, segments, sport: undefined },
+        sport,
+        // The gadgets follow step 4's sport too (pace for running, ski runs for snow…).
+        style: { ...get().style, segments, ghost: ghost ? { ...ghost, startMs: ghostStart } : null, mapRange, mapMode, sport },
         segAnchor: undefined,
         ride,
+        streets: undefined,
+        streetsState: 'idle',
         rideId: id,
         rideFile: { name: file.name, size: file.size },
         rideName: rideNameFrom(ride, file.name),
         sync,
-        overlays: overlays.length ? overlays : (['speed'] as OverlayId[]).filter((o) => ride.available.has(getOverlay(o).requires)),
+        overlays: overlays.length ? overlays : FIRST_OVERLAY[sport].filter((o) => ride.available.has(getOverlay(o).requires)),
         rideLoading: false,
       });
     } catch (e) {
@@ -417,6 +472,15 @@ export const useApp = create<State & Actions>((set, get) => ({
     });
   },
 
+  setSport(sport) {
+    // The gadgets read the sport from the style (pace for running, ski runs for snow…), so both move together.
+    set({ sport, style: { ...get().style, sport } });
+    store(SPORT_KEY, sport);
+  },
+
+  setStreets: (streets, streetsState) => set({ streets, streetsState }),
+  retryStreets: () => set({ streetsRetry: get().streetsRetry + 1 }),
+
   toggleSafeZone(p) {
     const cur = get().safeZones;
     const safeZones = cur.includes(p) ? cur.filter((x) => x !== p) : [...cur, p];
@@ -458,8 +522,8 @@ export const useApp = create<State & Actions>((set, get) => ({
         durationMs: c.meta.durationMs,
         fps: c.meta.fps!,
         frameCount: c.meta.frameCount,
-        width: c.meta.width,
-        height: c.meta.height,
+        // A camera turned 90° exports its composite at the turned size.
+        ...shownSize(c, cams.get(c.cameraId)),
         sync: clipSyncInfo(c, cams.get(c.cameraId)!, st.ride, overlaps.get(c.id), currentLang()),
       }))
       .filter((c) => c.startUtcMs !== undefined && c.fps);
@@ -470,7 +534,7 @@ export const useApp = create<State & Actions>((set, get) => ({
         rideName: st.rideName,
         clips,
         overlays: st.overlays,
-        style: st.style,
+        style: drawStyle(st.style, st.sync),
         format: st.format,
         maxFps: st.maxFps,
         outputDir: st.outputDir,
@@ -511,6 +575,7 @@ export const useApp = create<State & Actions>((set, get) => ({
       style: st.style,
       output: { format: st.format, separate: st.exportSeparate, composite: st.exportComposite, compositeShortSide: st.compositeShortSide, maxFps: st.maxFps },
       layout: st.layout,
+      sport: st.sport,
     };
     const blob = new Blob([serializeProject(p)], { type: 'application/json' });
     const a = document.createElement('a');
@@ -534,18 +599,21 @@ export const useApp = create<State & Actions>((set, get) => ({
       const sync = resolveAll({ cameras: p.cameras, clips }, get().ride?.startTime, get().ride);
       const selected: Record<string, boolean> = {};
       p.clips.forEach((c) => (selected[c.id] = c.selected));
+      const projectSport = get().ride?.sport ?? p.sport ?? get().sport;
       set({
         sync,
         selected,
         files: {},
         overlays: p.overlays,
-        style: { ...DEFAULT_STYLE, ...p.style, units: { ...DEFAULT_STYLE.units, ...p.style.units }, language: get().overlayLang === 'auto' ? currentLang() : get().style.language },
+        style: { ...DEFAULT_STYLE, ...p.style, units: { ...DEFAULT_STYLE.units, ...p.style.units }, language: get().overlayLang === 'auto' ? currentLang() : get().style.language, sport: projectSport },
         format: p.output.format,
         maxFps: p.output.maxFps === 30 ? 30 : 0,
         exportSeparate: p.output.separate ?? true,
         exportComposite: p.output.composite ?? false,
         compositeShortSide: p.output.compositeShortSide ?? 1080,
         layout: p.layout ?? {},
+        // The project's sport tab; the ride's own sport, when its file says, still wins (see loadTelemetry).
+        sport: projectSport,
         rideName: p.name,
         activeClipId: clips[0]?.id,
         step: get().ride ? 'sync' : 'telemetry',

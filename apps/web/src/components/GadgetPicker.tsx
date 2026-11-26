@@ -1,12 +1,11 @@
-// Gadget picker of step 4, organised on three axes that are the same everywhere: the sport (which metrics), the
-// theme (the look, as a gallery of cards) and the category (the kind of gadget). The gadgets already chosen are
-// listed as chips at the top, whatever their theme, so mixing themes never gets lost.
-import { useState } from 'react';
+// Gadget picker of step 4, inside the sport tab: the theme (the look, as a gallery of cards) and the category (the
+// kind of gadget, the same in every theme). The gadgets already chosen are listed as chips at the top, whatever their
+// theme or sport, so mixing themes never gets lost.
+import { useState, type ReactNode } from 'react';
 import {
   categoryName,
   GADGET_CATEGORIES,
   glassPanelMetricOf,
-  isSegmentOverlay,
   offeredThemes,
   overlayCategory,
   overlayLabel,
@@ -16,8 +15,6 @@ import {
   panelMetricOf,
   panelOptions,
   sportName,
-  sportOf,
-  SPORTS,
   themeInfo,
   themeLead,
   themeName,
@@ -34,7 +31,10 @@ import {
   type OverlayId,
   type PanelMetric,
   type PanelOptions,
+  type GadgetCategory,
+  type OverlayStyle,
   type Sport,
+  type Streets,
   type ThemeId,
 } from '@telemesync/core';
 import { OverlayCanvas } from './OverlayCanvas.tsx';
@@ -128,19 +128,31 @@ function WatchOptionsForm({ ride }: { ride: RideData }) {
 
 interface Times {
   t: number;
-  segT: number;
   clipStart: number;
   clipEnd: number;
 }
 
-export function GadgetPicker({ times }: { times: Times }) {
+export function GadgetPicker(props: {
+  /** Sport tab of step 4: which gadgets are offered and which themes come first. */
+  sport: Sport;
+  /** Style for the previews (maps limited to the clips, see drawStyle). */
+  previewStyle: OverlayStyle;
+  streets?: Streets;
+  times: Times;
+  /** Instant to preview a gadget at (inside a segment, a ski run, the PR ghost…). */
+  previewT: (d: OverlayDefinition) => number;
+  /** Text and options shown under a category's title (segments: the ghost, runs notice…). */
+  sectionNote?: (c: GadgetCategory) => ReactNode;
+  /** Lead of the default theme for this sport (else the theme's own). */
+  defaultLead?: string;
+}) {
+  const { sport, previewStyle, streets, times, previewT } = props;
   const { ride, overlays, toggleOverlay, style, setStyle } = useApp();
   const tr = useT();
   const lang = useLang((s) => s.lang);
   const [showPreview, setShowPreview] = useState(() => load(PREVIEW_KEY) === '1');
   const [stored, setStored] = useState<ThemeId>(() => (load(THEME_KEY) as ThemeId) ?? 'default');
   if (!ride) return null;
-  const sport = sportOf(style, ride);
   const themes = offeredThemes(sport, showPreview);
   const theme: ThemeId = themes.includes(stored) ? stored : 'default';
   const choose = (th: ThemeId) => {
@@ -149,8 +161,10 @@ export function GadgetPicker({ times }: { times: Times }) {
   };
   const defs = themeOverlays(ride, theme, sport);
   const sections = GADGET_CATEGORIES.map((c) => ({ c, list: defs.filter((d) => overlayCategory(d.id) === c) })).filter((s) => s.list.length);
-  const { t, segT, clipStart, clipEnd } = times;
-  const thumb = (id: OverlayId, at = t, h = 190) => <OverlayCanvas id={id} ride={ride} style={style} t={at} clipStart={clipStart} clipEnd={clipEnd} cssScale={0.45} fitHeight={h} />;
+  const { t, clipStart, clipEnd } = times;
+  const thumb = (id: OverlayId, at = t, h = 190) => (
+    <OverlayCanvas id={id} ride={ride} style={previewStyle} t={at} clipStart={clipStart} clipEnd={clipEnd} streets={streets} cssScale={0.45} fitHeight={h} />
+  );
   const chartMetrics = PANEL_METRICS.filter((m) => ride.available.has(m));
   const distUnit = style.units.system === 'metric' ? 'km' : 'mi';
   const setPanel = (m: PanelMetric, patch: Partial<PanelOptions>) =>
@@ -158,30 +172,7 @@ export function GadgetPicker({ times }: { times: Times }) {
 
   return (
     <div className="picker">
-      {/* 1. Sport: which metrics (pace for running, vertical drop for ski…) and which themes come first. */}
-      <div className="sport-row">
-        <span className="sport-row__label">{tr('ov.sport')}</span>
-        {SPORTS.map((s: Sport) => (
-          <button
-            key={s}
-            type="button"
-            className={`chip-toggle${s === sport ? ' on' : ''}`}
-            aria-pressed={s === sport}
-            onClick={() => setStyle({ sport: s === ride.sport ? undefined : s })}
-          >
-            {sportName(s, lang)}
-          </button>
-        ))}
-        <span className="sport-row__note">
-          {style.sport && style.sport !== ride.sport
-            ? tr('ov.sportChosen', { sport: sportName(ride.sport, lang) })
-            : ride.sportFromFile
-              ? tr('ov.sportFromFile')
-              : tr('ov.sportGuessed')}
-        </span>
-      </div>
-
-      {/* 2. Theme gallery. */}
+      {/* 1. Theme gallery. */}
       <div className="theme-head">
         <h3>{tr('ov.themes')}</h3>
         <label className="field check small">
@@ -226,7 +217,7 @@ export function GadgetPicker({ times }: { times: Times }) {
         })}
       </div>
 
-      {/* 3. Gadgets in use, from any theme. */}
+      {/* 2. Gadgets in use, from any theme. */}
       <div className="in-use">
         <span className="in-use__label">{tr('ov.inUse', { n: overlays.length })}</span>
         {overlays.length ? (
@@ -245,17 +236,12 @@ export function GadgetPicker({ times }: { times: Times }) {
         )}
       </div>
 
-      {/* 4. The theme's gadgets by category. */}
-      <p className="lead">{themeLead(theme, lang)}</p>
+      {/* 3. The theme's gadgets by category. */}
+      <p className="lead">{theme === 'default' && props.defaultLead ? props.defaultLead : themeLead(theme, lang)}</p>
       {sections.map(({ c, list }) => (
         <section key={c} className="gadget-section">
           <h3>{categoryName(c, lang)}</h3>
-          {c === 'segments' ? (
-            <>
-              <p className="lead">{tr('seg.sectionLead')}</p>
-              {style.segments.length === 0 ? <p className="notice">{tr('seg.noneHint')}</p> : null}
-            </>
-          ) : null}
+          {props.sectionNote?.(c)}
           <div className={`overlay-grid${c === 'panels' ? ' panels' : ''}${theme === 'glass' ? ' glass' : ''}`}>
             {list.map((d) => {
               const on = overlays.includes(d.id);
@@ -307,7 +293,7 @@ export function GadgetPicker({ times }: { times: Times }) {
                 <label key={d.id} className={`overlay-card${on ? ' on' : ''}`}>
                   <input type="checkbox" checked={on} onChange={(e) => toggleOverlay(d.id, e.target.checked)} />
                   <span>{overlayLabel(d.id, lang)}</span>
-                  <div className={`checker${theme === 'glass' ? ' glass-backdrop' : ''}`}>{thumb(d.id, isSegmentOverlay(d.id) ? segT : t)}</div>
+                  <div className={`checker${theme === 'glass' ? ' glass-backdrop' : ''}`}>{thumb(d.id, previewT(d))}</div>
                 </label>
               );
             })}

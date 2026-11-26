@@ -162,7 +162,7 @@ export function fieldValue(f: WatchField, s: RideSample, style: OverlayStyle, ri
   const lapStats = (arr: Float64Array, skip?: (v: number) => boolean) => (before ? { avg: NaN, max: NaN } : rangeStats(arr, lap.start, i, skip));
   const pick = (now: number, all: { avg: number; max: number }, lapS: { avg: number; max: number }) =>
     f.mode === 'avg' ? all.avg : f.mode === 'max' ? all.max : f.mode === 'lap' ? lapS.avg : now;
-  const running = ['running', 'hiking'].includes(sportOf(style, ride));
+  const running = sportOf(style, ride) === 'running';
   switch (f.metric) {
     case 'pace':
     case 'speed': {
@@ -190,7 +190,7 @@ export function fieldValue(f: WatchField, s: RideSample, style: OverlayStyle, ri
     case 'cadence': {
       // Running cadence is recorded per leg: steps per minute are twice that.
       const v = pick(s.cadence, stats('cadence'), lapStats(ride.cadence, (c) => c <= 0));
-      return { label, value: fmt(running ? stepsPerMin(v) : v, 0), unit: running ? 'spm' : 'rpm' };
+      return { label, value: fmt(running ? stepsPerMin(v, ride) : v, 0), unit: running ? 'spm' : 'rpm' };
     }
     case 'power':
       return { label, value: fmt(pick(s.power, stats('power'), lapStats(ride.power, (p) => p <= 0)), 0), unit: 'W' };

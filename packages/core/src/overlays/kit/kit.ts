@@ -1,5 +1,5 @@
 import type { MetricKey, RideData, RideSample } from '../../telemetry/ride.ts';
-import type { Sport } from '../../telemetry/sport.ts';
+import type { Sport } from '../../telemetry/types.ts';
 import { pick, tr, type CoreKey, type Lang, type Translations } from '../../i18n/index.ts';
 import { formatDuration } from '../../util/timezone.ts';
 import { cardinal, formatPace, paceUnit, skiRuns, toStart } from '../../metrics/derived.ts';
@@ -13,6 +13,10 @@ import { themeName, type GadgetCategory, type KitThemeId } from '../themes.ts';
 import { sportOf, type Ctx2D, type FrameState, type KitOverlayId, type OverlayContext, type OverlayDefinition, type OverlayStyle } from '../types.ts';
 import { convert, fmt } from '../units.ts';
 import { NO_VALUE } from './colors.ts';
+import { SPORTS } from '../../telemetry/types.ts';
+
+/** Kit gadgets with no sport list are in every sport's catalogue. */
+const ALL_SPORTS = [...SPORTS];
 import type { LineIcon } from './icons.ts';
 import { METRIC_ROLES, type MetricRole } from './roles.ts';
 
@@ -165,18 +169,18 @@ export function summaryRows(frame: FrameState, style: OverlayStyle, ride: RideDa
     { requires: 'heartRate', row: () => ({ label: L('summary.hr'), icon: 'heart', value: fmt(avg('heartRate'), 0), unit: 'bpm' }) },
     {
       requires: 'pace',
-      sports: ['running', 'hiking'],
+      sports: ['running'],
       row: () => ({ label: `${L('dial.avg')} ${L('metric.pace')}`, icon: 'stopwatch', value: formatPace(before ? NaN : ride.totals.avgMovingSpeed, style.units), unit: paceUnit(style.units) }),
     },
-    { requires: 'power', sports: ['cycling', 'other'], row: () => ({ label: L('summary.power'), icon: 'bolt', value: fmt(avg('power'), 0), unit: 'W' }) },
+    { requires: 'power', sports: ['cycling'], row: () => ({ label: L('summary.power'), icon: 'bolt', value: fmt(avg('power'), 0), unit: 'W' }) },
     {
       requires: 'runs',
-      sports: ['ski'],
+      sports: ['snow'],
       row: () => ({ label: L('metric.runs'), icon: 'mountain', value: before ? '0' : String(skiRuns(ride).count[s.index]), unit: '' }),
     },
     {
       requires: 'runs',
-      sports: ['ski'],
+      sports: ['snow'],
       row: () => ({
         label: L('kit.drop'),
         icon: 'mountain',
@@ -186,7 +190,7 @@ export function summaryRows(frame: FrameState, style: OverlayStyle, ride: RideDa
     },
     {
       requires: 'speed',
-      sports: ['cycling', 'ski', 'other'],
+      sports: ['cycling', 'snow'],
       row: () => ({ label: L('summary.speed'), icon: 'gauge', value: fmt(convert.speed(avg('speed'), style.units), 1), unit: convert.speedUnit(style.units) }),
     },
     { requires: 'distance', row: () => ({ label: L('summary.distance'), icon: 'route', value: fmt(convert.distance(s.distance, style.units), 1), unit: convert.distanceUnit(style.units) }) },
@@ -235,7 +239,7 @@ export function kitGadget(theme: KitThemeId, themeSlug: Translations, spec: Extr
     slugFor: (lang) => `${pick(themeSlug, lang)}-${slugOf(spec.slug, lang)}`,
     theme,
     category: spec.category ?? 'extras',
-    sports: spec.sports,
+    sports: spec.sports ?? ALL_SPORTS,
     placement: spec.placement,
     requires: spec.requires,
     textOnly: !!spec.textOnly,

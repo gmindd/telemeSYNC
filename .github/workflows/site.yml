@@ -1,0 +1,33 @@
+# Site: builds the landing page image (Dockerfile), checks the nginx config and the domains' redirects
+# (scripts/test/site-redirects.sh): the old domain's pages move to telemesync.app while the update check and /api/
+# keep answering there.
+name: Site
+
+on:
+  push:
+    paths:
+      - 'site/**'
+      - 'scripts/nginx-site.conf'
+      - 'scripts/*.mjs'
+      - 'scripts/*.sh'
+      - 'scripts/test/site-redirects.sh'
+      - 'Dockerfile'
+      - '.github/workflows/site.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - run: docker build -t telemesync-site .
+      - run: docker run -d --name site -p 8080:80 telemesync-site
+      - run: docker exec site nginx -t
+      - name: Wait for nginx
+        run: for i in $(seq 1 30); do curl -s -o /dev/null http://localhost:8080/ && exit 0; sleep 1; done; exit 1
+      - run: bash scripts/test/site-redirects.sh http://localhost:8080
+      - if: failure()
+        run: docker logs site

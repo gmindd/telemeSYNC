@@ -1,5 +1,3 @@
-import type { Sport } from './sport.ts';
-
 /** Metric keys that can be present in a telemetry file. */
 export type ChannelKey =
   | 'position'
@@ -32,8 +30,6 @@ export interface RawSample {
 
 export interface RawTelemetry {
   source: 'fit' | 'gpx' | 'strava';
-  /** Sport written in the file (FIT session/sport, Strava sport type, GPX <type>), when it says. */
-  sport?: Sport;
   /** Human-friendly name (file name, GPX track name, …). */
   name?: string;
   /** Device / creator description if the file provides one. */
@@ -43,6 +39,24 @@ export interface RawTelemetry {
   samples: RawSample[];
   /** Names of the fields found in FIT record messages (diagnostics). */
   recordFields?: string[];
-  /** Laps recorded by the device (lap button or auto-lap), UTC ms. */
-  laps?: { startMs: number; endMs: number }[];
+  /** Laps recorded by the device (lap button or auto-lap), UTC ms, with the climb and descent it measured (m). */
+  laps?: { startMs: number; endMs: number; ascentM?: number; descentM?: number }[];
+  /** Totals the device worked out itself (FIT session), when the file has them. */
+  deviceTotals?: { ascentM?: number; descentM?: number };
+  /** Sport the file says it is (FIT session/sport, GPX track type), when it says. */
+  sport?: Sport;
+}
+
+/** Sports the overlays are designed for. Walking and hiking count as running; skiing and snowboarding as snow. */
+export type Sport = 'cycling' | 'running' | 'snow';
+export const SPORTS: Sport[] = ['cycling', 'running', 'snow'];
+
+/** Sport from a free text such as a GPX track type ("trail_running", "resort_skiing_snowboarding_ws"). */
+export function sportFromText(text: string | undefined): Sport | undefined {
+  const t = String(text ?? '').toLowerCase();
+  if (!t) return undefined;
+  if (/ski|snow/.test(t)) return 'snow';
+  if (/run|walk|hik|trek|jog/.test(t)) return 'running';
+  if (/cycl|bik|ride|velo|gravel|mtb/.test(t)) return 'cycling';
+  return undefined;
 }

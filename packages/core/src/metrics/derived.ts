@@ -31,9 +31,13 @@ export function formatPace(speed: number, u: Units): string {
 
 export const paceUnit = (u: Units) => (u.system === 'metric' ? '/km' : '/mi');
 
-/** Running and walking cadence is recorded per leg (strides/min): steps per minute are twice that. */
-export function stepsPerMin(cadence: number): number {
-  return Number.isFinite(cadence) ? cadence * 2 : NaN;
+/**
+ * Steps per minute from the ride's cadence. Running files store it per leg (strides/min); when the file says it
+ * is running, reading it already doubled it, so only the other rides are doubled here.
+ */
+export function stepsPerMin(cadence: number, ride: { sport?: string }): number {
+  if (!Number.isFinite(cadence)) return NaN;
+  return ride.sport === 'running' ? cadence : cadence * 2;
 }
 
 /** Slope in degrees from a grade in percent. */

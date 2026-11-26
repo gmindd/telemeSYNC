@@ -1,9 +1,10 @@
-import type { RideData, RideSample } from '../../telemetry/ride.ts';
+import { sampleAt, type RideData, type RideSample } from '../../telemetry/ride.ts';
 import { STREETS_ATTRIBUTION, type StreetKind, type Streets } from '../../map/streets.ts';
 import { drawText } from '../draw.ts';
 import { withAlpha } from '../panel/paint.ts';
 import type { Ctx2D, FrameState, OverlayContext, OverlayDefinition, OverlayStyle } from '../types.ts';
 import { CX, CY, DIAL, dialPaint, drawDialBase } from './common.ts';
+import { routeSpan } from '../routeRange.ts';
 
 // Round minimap, "GTA" style: centred on the rider, rotating so the direction of travel points up.
 export const MAP_R = 128;
@@ -18,6 +19,8 @@ interface Local {
   n: Float64Array;
   /** View radius in metres (from the size of the ride). */
   viewM: number;
+  /** Path length from the start to each sample (m, carried over samples without position). */
+  cum: Float64Array;
   /** Origin and east metres per degree of longitude, to place other things (streets) in the same frame. */
   lat0: number;
   lon0: number;
@@ -55,7 +58,15 @@ function localOf(ride: RideData): Local {
     maxN = Math.max(maxN, n[i]);
   }
   const extent = Number.isFinite(minE) ? Math.max(maxE - minE, maxN - minN) : 1000;
-  l = { e, n, viewM: Math.max(300, Math.min(2500, extent * 0.3)), lat0, lon0, k };
+  const cum = new Float64Array(len);
+  let last = -1;
+  for (let i = 0; i < len; i++) {
+    cum[i] = i > 0 ? cum[i - 1] : 0;
+    if (Number.isNaN(e[i])) continue;
+    if (last >= 0) cum[i] += Math.hypot(e[i] - e[last], n[i] - n[last]);
+    last = i;
+  }
+  l = { e, n, viewM: Math.max(300, Math.min(2500, extent * 0.3)), cum, lat0, lon0, k };
   localCache.set(ride, l);
   return l;
 }
@@ -358,19 +369,20 @@ export function drawRoundMap(ctx: Ctx2D, frame: FrameState, style: OverlayStyle,
       }
       if (extra && pen) ctx.lineTo(sx(extra.e, extra.n), sy(extra.e, extra.n));
     };
-    const last = ride.t.length - 1;
-    const cur = Math.min(last, s.index);
+    // Only the part of the ride chosen for the maps (whole ride, clips or a stretch) is drawn.
+    const span = routeSpan(ride, style, octx);
+    const cur = Math.min(span.i1, s.index);
     ctx.lineJoin = 'round';
     ctx.lineCap = 'round';
-    path(0, last);
+    path(span.i0, span.i1);
     ctx.strokeStyle = look.routeUnder;
     ctx.lineWidth = 8;
     ctx.stroke();
     ctx.strokeStyle = look.route;
     ctx.lineWidth = 4.5;
     ctx.stroke();
-    if (!(s.outside && s.t < ride.startTime)) {
-      path(0, cur, pos);
+    if (!(s.outside && s.t < ride.startTime) && cur >= span.i0) {
+      path(span.i0, cur, s.index < span.i1 ? pos : undefined);
       ctx.shadowColor = withAlpha(style.accentColor, 0.8);
       ctx.shadowBlur = 10;
       ctx.strokeStyle = style.accentColor;
@@ -431,3 +443,11 @@ export const dialMapOverlay: OverlayDefinition = {
   draw: (ctx: Ctx2D, frame, style, octx) =>
     drawRoundMap(ctx, frame, style, octx, (c) => drawDialBase(c, { from: style.accentColor, to: style.accentColor }, dialPaint(style), true)),
 };
+
+/** Direction the round map turns to at instant t (radians clockwise from north), for tests. */
+export function mapHeadingAt(ride: RideData, t: number): number {
+  const l = localOf(ride);
+  const s = sampleAt(ride, t);
+  const pos = positionAt(ride, l, s);
+  return pos ? headingAt(ride, l, s) : NaN;
+}

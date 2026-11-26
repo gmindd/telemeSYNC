@@ -132,6 +132,8 @@ progress { accent-color: var(--accent); height: 10px; }
 .sync-bottom { display: grid; grid-template-columns: minmax(0, 2fr) minmax(300px, 1fr); gap: 16px; margin-top: 12px; }
 .preview-box { position: relative; width: 100%; background: #000; border-radius: 8px; overflow: hidden; }
 .preview-box video { width: 100%; height: 100%; display: block; }
+/* Vertical frame (phone video, or a camera turned 90°): as tall as the screen allows, centred */
+.preview-box.portrait { width: auto; height: min(75vh, 900px); max-width: 100%; margin: 0 auto; }
 .preview-nodata { position: absolute; inset: 0; background: repeating-conic-gradient(#2a3a2a 0% 25%, #223022 0% 50%) 0 0 / 40px 40px; }
 .overlay-layer { position: absolute; inset: 0; pointer-events: none; }
 .gadget { position: absolute; pointer-events: auto; cursor: move; touch-action: none; outline: 1px dashed transparent; }
@@ -144,6 +146,7 @@ progress { accent-color: var(--accent); height: 10px; }
 .safe-zone-status.warn { color: var(--warn); }
 .safe-zone-status.ok { color: #4ade80; }
 .gadget:hover { outline-color: rgba(255, 255, 255, 0.6); }
+.gadget.is-hidden { outline: 1px dashed rgba(255, 255, 255, 0.35); }
 .gadget canvas { display: block; width: 100%; height: auto; }
 .gadget-resize {
   position: absolute; right: -6px; bottom: -6px; width: 14px; height: 14px; border-radius: 3px; background: var(--accent);
@@ -161,7 +164,10 @@ progress { accent-color: var(--accent); height: 10px; }
 .gadget:hover .gadget-delete, .gadget.selected .gadget-delete { opacity: 1; pointer-events: auto; }
 .gadget-delete:hover { background: #ff2d33; }
 .scrub { width: 100%; }
-.preview-box video.rotated { transform: rotate(180deg); }
+.preview-box video.rot-180 { transform: rotate(180deg); }
+.preview-box video.rot-90, .preview-box video.rot-270 { position: absolute; top: 50%; left: 50%; max-width: none; object-fit: contain; }
+.preview-box video.rot-90 { transform: translate(-50%, -50%) rotate(90deg); }
+.preview-box video.rot-270 { transform: translate(-50%, -50%) rotate(270deg); }
 .video-controls { display: flex; align-items: center; gap: 10px; margin-top: 6px; }
 .video-controls .scrub { flex: 1; }
 .video-controls button { white-space: nowrap; }
@@ -223,6 +229,12 @@ button.tiny { padding: 0 6px; font-size: 11px; }
 .theme-tabs button { border: 1px solid transparent; border-bottom: none; border-radius: 8px 8px 0 0; background: transparent; padding: 8px 16px; font-weight: 700; margin-bottom: -1px; }
 .theme-tabs button.active { background: var(--panel); border-color: var(--border); color: var(--accent); }
 .theme-count { display: inline-block; min-width: 20px; margin-left: 8px; padding: 0 6px; border-radius: 10px; background: var(--accent); color: #1a0d00; font-size: 12px; line-height: 18px; }
+/* Sports (step 4): big tabs above the theme tabs of cycling */
+.sport-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin: 6px 0 16px; }
+.sport-tabs button { display: inline-flex; align-items: center; gap: 4px; padding: 10px 18px; border-radius: 12px; border: 1px solid var(--border); background: var(--panel); font-weight: 800; font-size: 15px; }
+.sport-tabs button.active { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; color: var(--accent); }
+.sport-file { margin-left: 6px; padding: 1px 7px; border-radius: 8px; background: rgba(76, 195, 138, 0.18); color: #4cc38a; font-size: 11px; font-weight: 700; }
+.ghost-options .lead.small { font-size: 13px; margin: 0 0 8px; }
 .overlay-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; }
 .overlay-card { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 8px; cursor: pointer; display: flex; flex-direction: column; gap: 6px; }
 .overlay-card.on { border-color: var(--accent); }
@@ -304,3 +316,32 @@ table.licenses td { padding: 3px 6px; border-bottom: 1px solid var(--border); }
 .services { list-style: none; padding: 0; margin: 8px 0; display: flex; flex-wrap: wrap; gap: 6px; }
 .services li { background: var(--panel2); border: 1px solid var(--border); border-radius: 14px; padding: 3px 10px; font-size: 12px; }
 .promo-actions { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; margin-top: 10px; }
+
+/* Area of the maps and profiles (step 4) */
+.segmented { display: inline-flex; flex-wrap: wrap; gap: 0; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin: 2px 0 8px; }
+.segmented button { border: 0; border-right: 1px solid var(--border); border-radius: 0; background: transparent; padding: 7px 14px; font-weight: 700; }
+.segmented button:last-child { border-right: 0; }
+.segmented button.active { background: var(--accent); color: #1a0d00; }
+.route-picker { margin-top: 8px; max-width: 900px; }
+.route-picker canvas { display: block; border-radius: 10px; border: 1px solid var(--border); cursor: crosshair; touch-action: none; }
+.route-picker-strip { margin-top: 6px; }
+.route-picker .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; vertical-align: -1px; }
+
+/* Sync step: round map at the playhead, to line a bend up with the video */
+.syncmap { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.syncmap h3 { align-self: flex-start; margin: 0; font-size: 14px; }
+.syncmap__map { display: block; }
+.syncmap__zoom { display: flex; align-items: center; gap: 8px; }
+.syncmap__zoom button.small { min-width: 30px; font-size: 16px; font-weight: 700; }
+.syncmap__note { margin: 0; font-size: 12px; text-align: center; }
+button.link-inline { background: none; border: none; padding: 0; color: var(--accent); text-decoration: underline; cursor: pointer; font: inherit; }
+
+/* Step 4: when gadgets appear (conditions) */
+.cond-panel summary { display: flex; align-items: baseline; gap: 12px; cursor: pointer; list-style: revert; }
+.cond-panel summary h3 { display: inline; margin: 0; }
+.cond-row { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px 14px; padding: 8px 0; border-top: 1px solid var(--border); }
+.cond-row .cond-name { min-width: 180px; font-weight: 600; align-self: center; }
+.cond-row > select { align-self: center; }
+.cond-input { display: inline-flex; align-items: center; gap: 6px; }
+.cond-value input { width: 76px; }
+.cond-warn { flex-basis: 100%; margin: 0; }

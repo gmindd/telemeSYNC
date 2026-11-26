@@ -283,9 +283,8 @@ const liveBadge = g({
 /** Roles of the stats column, by sport. */
 function stackRoles(ride: RideData, style: OverlayStyle): string[] {
   const bySport: Record<string, string[]> = {
-    running: ['pace', 'heartRate', 'steps', 'power', 'grade'],
-    hiking: ['pace', 'heartRate', 'verticalSpeed', 'altitude', 'grade'],
-    ski: ['speed', 'altitude', 'slope', 'verticalSpeed', 'heartRate'],
+    running: ['pace', 'heartRate', 'steps', 'verticalSpeed', 'grade'],
+    snow: ['speed', 'altitude', 'slope', 'verticalSpeed', 'heartRate'],
   };
   const list = bySport[sportOf(style, ride)] ?? ['speed', 'power', 'heartRate', 'cadence', 'grade', 'altitude'];
   return list.filter((r) => ride.available.has(metricRole(r).requires)).slice(0, 5);

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   CAMERA_PROFILES,
   clipWarnings,
@@ -14,12 +14,13 @@ import {
 } from '@telemesync/core';
 import { ClipList } from '../components/ClipList.tsx';
 import { SegmentsPanel } from '../components/SegmentsPanel.tsx';
-import { gadgetZones, PLATFORM_NAMES, SOCIAL_PLATFORMS } from '@telemesync/core';
+import { gadgetZones, PLATFORM_NAMES, shownSize, SOCIAL_PLATFORMS } from '@telemesync/core';
 import { Preview } from '../components/Preview.tsx';
 import { Timeline } from '../components/Timeline.tsx';
 import { ValuesPanel } from '../components/ValuesPanel.tsx';
+import { SyncMap } from '../components/SyncMap.tsx';
 import { useLang, useT } from '../i18n/index.tsx';
-import { useApp } from '../lib/store.ts';
+import { drawStyle, useApp } from '../lib/store.ts';
 import { dec, fmtOffset, parseDecimal } from '../lib/format.ts';
 
 const TIME_ZONES = ['Europe/Lisbon', 'Atlantic/Madeira', 'Atlantic/Azores', 'Europe/Madrid', 'Europe/Paris', 'Europe/London', 'UTC'];
@@ -72,10 +73,11 @@ function CameraRow({ cam }: { cam: Camera }) {
 }
 
 /** Social-app zones over the preview: one toggle per app, and whether any gadget sits under their buttons. */
-function SafeZoneBar({ clip }: { clip: Clip }) {
+function SafeZoneBar({ clip, cam }: { clip: Clip; cam: Camera }) {
   const { safeZones, toggleSafeZone, overlays, layout, style } = useApp();
   const t = useT();
-  const aspect = clip.meta.width && clip.meta.height ? clip.meta.width / clip.meta.height : 16 / 9;
+  const shown = shownSize(clip, cam);
+  const aspect = shown.width && shown.height ? shown.width / shown.height : 16 / 9;
   const zones = gadgetZones(overlays, resolveLayout(overlays, layout, aspect, style), aspect, style, safeZones);
   const covered = Object.values(zones).filter((z) => z === 'ui').length;
   const maybe = Object.values(zones).filter((z) => z === 'maybe').length;
@@ -168,10 +170,13 @@ export function StepSync() {
   const st = useApp();
   const { ride, sync, activeClipId, playhead, style, files, overlays, layout } = st;
   const t = useT();
+  // Maps on "only the clips": the stretch the clips cover.
+  const viewStyle = useMemo(() => drawStyle(style, sync), [style, sync]);
   if (!ride) return <section><p>{t('sync.needRide')}</p></section>;
   const cams = new Map(sync.cameras.map((c) => [c.id, c]));
   const clip = sync.clips.find((c) => c.id === activeClipId) ?? sync.clips[0];
   const cam = clip ? cams.get(clip.cameraId)! : undefined;
+  const clipStart = clip && cam ? effectiveStart(clip, cam) : undefined;
   return (
     <section>
       <h2>{t('nav.sync')}</h2>
@@ -194,7 +199,7 @@ export function StepSync() {
       {clip && cam ? (
         <div className="sync-bottom">
           <div className="sync-preview">
-            <Preview clip={clip} camera={cam} file={files[clip.id]} ride={ride} overlays={overlays} style={style} layout={layout} onPlacement={st.setPlacement} />
+            <Preview clip={clip} camera={cam} file={files[clip.id]} ride={ride} overlays={overlays} style={viewStyle} layout={layout} onPlacement={st.setPlacement} />
             <div className="row muted">
               {t('sync.dragHint')}
               <button className="small" onClick={st.resetLayout}>{t('sync.resetLayout')}</button>
@@ -206,12 +211,21 @@ export function StepSync() {
               >
                 ⟲ {t('preview.rotate')}
               </button>
+              <button
+                className={`small${cam.videoRotation === 90 || cam.videoRotation === 270 ? ' toggle-on' : ''}`}
+                aria-pressed={cam.videoRotation === 90 || cam.videoRotation === 270}
+                title={t('preview.rotate90Title')}
+                onClick={() => st.setCameraRotation(cam.id, (((cam.videoRotation ?? 0) + 90) % 360) as 0 | 90 | 180 | 270)}
+              >
+                ⟳ {t('preview.rotate90')}
+              </button>
             </div>
-            <SafeZoneBar clip={clip} />
+            <SafeZoneBar clip={clip} cam={cam} />
           </div>
           <div className="sync-side">
             <ClipDetail clip={clip} cam={cam} />
             {playhead ? <ValuesPanel ride={ride} t={playhead.t} style={style} /> : null}
+            {playhead && clipStart !== undefined && ride.available.has('map') ? <SyncMap ride={ride} t={playhead.t} clipStart={clipStart} clipEnd={clipStart + clip.meta.durationMs} style={viewStyle} /> : null}
             <SegmentsPanel ride={ride} timeZone={style.timeZone} />
           </div>
         </div>

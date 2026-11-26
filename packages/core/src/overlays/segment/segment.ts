@@ -7,6 +7,7 @@ import { drawText, font, labelSize } from '../draw.ts';
 import { withAlpha } from '../panel/paint.ts';
 import { showsWkg, type Ctx2D, type OverlayDefinition, type OverlayId, type OverlayStyle } from '../types.ts';
 import { convert, fmt } from '../units.ts';
+import { formatPace, paceUnit } from '../../metrics/running.ts';
 
 // Segment gadgets: the segment being ridden (running time with tenths, figures so far, comparison with
 // the best lap) and the laps table that fills up as the laps are finished. Both draw nothing outside
@@ -36,13 +37,20 @@ const STATS: StatColumn[] = [
   { key: 'seg.avgTemp', requires: 'temperature', value: (s, st) => fmt(convert.temperature(s.avgTemperature, st.units), 0), unit: (st) => convert.temperatureUnit(st.units) },
 ];
 
+/** Running files show pace where cycling shows speed, and cadence in steps. */
+const RUN_STATS: Partial<Record<CoreKey, StatColumn>> = {
+  'seg.avgSpeed': { key: 'run.avgPace', requires: 'distance', value: (s, st) => formatPace(s.avgSpeed, st.units), unit: (st) => paceUnit(st.units).slice(1) },
+  'seg.avgCadence': { key: 'run.avgCadence', requires: 'cadence', value: (s) => fmt(s.avgCadence, 0), unit: (st) => tr(st.language, 'unit.spm') },
+};
+
 function statsFor(ride: RideData, style: OverlayStyle, n: number, only?: CoreKey[]): StatColumn[] {
-  const list = only ? only.map((k) => STATS.find((c) => c.key === k)!) : STATS;
+  let list = only ? only.map((k) => STATS.find((c) => c.key === k)!) : STATS;
+  if (ride.sport === 'running') list = list.filter((c) => c.key !== 'seg.maxSpeed').map((c) => RUN_STATS[c.key] ?? c);
   return list.filter((c) => ride.available.has(c.requires) && (!c.when || c.when(style))).slice(0, n);
 }
 
 /** Text cut with "…" to fit maxW at the current font. */
-function fitText(ctx: Ctx2D, text: string, maxW: number): string {
+export function fitText(ctx: Ctx2D, text: string, maxW: number): string {
   if (ctx.measureText(text).width <= maxW) return text;
   let t = text;
   while (t.length > 1 && ctx.measureText(`${t}…`).width > maxW) t = t.slice(0, -1);
@@ -50,7 +58,7 @@ function fitText(ctx: Ctx2D, text: string, maxW: number): string {
 }
 
 /** Rounded badge; `edge` is its right end (align 'right') or its left end ('left'). Returns its width. */
-function pill(ctx: Ctx2D, edge: number, cy: number, text: string, color: string, style: OverlayStyle, align: 'left' | 'right' = 'right') {
+export function pill(ctx: Ctx2D, edge: number, cy: number, text: string, color: string, style: OverlayStyle, align: 'left' | 'right' = 'right') {
   const p = dialPaint(style);
   ctx.font = font(p.ts, 13, 800);
   const w = ctx.measureText(text).width + 22;
@@ -70,7 +78,7 @@ function pill(ctx: Ctx2D, edge: number, cy: number, text: string, color: string,
 }
 
 /** Chequered flag icon. */
-function flag(ctx: Ctx2D, x: number, y: number, s: number) {
+export function flag(ctx: Ctx2D, x: number, y: number, s: number) {
   ctx.fillStyle = '#ffffff';
   ctx.fillRect(x, y, 2.5, s);
   const cw = s * 0.18;
@@ -82,8 +90,8 @@ function flag(ctx: Ctx2D, x: number, y: number, s: number) {
   }
 }
 
-const GOOD = '#4ade80';
-const BAD = '#f87171';
+export const GOOD = '#4ade80';
+export const BAD = '#f87171';
 
 // ---------------------------------------------------------------------------------------------
 
@@ -121,7 +129,8 @@ export const segmentLiveOverlay: OverlayDefinition = {
     drawText(ctx, formatLapTime(timeStats.elapsedMs, dec), 26, 122, p.ts, { size: 68, weight: 800, color: running ? undefined : GOOD });
 
     // Comparison with the best lap/segment of the same kind finished before this one.
-    const best = bestBefore(ride, style.segments, seg.kind, running ? frame.t : seg.startMs, seg.id);
+    // Only laps race each other: segments are different stretches, each with its own figures.
+    const best = seg.kind === 'lap' ? bestBefore(ride, style.segments, 'lap', running ? frame.t : seg.startMs, seg.id) : undefined;
     if (best) {
       if (running) {
         drawText(ctx, tr(lang, 'seg.best', { time: formatLapTime(best.ms, dec) }), 28, 154, p.ts, { size: 17, weight: 700, tabular: false, color: p.label });
@@ -129,7 +138,7 @@ export const segmentLiveOverlay: OverlayDefinition = {
         const delta = timeStats.elapsedMs - best.ms;
         const d = `${delta < 0 ? '−' : '+'}${formatLapTime(Math.abs(delta), dec)} s`;
         const w = drawText(ctx, tr(lang, 'seg.vsBest', { delta: d }), 28, 154, p.ts, { size: 18, weight: 800, tabular: false, color: delta < 0 ? GOOD : BAD });
-        if (delta < 0) pill(ctx, 28 + w + 14, 148, `★ ${tr(lang, seg.kind === 'lap' ? 'seg.newBestLap' : 'seg.newBestTime')}`, '#ffd23f', style, 'left');
+        if (delta < 0) pill(ctx, 28 + w + 14, 148, `★ ${tr(lang, 'seg.newBestLap')}`, '#ffd23f', style, 'left');
       }
     }
 
@@ -179,13 +188,10 @@ export const segmentLapsOverlay: OverlayDefinition = {
     const dec = decimalSeparator(lang);
     const laps = all.every((seg) => seg.kind === 'lap');
 
-    // Best finished time of each kind, for the highlight.
-    const bestMs: Partial<Record<Segment['kind'], number>> = {};
-    for (const seg of started) {
-      if (seg.endMs > frame.t) continue;
-      const ms = seg.endMs - seg.startMs;
-      if (!(ms >= (bestMs[seg.kind] ?? Infinity))) bestMs[seg.kind] = ms;
-    }
+    // Best finished lap, for the highlight (segments are not compared with each other).
+    let bestLapMs = Infinity;
+    for (const seg of started) if (seg.kind === 'lap' && seg.endMs <= frame.t) bestLapMs = Math.min(bestLapMs, seg.endMs - seg.startMs);
+    const finishedLaps = rowsOf(started, frame.t);
 
     const rows = started.slice(-ROWS);
     // The card grows with the laps (the canvas keeps its size, for the video).
@@ -221,7 +227,7 @@ export const segmentLapsOverlay: OverlayDefinition = {
       const st = segmentStats(ride, seg, running ? frame.t : Infinity);
       const textSt = running ? segmentStats(ride, seg, Math.max(seg.startMs + 1, frame.textSample.t)) ?? st : st;
       if (!st || !textSt) return;
-      const isBest = !running && bestMs[seg.kind] === seg.endMs - seg.startMs && rows.filter((r) => r.kind === seg.kind && r.endMs <= frame.t).length > 1;
+      const isBest = !running && seg.kind === 'lap' && bestLapMs === seg.endMs - seg.startMs && finishedLaps > 1;
       if (running) {
         ctx.fillStyle = withAlpha(style.accentColor, 0.18);
         ctx.fillRect(22, y + 2, TW - 44, ROW_H - 4);
@@ -239,6 +245,11 @@ export const segmentLapsOverlay: OverlayDefinition = {
     });
   },
 };
+
+/** Laps finished by instant t. */
+function rowsOf(list: Segment[], t: number): number {
+  return list.filter((seg) => seg.kind === 'lap' && seg.endMs <= t).length;
+}
 
 export const segmentOverlays: OverlayDefinition[] = [segmentLiveOverlay, segmentLapsOverlay];
 

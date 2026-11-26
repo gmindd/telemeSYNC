@@ -79,14 +79,22 @@ export function withLang(url: string, lang: Lang): string {
   }
 }
 
-/** Asks the site for the latest release; null when there is none newer or the site can't be reached (offline, timeout). */
-export async function checkForUpdate(url: string, current: string, platform: Platform = currentPlatform()): Promise<Release | null> {
-  try {
-    const res = await fetch(url, { cache: 'no-store', signal: AbortSignal.timeout(8000) });
-    if (!res.ok) return null;
-    const release = parseRelease(await res.json(), platform);
-    return release && isNewer(release.version, current) ? release : null;
-  } catch {
-    return null;
+/**
+ * Asks the site for the latest release; null when there is none newer or the site can't be reached (offline, timeout).
+ * With several addresses, the next one is tried only when the previous one fails (no answer, an error status or a
+ * file that isn't a valid release); a valid answer, newer or not, ends the check.
+ */
+export async function checkForUpdate(urls: string | readonly string[], current: string, platform: Platform = currentPlatform(), fetcher: typeof fetch = fetch): Promise<Release | null> {
+  for (const url of typeof urls === 'string' ? [urls] : urls) {
+    try {
+      const res = await fetcher(url, { cache: 'no-store', signal: AbortSignal.timeout(8000) });
+      if (!res.ok) continue;
+      const release = parseRelease(await res.json(), platform);
+      if (!release) continue;
+      return isNewer(release.version, current) ? release : null;
+    } catch {
+      /* this address can't be reached: try the next one */
+    }
   }
+  return null;
 }

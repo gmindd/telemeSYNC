@@ -78,10 +78,7 @@ export function syntheticRide(start = Date.UTC(2024, 5, 15, 8, 0, 0)): Synthetic
 const DEG_TO_SC = 2 ** 31 / 180;
 
 /** Encodes samples as a FIT activity. `enhanced` = write enhanced fields (Garmin) or legacy ones (older devices). */
-export function encodeFit(
-  samples: RawSample[],
-  opts: { enhanced?: boolean; localOffsetMs?: number; laps?: { startMs: number; endMs: number }[]; sport?: string } = {},
-): Uint8Array {
+export function encodeFit(samples: RawSample[], opts: { enhanced?: boolean; localOffsetMs?: number; laps?: { startMs: number; endMs: number }[]; sport?: string } = {}): Uint8Array {
   const enc = new Encoder();
   const start = new Date(samples[0].t);
   enc.writeMesg({
@@ -130,9 +127,8 @@ export function encodeFit(
       mesgNum: Profile.MesgNum.SESSION,
       timestamp: last,
       startTime: start,
-      totalElapsedTime: (last.getTime() - start.getTime()) / 1000,
-      totalTimerTime: (last.getTime() - start.getTime()) / 1000,
       sport: opts.sport,
+      totalElapsedTime: (last.getTime() - start.getTime()) / 1000,
       event: 'session',
       eventType: 'stop',
     } as any);

@@ -101,7 +101,7 @@ export function refName(name) {
     .split('/')[0]
     .split(':')[0]
     .replace(/^(www|m|l|lm|mobile|out)\./, '');
-  if (!host || host === '-' || host.startsWith('(') || host.endsWith('telemesync.pereiragabriel.com') || host === 'localhost') return '';
+  if (!host || host === '-' || host.startsWith('(') || host.endsWith('telemesync.pereiragabriel.com') || host === 'telemesync.app' || host === 'localhost') return '';
   for (const [re, label] of KNOWN_REFS) if (re.test(host)) return label;
   return host;
 }

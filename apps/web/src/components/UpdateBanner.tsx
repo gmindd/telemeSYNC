@@ -9,9 +9,9 @@ export function UpdateBanner() {
   const t = useT();
   const lang = useLang((s) => s.lang);
   useEffect(() => {
-    if (!APP_INFO.updateUrl) return;
+    if (!APP_INFO.updateUrls.length) return;
     let alive = true;
-    void checkForUpdate(APP_INFO.updateUrl, APP_INFO.version).then((r) => {
+    void checkForUpdate(APP_INFO.updateUrls, APP_INFO.version).then((r) => {
       if (alive) setRelease(r);
     });
     return () => {

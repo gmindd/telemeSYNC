@@ -393,7 +393,7 @@ const runsCard = g({
   name: 'kit.runsCard',
   slug: 'runs-card',
   requires: 'runs',
-  sports: ['ski'],
+  sports: ['snow'],
   textOnly: true,
   size: { width: 520, height: 170 },
   draw: (ctx, frame, style, octx) => {

@@ -1,6 +1,5 @@
 import { pick, tr, type CoreKey, type Lang, type Translations } from '../i18n/index.ts';
 import type { RideData } from '../telemetry/ride.ts';
-import type { Sport } from '../telemetry/sport.ts';
 import { sampleAt } from '../telemetry/ride.ts';
 import { dialFamily } from './dial/index.ts';
 import { elevationProfileOverlay } from './elevationProfile.ts';
@@ -22,9 +21,38 @@ import { natalFamily } from './natal/index.ts';
 import { segmentOverlays } from './segment/segment.ts';
 import { panelOverlays } from './panel/panel.ts';
 import { textOverlays } from './text/metrics.ts';
+import { runOverlays } from './run/run.ts';
+import { snowOverlays } from './snow/snow.ts';
+import type { Sport } from '../telemetry/types.ts';
 import { METRIC_SLUGS } from './slugs.ts';
 import { setNumberLang } from './units.ts';
 import type { Ctx2D, FrameState, OverlayContext, OverlayDefinition, OverlayId, OverlayStyle, OverlayTheme } from './types.ts';
+
+/**
+ * Cycling gadgets that also fit the other sports' catalogues (plain numbers, maps, profiles, laps).
+ * Dials are not shared: each sport has its own rim (chainring, athletics track, ice).
+ */
+const SHARED_SPORTS: Partial<Record<OverlayId, Sport[]>> = {
+  heartRate: ['cycling', 'running', 'snow'],
+  altitude: ['cycling', 'running', 'snow'],
+  grade: ['cycling', 'running'],
+  speed: ['cycling', 'snow'],
+  power: ['cycling', 'running'],
+  temperature: ['cycling', 'running', 'snow'],
+  distance: ['cycling', 'running', 'snow'],
+  elevationGain: ['cycling', 'running'],
+  elapsedTime: ['cycling', 'running', 'snow'],
+  localTime: ['cycling', 'running', 'snow'],
+  map: ['cycling', 'running', 'snow'],
+  elevationProfile: ['cycling', 'running', 'snow'],
+  dialMap: ['cycling', 'running', 'snow'],
+  dialProfile: ['cycling', 'running', 'snow'],
+  panelHeartRate: ['cycling', 'running'],
+  panelAltitude: ['cycling', 'running', 'snow'],
+  panelSpeed: ['cycling', 'snow'],
+  segmentLive: ['cycling', 'running'],
+  segmentLaps: ['cycling', 'running'],
+};
 
 export const OVERLAYS: OverlayDefinition[] = [
   ...textOverlays,
@@ -35,8 +63,30 @@ export const OVERLAYS: OverlayDefinition[] = [
   ...segmentOverlays,
   ...glassFamily,
   ...natalFamily,
+  ...runOverlays,
+  ...snowOverlays,
   ...KIT_FAMILIES,
-];
+].map((o) => (SHARED_SPORTS[o.id] ? { ...o, sports: SHARED_SPORTS[o.id] } : o));
+
+/** Section of the app a gadget goes in: plain gadgets, round dials, panels, or live cards and tables. */
+export type OverlayGroup = 'gadget' | 'dial' | 'panel' | 'live';
+const LIVE_IDS = new Set<OverlayId>(['segmentLive', 'segmentLaps', 'runSplits', 'runGhost', 'snowRunLive', 'snowRuns']);
+export function overlayGroup(id: OverlayId): OverlayGroup {
+  if (LIVE_IDS.has(id)) return 'live';
+  if (id.startsWith('panel')) return 'panel';
+  if (id.startsWith('dial') || id.startsWith('runDial') || id.startsWith('snowDial')) return 'dial';
+  return 'gadget';
+}
+
+/** Sports whose catalogue lists the overlay (cycling when it says nothing). */
+export function overlaySports(id: OverlayId): Sport[] {
+  return OVERLAYS.find((o) => o.id === id)?.sports ?? ['cycling'];
+}
+
+/** Overlays of a sport's catalogue that this ride can show. */
+export function overlaysForSport(ride: RideData, sport: Sport): OverlayDefinition[] {
+  return availableOverlays(ride).filter((o) => (o.sports ?? ['cycling']).includes(sport));
+}
 
 // Categories of the gadgets made before the kit (the kit gadgets carry theirs).
 const MAP_IDS = new Set<OverlayId>(['map', 'elevationProfile', dialMapOverlay.id, dialProfileOverlay.id, ...natalCards.slice(0, 2).map((d) => d.id), ...glassCards.slice(0, 3).map((d) => d.id)]);
@@ -49,15 +99,15 @@ export function overlayCategory(id: OverlayId): GadgetCategory {
   if (def?.category) return def.category;
   if (MAP_IDS.has(id)) return 'maps';
   if (SUMMARY_IDS.has(id) || panelMetricOf(id) || glassPanelMetricOf(id)) return 'panels';
-  if (isSegmentOverlay(id)) return 'segments';
-  if (isDialOverlay(id) || DIAL_IDS.has(id)) return 'dials';
+  if (overlayGroup(id) === 'live' || isSegmentOverlay(id)) return 'segments';
+  if (overlayGroup(id) === 'dial' || isDialOverlay(id) || DIAL_IDS.has(id)) return 'dials';
   if (def?.theme && def.theme !== 'default') return 'extras';
   return 'numbers';
 }
 
-/** True when the gadget suits the sport (gadgets without a sport list suit every sport). */
+/** True when the gadget is in the sport's catalogue (cycling when it says nothing, as in overlaySports). */
 export function suitsSport(def: OverlayDefinition, sport: Sport | undefined): boolean {
-  return !sport || !def.sports || def.sports.includes(sport);
+  return !sport || (def.sports ?? ['cycling']).includes(sport);
 }
 
 /** Gadgets of a theme that this ride can show and that suit the sport, in the theme's order. */
