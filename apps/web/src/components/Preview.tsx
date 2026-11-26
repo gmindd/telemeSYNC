@@ -3,6 +3,7 @@ import {
   effectiveStart,
   shownSize,
   gadgetOpacity,
+  gadgetStyle,
   formatDuration,
   gadgetZones,
   resolveLayout,
@@ -134,7 +135,7 @@ export function Preview(props: {
       for (const id of overlays) {
         const c = canvases.current.get(id);
         const ctx = c?.getContext('2d');
-        if (ctx) renderOverlayFrame(ctx as unknown as Ctx2D, getOverlay(id), t, style, octx);
+        if (ctx) renderOverlayFrame(ctx as unknown as Ctx2D, getOverlay(id), t, gadgetStyle(style, id), octx);
         if (c) {
           // Gadget with a condition: as it will look in the video; while hidden, a faint outline so it can still be placed.
           const a = gadgetOpacity(id, t, style, ride);

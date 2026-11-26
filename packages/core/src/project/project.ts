@@ -43,6 +43,13 @@ export function validConditions(v: unknown): Partial<Record<OverlayId, GadgetCon
   return out;
 }
 
+/** Background opacity of single gadgets in a project file: only values from 0 to 1 (older projects have none). */
+export function validGadgetOpacity(v: unknown): Partial<Record<OverlayId, number>> {
+  const out: Partial<Record<OverlayId, number>> = {};
+  if (v && typeof v === 'object') for (const [id, o] of Object.entries(v)) if (typeof o === 'number' && o >= 0 && o <= 1) out[id as OverlayId] = o;
+  return out;
+}
+
 /** Segments of a project file: only well-formed ones (older projects have none). */
 function validSegments(v: unknown): Segment[] {
   if (!Array.isArray(v)) return [];
@@ -68,7 +75,7 @@ export function parseProject(json: string): ProjectFile {
   }
   return {
     ...p,
-    style: { ...DEFAULT_STYLE, ...p.style, units: { ...DEFAULT_STYLE.units, ...p.style?.units }, segments: validSegments(p.style?.segments), conditions: validConditions(p.style?.conditions) },
+    style: { ...DEFAULT_STYLE, ...p.style, units: { ...DEFAULT_STYLE.units, ...p.style?.units }, segments: validSegments(p.style?.segments), conditions: validConditions(p.style?.conditions), gadgetOpacity: validGadgetOpacity(p.style?.gadgetOpacity) },
     overlays: Array.isArray(p.overlays) ? p.overlays : [],
     output: {
       format: isOutputFormat(p.output?.format) ? p.output.format : 'prores',

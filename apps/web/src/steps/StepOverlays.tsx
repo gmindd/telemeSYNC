@@ -38,6 +38,7 @@ import {
 } from '@telemesync/core';
 import { OverlayCanvas } from '../components/OverlayCanvas.tsx';
 import { ConditionsPanel } from '../components/ConditionsPanel.tsx';
+import { GadgetBackgroundPanel } from '../components/GadgetBackgroundPanel.tsx';
 import { langName, useLang, useT } from '../i18n/index.tsx';
 import { clipsSpan, drawStyle, useApp } from '../lib/store.ts';
 import { RoutePicker } from '../components/RoutePicker.tsx';
@@ -448,6 +449,7 @@ export function StepOverlays() {
       {showHr ? <HeartRateOptions /> : null}
       {showArea ? <AreaOptions /> : null}
       <ConditionsPanel />
+      <GadgetBackgroundPanel />
 
       {sport === 'cycling' ? (
         <>

@@ -118,7 +118,8 @@ export function drawComposite(
     // Gadgets with a condition (see visibility.ts) are hidden, or fading in or out.
     const alpha = gadgetOpacity(id, t, style, octx.ride);
     if (alpha <= 0) continue;
-    const base = def.size(style);
+    const st = gadgetStyle(style, id);
+    const base = def.size(st);
     const k = (p.w * width) / base.width;
     if (alpha < 1 && layer && ctx.drawImage) {
       const L = layer(Math.ceil(base.width * k), Math.ceil(base.height * k));
@@ -126,7 +127,7 @@ export function drawComposite(
       L.clearRect(0, 0, base.width * k + 1, base.height * k + 1);
       L.save();
       L.setTransform(k, 0, 0, k, 0, 0);
-      def.draw(L, fs, style, octx);
+      def.draw(L, fs, st, octx);
       L.restore();
       ctx.save();
       ctx.globalAlpha = alpha;
@@ -137,7 +138,7 @@ export function drawComposite(
     ctx.save();
     if (alpha < 1) ctx.globalAlpha = alpha;
     ctx.setTransform(k, 0, 0, k, p.x * width, p.y * height);
-    def.draw(ctx, fs, gadgetStyle(style, id), octx);
+    def.draw(ctx, fs, st, octx);
     ctx.restore();
   }
 }

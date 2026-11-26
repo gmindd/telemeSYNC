@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { getOverlay, overlayPixelSize, renderOverlayFrame, type Ctx2D, type OverlayId, type OverlayStyle, type RideData, type Streets } from '@telemesync/core';
+import { gadgetStyle, getOverlay, overlayPixelSize, renderOverlayFrame, type Ctx2D, type OverlayId, type OverlayStyle, type RideData, type Streets } from '@telemesync/core';
 
 /** Draws one overlay with the exact same renderer used for export. */
 export function OverlayCanvas(props: {
@@ -25,7 +25,7 @@ export function OverlayCanvas(props: {
     if (!c) return;
     const ctx = c.getContext('2d');
     if (!ctx) return;
-    renderOverlayFrame(ctx as unknown as Ctx2D, def, props.t, props.style, { ride: props.ride, clipStart: props.clipStart, clipEnd: props.clipEnd, streets: props.streets });
+    renderOverlayFrame(ctx as unknown as Ctx2D, def, props.t, gadgetStyle(props.style, props.id), { ride: props.ride, clipStart: props.clipStart, clipEnd: props.clipEnd, streets: props.streets });
   });
   const k = props.cssScale ?? 1;
   const css = props.fitHeight

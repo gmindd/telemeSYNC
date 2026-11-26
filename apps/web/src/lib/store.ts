@@ -19,6 +19,8 @@ import {
   resolveAll,
   shownSize,
   serializeProject,
+  validConditions,
+  validGadgetOpacity,
   type CameraProfileId,
   type GadgetLayout,
   type GadgetPlacement,
@@ -191,7 +193,7 @@ function loadStoredStyle(overlayLang: Lang | 'auto'): OverlayStyle {
   const language = overlayLanguage(overlayLang);
   try {
     const s = JSON.parse(localStorage.getItem(STYLE_KEY) ?? 'null');
-    if (s) return { ...DEFAULT_STYLE, ...s, units: { ...DEFAULT_STYLE.units, ...s.units }, language, segments: [] };
+    if (s) return { ...DEFAULT_STYLE, ...s, units: { ...DEFAULT_STYLE.units, ...s.units }, language, segments: [], conditions: validConditions(s.conditions), gadgetOpacity: validGadgetOpacity(s.gadgetOpacity) };
   } catch {
     /* ignore */
   }
@@ -411,7 +413,8 @@ export const useApp = create<State & Actions>((set, get) => ({
   },
 
   setStyle(p) {
-    const style = { ...get().style, ...p };
+    // A new shared background opacity applies to every gadget (dropping the ones set one by one).
+    const style = { ...get().style, ...(p.panelOpacity !== undefined && p.gadgetOpacity === undefined ? { gadgetOpacity: {} } : {}), ...p };
     set({ style });
     try {
       // Segments belong to the ride (saved in the project), not to the style kept between rides.

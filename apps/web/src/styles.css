@@ -294,6 +294,11 @@ button.link-inline { background: none; border: none; padding: 0; color: var(--ac
 .cond-row { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px 14px; padding: 8px 0; border-top: 1px solid var(--border); }
 .cond-row .cond-name { min-width: 180px; font-weight: 600; align-self: center; }
 .cond-row > select { align-self: center; }
+.bg-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; padding: 8px 0; border-top: 1px solid var(--border); }
+.bg-row .cond-name { min-width: 180px; font-weight: 600; }
+.bg-row input[type='range'] { flex: 1 1 160px; max-width: 280px; }
+.bg-row__val { min-width: 3.5em; font-variant-numeric: tabular-nums; }
+.bg-row:not(.on) .bg-row__val { color: var(--muted, #888); font-weight: 400; }
 .cond-input { display: inline-flex; align-items: center; gap: 6px; }
 .cond-value input { width: 76px; }
 .cond-warn { flex-basis: 100%; margin: 0; }

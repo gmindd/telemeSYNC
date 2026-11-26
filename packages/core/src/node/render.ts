@@ -4,7 +4,7 @@ import { dirname, join } from 'node:path';
 import type { OutputFormat } from '../export/formats.ts';
 import type { Fps } from '../media/types.ts';
 import { changesAtTextRate, frameState, overlayPixelSize, textInstant } from '../overlays/registry.ts';
-import { compositeFrameKey, drawComposite, type GadgetPlacement } from '../overlays/layout.ts';
+import { compositeFrameKey, drawComposite, gadgetStyle, type GadgetPlacement } from '../overlays/layout.ts';
 import { gadgetOpacity } from '../overlays/visibility.ts';
 import type { Ctx2D, OverlayContext, OverlayDefinition, OverlayId, OverlayStyle } from '../overlays/types.ts';
 import { setNumberLang } from '../overlays/units.ts';
@@ -127,7 +127,7 @@ export function renderOverlay(o: RenderOverlayOptions): Promise<{ frames: number
         ctx.save();
         ctx.setTransform(o.style.scale, 0, 0, o.style.scale, 0, 0);
         setNumberLang(o.style.language);
-        o.def.draw(ctx, frameState(t, o.style, o.octx), o.style, o.octx);
+        o.def.draw(ctx, frameState(t, o.style, o.octx), gadgetStyle(o.style, o.def.id), o.octx);
         ctx.restore();
       },
     },
