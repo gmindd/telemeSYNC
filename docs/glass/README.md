@@ -2,7 +2,7 @@
 
 Versões em vidro, transparentes, de todos os gadgets com métricas. A ideia é elegância e transparência: o vídeo continua a ser o protagonista.
 
-> **Estado: pronto mas não oferecido.** O tema está todo feito e testado, mas não aparece nas apps. Para o ativar, acrescente `'glass'` a `OVERLAY_THEMES` em [`packages/core/src/overlays/types.ts`](../../packages/core/src/overlays/types.ts) (a seguir a `'default'`): aparece o separador **Vidro** no passo 4 (desktop) e a categoria **Vidro** nos gadgets (telemóvel).
+> **Estado: oferecido desde o desktop 1.2.1.** Separador **Vidro** no passo 4 do desktop (ciclismo). Na app Android, a categoria **Vidro** aparece na próxima versão (está ligada a `OVERLAY_THEMES` em [`packages/core/src/overlays/types.ts`](../../packages/core/src/overlays/types.ts)).
 
 ![Mostradores de vidro em dois momentos da volta](resultado-mostradores.jpg)
 

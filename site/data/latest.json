@@ -1,18 +1,18 @@
 {
-  "version": "1.2.0",
-  "date": "2026-11-19",
-  "summary": "Corrida e trail, ski e snowboard; gadgets que aparecem só quando interessa; mapa com ruas na sincronização; rodar o vídeo 90°; desnível igual ao do ciclocomputador.",
+  "version": "1.2.1",
+  "date": "2026-11-26",
+  "summary": "Tema Vidro; fundo de cada gadget; opacidade do fundo em todos os gadgets com fundo; mapas que já não ficam uns por cima dos outros; aviso de atualizações pelo novo domínio.",
   "summaries": {
-    "en": "Running and trail, skiing and snowboarding; gadgets that appear only when it matters; a map with streets in the sync step; video rotated 90°; elevation gain matching the bike computer.",
-    "pt": "Corrida e trail, ski e snowboard; gadgets que aparecem só quando interessa; mapa com ruas na sincronização; rodar o vídeo 90°; desnível igual ao do ciclocomputador.",
-    "fr": "Course et trail, ski et snowboard ; des gadgets qui n’apparaissent que quand ça compte ; une carte avec les rues à la synchronisation ; vidéo pivotée de 90° ; dénivelé identique à celui du compteur.",
-    "es": "Running y trail, esquí y snowboard; gadgets que aparecen solo cuando importa; mapa con calles en la sincronización; girar el vídeo 90°; desnivel igual al del ciclocomputador.",
-    "de": "Laufen und Trail, Ski und Snowboard; Gadgets, die nur erscheinen, wenn es zählt; Karte mit Straßen beim Synchronisieren; Video um 90° drehen; Höhenmeter wie beim Radcomputer."
+    "en": "Glass theme; background of each gadget; background opacity on every gadget with a background; maps that no longer pile up on each other; update notice from the new domain.",
+    "pt": "Tema Vidro; fundo de cada gadget; opacidade do fundo em todos os gadgets com fundo; mapas que já não ficam uns por cima dos outros; aviso de atualizações pelo novo domínio.",
+    "fr": "Thème Verre ; fond de chaque gadget ; opacité du fond sur tous les gadgets avec un fond ; des cartes qui ne se superposent plus ; avis de mise à jour par le nouveau domaine.",
+    "es": "Tema Cristal; fondo de cada gadget; opacidad del fondo en todos los gadgets con fondo; mapas que ya no quedan unos encima de otros; aviso de actualizaciones desde el nuevo dominio.",
+    "de": "Glas-Design; Hintergrund je Gadget; Hintergrund-Deckkraft bei allen Gadgets mit Hintergrund; Karten, die sich nicht mehr überlappen; Update-Hinweis über die neue Domain."
   },
-  "downloadUrl": "https://github.com/gmindd/telemeSYNC/releases/download/v1.2.0/telemeSYNC-1.2.0-windows.zip",
+  "downloadUrl": "https://github.com/gmindd/telemeSYNC/releases/download/v1.2.1/telemeSYNC-1.2.1-windows.zip",
   "downloads": {
-    "windows": "https://github.com/gmindd/telemeSYNC/releases/download/v1.2.0/telemeSYNC-1.2.0-windows.zip",
-    "mac": "https://github.com/gmindd/telemeSYNC/releases/download/v1.2.0/telemeSYNC-1.2.0-macos.zip"
+    "windows": "https://github.com/gmindd/telemeSYNC/releases/download/v1.2.1/telemeSYNC-1.2.1-windows.zip",
+    "mac": "https://github.com/gmindd/telemeSYNC/releases/download/v1.2.1/telemeSYNC-1.2.1-macos.zip"
   },
   "changelogUrl": "https://telemesync.app/#novidades"
 }
