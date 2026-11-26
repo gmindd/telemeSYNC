@@ -9,6 +9,14 @@ export const OVERLAYS_MSG = {
     'Jedes gewählte Overlay erzeugt ein transparentes Video pro Clip. Es erscheinen nur Messwerte, die in der Datei vorhanden sind.',
   ],
   'ov.theme.default': ['Default', 'Predefinido', 'Par défaut', 'Predeterminado', 'Standard'],
+  'ov.theme.glass': ['Glass', 'Vidro', 'Verre', 'Cristal', 'Glas'],
+  'ov.glassLead': [
+    'Frosted, see-through versions of the dials, panels, round map, elevation profile and compact panel: thin luminous arcs, light numbers and hairline edges, so the video stays the star. The "Background" opacity sets how dark the glass is. They can be combined with the other designs.',
+    'Versões em vidro fosco, transparentes, dos mostradores, painéis, mapa circular, perfil de altimetria e painel compacto: arcos finos e luminosos, números leves e contornos finos, para o vídeo continuar a ser o protagonista. A opacidade do "Fundo" define o quão escuro fica o vidro. Podem ser combinadas com os outros designs.',
+    'Des versions en verre dépoli, transparentes, des cadrans, panneaux, carte ronde, profil altimétrique et panneau compact : arcs fins et lumineux, chiffres légers et bords fins, pour que la vidéo reste la vedette. L’opacité du « Fond » règle la teinte du verre. Elles se combinent avec les autres designs.',
+    'Versiones de cristal esmerilado, transparentes, de las esferas, paneles, mapa circular, perfil de altitud y panel compacto: arcos finos y luminosos, números ligeros y bordes finos, para que el vídeo siga siendo el protagonista. La opacidad del "Fondo" define lo oscuro del cristal. Se pueden combinar con los otros diseños.',
+    'Milchglas-Versionen der Rundinstrumente, Panels, runden Karte, des Höhenprofils und des Kompakt-Panels: dünne leuchtende Bögen, leichte Ziffern und feine Kanten, damit das Video im Mittelpunkt bleibt. Die Deckkraft des „Hintergrunds“ bestimmt, wie dunkel das Glas ist. Sie lassen sich mit den anderen Designs kombinieren.',
+  ],
   'ov.theme.natal': ['Christmas 🎄', 'Natal 🎄', 'Noël 🎄', 'Navidad 🎄', 'Weihnachten 🎄'],
   'ov.natalLead': [
     'Festive versions of the gadgets: snow, lights, holly, candy canes, Santa hats, wreaths, a snow globe and a mug of hot chocolate. They can be combined with the default designs.',

@@ -45,7 +45,7 @@ import { RoutePicker } from '../components/RoutePicker.tsx';
 
 const THEME_KEY = 'telemesync.overlayTheme';
 
-/** Tab of overlay designs last opened (Default or Christmas). */
+/** Tab of overlay designs last opened (Default, Glass or Christmas). */
 function storedTheme(): OverlayTheme {
   try {
     const v = localStorage.getItem(THEME_KEY);
@@ -60,9 +60,9 @@ const LB_PER_KG = 2.20462;
 
 /** Power options, shown when a gadget with power is chosen: instantaneous or 3 s average, and W/kg with the weight. */
 /** Gadgets that colour or place values by power zone (need the FTP). */
-const POWER_ZONE_IDS: OverlayId[] = ['dialPower', 'panelPower'];
+const POWER_ZONE_IDS: OverlayId[] = ['dialPower', 'panelPower', 'glassPower', 'glassPanelPower'];
 /** Gadgets that show heart-rate zones (need the zone limits). */
-const HR_ZONE_IDS: OverlayId[] = ['heartRate', 'dialHeartRate', 'panelHeartRate', 'natalHeartRate', 'natalHeartRateReindeer'];
+const HR_ZONE_IDS: OverlayId[] = ['heartRate', 'dialHeartRate', 'panelHeartRate', 'natalHeartRate', 'natalHeartRateReindeer', 'glassHeartRate', 'glassPanelHeartRate', 'glassHeartRateZone'];
 
 function PowerOptions() {
   const { style, setStyle, overlays } = useApp();
@@ -251,7 +251,7 @@ function GhostOptions({ clipStart }: { clipStart?: number }) {
 }
 
 /** Gadgets that draw the route or the elevation profile (the area option applies to them). */
-const ROUTE_IDS: OverlayId[] = ['map', 'elevationProfile', 'dialMap', 'dialProfile', 'natalMap', 'natalProfile'];
+const ROUTE_IDS: OverlayId[] = ['map', 'elevationProfile', 'dialMap', 'dialProfile', 'natalMap', 'natalProfile', 'glassMap', 'glassProfile', 'glassProfileStrip'];
 const AREA_MODES: OverlayStyle['mapMode'][] = ['full', 'clips', 'clip', 'custom'];
 
 /** What the maps and profiles show: whole ride, the clips, clip by clip, or a stretch picked on the map. */
@@ -333,6 +333,7 @@ export function StepOverlays() {
   if (!ride) return <section><p>{tr('sync.needRide')}</p></section>;
   const cycling = overlaysForSport(ride, 'cycling');
   const natal = cycling.filter((d) => d.theme === 'natal');
+  const glass = cycling.filter((d) => d.theme === 'glass');
   const classic = cycling.filter((d) => (d.theme ?? 'default') === 'default');
   const segs = classic.filter((d) => isSegmentOverlay(d.id));
   const defs = classic.filter((d) => !panelMetricOf(d.id) && !isDialOverlay(d.id) && !isSegmentOverlay(d.id));
@@ -365,11 +366,12 @@ export function StepOverlays() {
   const previewT = (d: OverlayDefinition) =>
     isSegmentOverlay(d.id) ? segT : d.id === 'runGhost' ? ghostT : d.id === 'snowRunLive' || d.id === 'snowRuns' ? snowPreviewT(ride, t) : t;
 
+  /** A gadget's card; see-through (glass) gadgets are shown over a landscape-like backdrop. */
   const card = (d: OverlayDefinition) => (
     <label key={d.id} className={`overlay-card${overlays.includes(d.id) ? ' on' : ''}`}>
       <input type="checkbox" checked={overlays.includes(d.id)} onChange={(e) => toggleOverlay(d.id, e.target.checked)} />
       <span>{overlayLabel(d.id, lang)}</span>
-      <div className="checker">
+      <div className={d.theme === 'glass' ? 'checker glass-backdrop' : 'checker'}>
         <OverlayCanvas id={d.id} ride={ride} style={viewStyle} t={previewT(d)} clipStart={clipStart} clipEnd={clipEnd} streets={streets} cssScale={0.45} fitHeight={190} />
       </div>
     </label>
@@ -477,6 +479,11 @@ export function StepOverlays() {
               <p className="lead">{tr('seg.sectionLead')}</p>
               {style.segments.length === 0 ? <p className="notice">{tr('seg.noneHint')}</p> : null}
               {grid(segs)}
+            </>
+          ) : theme === 'glass' ? (
+            <>
+              <p className="lead">{tr('ov.glassLead')}</p>
+              {grid(glass)}
             </>
           ) : (
             <>

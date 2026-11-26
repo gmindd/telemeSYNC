@@ -234,11 +234,40 @@ export function roundMapHeading(ride: RideData, s: RideSample): number {
   return headingAt(ride, localOf(ride), s);
 }
 
+/** Colours of the round map that a theme can change (the glass lens is see-through, the others dark). */
+export interface RoundMapLook {
+  /** Background inside the map, centre → edge. */
+  bg: [string, string];
+  /** Darkening towards the rim (alpha at the edge). */
+  shade: number;
+  /** Whole route (not yet ridden). */
+  route: string;
+  routeUnder: string;
+  arrow: string;
+  arrowGlow: string;
+  /** North marker disc and ring (no disc colour = the dial's rim colour, which follows the background opacity). */
+  north?: string;
+  northRing: string;
+  northWidth: number;
+}
+
+const CLASSIC_LOOK: RoundMapLook = {
+  bg: ['#1d3a3a', '#0a1619'],
+  shade: 0.45,
+  route: 'rgba(235,245,255,0.55)',
+  routeUnder: 'rgba(0,0,0,0.45)',
+  arrow: '#38bdf8',
+  arrowGlow: 'rgba(56,189,248,0.9)',
+  northRing: 'rgba(255,255,255,0.85)',
+  northWidth: 2,
+};
+
 /**
  * Round minimap inside a frame drawn by `rim` (centre CX, CY; the map has radius MAP_R): shared by the
- * "Mostradores" map (chainring rim) and the Christmas one (wreath).
+ * "Mostradores" map (chainring rim), the Christmas one (wreath) and the glass lens.
  */
-export function drawRoundMap(ctx: Ctx2D, frame: FrameState, style: OverlayStyle, octx: OverlayContext, rim: (ctx: Ctx2D) => void) {
+export function drawRoundMap(ctx: Ctx2D, frame: FrameState, style: OverlayStyle, octx: OverlayContext, rim: (ctx: Ctx2D) => void, lookIn?: Partial<RoundMapLook>) {
+  const look = { ...CLASSIC_LOOK, ...lookIn };
   const ride = octx.ride;
   const l = localOf(ride);
   const p = dialPaint(style);
@@ -258,8 +287,8 @@ export function drawRoundMap(ctx: Ctx2D, frame: FrameState, style: OverlayStyle,
   ctx.arc(CX, CY, MAP_R, 0, Math.PI * 2);
   ctx.clip();
   const bg = ctx.createRadialGradient(CX, CY - 20, 10, CX, CY, MAP_R);
-  bg.addColorStop(0, '#1d3a3a');
-  bg.addColorStop(1, '#0a1619');
+  bg.addColorStop(0, look.bg[0]);
+  bg.addColorStop(1, look.bg[1]);
   ctx.fillStyle = bg;
   // The map's background follows the background opacity (the streets and the route stay)
   ctx.globalAlpha = p.rimAlpha;
@@ -338,10 +367,10 @@ export function drawRoundMap(ctx: Ctx2D, frame: FrameState, style: OverlayStyle,
     ctx.lineJoin = 'round';
     ctx.lineCap = 'round';
     path(span.i0, span.i1);
-    ctx.strokeStyle = 'rgba(0,0,0,0.45)';
+    ctx.strokeStyle = look.routeUnder;
     ctx.lineWidth = 8;
     ctx.stroke();
-    ctx.strokeStyle = 'rgba(235,245,255,0.55)';
+    ctx.strokeStyle = look.route;
     ctx.lineWidth = 4.5;
     ctx.stroke();
     if (!(s.outside && s.t < ride.startTime) && cur >= span.i0) {
@@ -358,7 +387,7 @@ export function drawRoundMap(ctx: Ctx2D, frame: FrameState, style: OverlayStyle,
   // Inner shade towards the rim.
   const shade = ctx.createRadialGradient(CX, CY, MAP_R * 0.7, CX, CY, MAP_R);
   shade.addColorStop(0, 'rgba(0,0,0,0)');
-  shade.addColorStop(1, 'rgba(0,0,0,0.45)');
+  shade.addColorStop(1, `rgba(0,0,0,${look.shade})`);
   ctx.fillStyle = shade;
   ctx.globalAlpha = p.rimAlpha;
   ctx.fillRect(CX - MAP_R, CY - MAP_R, MAP_R * 2, MAP_R * 2);
@@ -375,9 +404,9 @@ export function drawRoundMap(ctx: Ctx2D, frame: FrameState, style: OverlayStyle,
     ctx.lineTo(CX, RIDER_Y + 5);
     ctx.lineTo(CX - 11, RIDER_Y + 11);
     ctx.closePath();
-    ctx.shadowColor = 'rgba(56,189,248,0.9)';
+    ctx.shadowColor = look.arrowGlow;
     ctx.shadowBlur = 12;
-    ctx.fillStyle = '#38bdf8';
+    ctx.fillStyle = look.arrow;
     ctx.fill();
     ctx.shadowColor = 'rgba(0,0,0,0)';
     ctx.shadowBlur = 0;
@@ -391,10 +420,10 @@ export function drawRoundMap(ctx: Ctx2D, frame: FrameState, style: OverlayStyle,
   const ny = CY - Math.cos(theta) * (MAP_R + 2);
   ctx.beginPath();
   ctx.arc(nx, ny, 15, 0, Math.PI * 2);
-  ctx.fillStyle = p.rim;
+  ctx.fillStyle = look.north ?? p.rim;
   ctx.fill();
-  ctx.strokeStyle = 'rgba(255,255,255,0.85)';
-  ctx.lineWidth = 2;
+  ctx.strokeStyle = look.northRing;
+  ctx.lineWidth = look.northWidth;
   ctx.stroke();
   drawText(ctx, 'N', nx, ny + 6, p.ts, { size: 16, weight: 800, align: 'center', tabular: false });
 }

@@ -26,8 +26,8 @@ export function compositeSize(clipWidth: number | undefined, clipHeight: number 
 const MARGIN = 0.025;
 /** Default width (px at 1×) of a map: no larger than a dial, so a new 2D map doesn't cover the rest of the frame. */
 const MAP_DEFAULT_PX = 300;
-const MAPS: OverlayId[] = ['map', 'dialMap', 'natalMap'];
-const PROFILES: OverlayId[] = ['elevationProfile', 'dialProfile', 'natalProfile'];
+const MAPS: OverlayId[] = ['map', 'dialMap', 'natalMap', 'glassMap'];
+const PROFILES: OverlayId[] = ['elevationProfile', 'dialProfile', 'natalProfile', 'glassProfile', 'glassProfileStrip'];
 
 /**
  * Fills missing placements with a default arrangement: numbers top-left, maps top-right, profiles bottom. Several

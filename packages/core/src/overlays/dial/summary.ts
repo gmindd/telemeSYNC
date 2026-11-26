@@ -19,7 +19,7 @@ const ROWS = 4;
 const TOP = 16;
 const ROW_H = (H - TOP * 2) / ROWS;
 
-interface Row {
+export interface SummaryRow {
   label: CoreKey;
   icon: IconId;
   requires: MetricKey;
@@ -35,7 +35,7 @@ function average(m: PanelMetric, decimals: number) {
   };
 }
 
-const ROW_CHOICES: Row[] = [
+export const ROW_CHOICES: SummaryRow[] = [
   { label: 'summary.duration', icon: 'clock', requires: 'elapsedTime', value: (s) => ({ text: formatDuration(s.elapsedMs), unit: '' }) },
   { label: 'summary.hr', icon: 'heart', requires: 'heartRate', value: average('heartRate', 0) },
   { label: 'summary.power', icon: 'bolt', requires: 'power', value: average('power', 0) },

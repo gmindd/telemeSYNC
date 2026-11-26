@@ -3,6 +3,7 @@ import type { RideData } from '../telemetry/ride.ts';
 import { sampleAt } from '../telemetry/ride.ts';
 import { dialFamily } from './dial/index.ts';
 import { elevationProfileOverlay } from './elevationProfile.ts';
+import { glassFamily } from './glass/index.ts';
 import { mapOverlay } from './map.ts';
 import { natalFamily } from './natal/index.ts';
 import { segmentOverlays } from './segment/segment.ts';
@@ -48,6 +49,7 @@ export const OVERLAYS: OverlayDefinition[] = [
   ...panelOverlays,
   ...dialFamily,
   ...segmentOverlays,
+  ...glassFamily,
   ...natalFamily,
   ...runOverlays,
   ...snowOverlays,

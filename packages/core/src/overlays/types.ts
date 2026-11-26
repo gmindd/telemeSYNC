@@ -113,6 +113,27 @@ export type OverlayId =
   | 'natalMap'
   | 'natalProfile'
   | 'natalSummary'
+  | 'glassHeartRate'
+  | 'glassCadence'
+  | 'glassSpeed'
+  | 'glassGrade'
+  | 'glassAltitude'
+  | 'glassPower'
+  | 'glassDistance'
+  | 'glassTime'
+  | 'glassTemperature'
+  | 'glassPanelSpeed'
+  | 'glassPanelAltitude'
+  | 'glassPanelGrade'
+  | 'glassPanelHeartRate'
+  | 'glassPanelCadence'
+  | 'glassPanelPower'
+  | 'glassPanelTemperature'
+  | 'glassMap'
+  | 'glassProfile'
+  | 'glassProfileStrip'
+  | 'glassSummary'
+  | 'glassHeartRateZone'
   // Running / trail
   | 'pace'
   | 'gap'
@@ -282,8 +303,9 @@ export interface FrameState {
   textSample: RideSample;
 }
 
-export type OverlayTheme = 'default' | 'natal';
-export const OVERLAY_THEMES: OverlayTheme[] = ['default', 'natal'];
+export type OverlayTheme = 'default' | 'glass' | 'natal';
+/** Themes offered in the apps (tabs on the desktop, categories on the phone), in this order. */
+export const OVERLAY_THEMES: OverlayTheme[] = ['default', 'glass', 'natal'];
 
 export interface OverlayDefinition {
   id: OverlayId;
