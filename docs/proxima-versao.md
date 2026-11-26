@@ -24,3 +24,4 @@ A versão 1.2.0 foi lançada a 19 de novembro de 2026; o que tinha esta lista es
 - **Relógio GPS (Minimal Pro):** 3 ou 4 campos à escolha, cada um instantâneo, média, volta ou máximo.
 - **Apagar gadgets na sincronização:** clicar no gadget e carregar no × ou na tecla Delete.
 - **Transmissão TV:** a faixa inferior mostra o perfil da volta toda e o ponto onde está.
+- **Avisos de atualização** passam a vir só de telemesync.app.
