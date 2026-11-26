@@ -1,4 +1,4 @@
-telemeSYNC - telemetry overlay generator for bike videos
+telemeSYNC - telemetry overlay generator for cycling, running and ski videos
 ========================================================
 
 HOW TO START

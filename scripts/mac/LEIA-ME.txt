@@ -1,4 +1,4 @@
-telemeSYNC - gerador de overlays de telemetria para vídeos de bicicleta (macOS)
+telemeSYNC - gerador de overlays de telemetria para vídeos de ciclismo, corrida e ski (macOS)
 ==============================================================================
 
 Funciona em Macs com Apple Silicon (M1, M2, M3, M4…) e com processador Intel, macOS 11 Big Sur ou mais recente.

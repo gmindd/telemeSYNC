@@ -1,4 +1,4 @@
-telemeSYNC - telemetry overlay generator for bike videos (macOS)
+telemeSYNC - telemetry overlay generator for cycling, running and ski videos (macOS)
 ================================================================
 
 Works on Macs with Apple Silicon (M1, M2, M3, M4…) and with Intel processors, macOS 11 Big Sur or later.

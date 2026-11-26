@@ -1,4 +1,4 @@
-telemeSYNC - gerador de overlays de telemetria para videos de bicicleta
+telemeSYNC - gerador de overlays de telemetria para videos de ciclismo, corrida e ski
 ================================================================
 
 COMO ARRANCAR

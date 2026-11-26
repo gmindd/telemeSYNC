@@ -43,12 +43,13 @@
 <body>
 
 <h1>tele<span>me</span>SYNC</h1>
-<div class="sub">Gerador de overlays de telemetria para vídeos de bicicleta — guia de instalação e utilização (Windows)</div>
+<div class="sub">Gerador de overlays de telemetria para vídeos de ciclismo, corrida e trail, ski e snowboard — guia de instalação e utilização (Windows)</div>
 
 <div class="box">
-  A partir do ficheiro <b>FIT/GPX</b> do ciclocomputador (Bryton, Garmin, iGPSPORT…) e dos clips da action cam
-  (DJI Osmo Action, GoPro, Insta360), o telemeSYNC gera vídeos <b>transparentes</b> (velocidade, inclinação, mapa,
-  altimetria, frequência cardíaca…) para pôr por cima dos clips no DaVinci Resolve, Premiere Pro ou Final Cut Pro.
+  A partir do ficheiro <b>FIT/GPX</b> do ciclocomputador, relógio ou app (Garmin, Bryton, iGPSPORT, Coros, Suunto, Strava…) e dos clips da action cam
+  (DJI Osmo Action, GoPro, Insta360), o telemeSYNC gera vídeos <b>transparentes</b> (velocidade, ritmo, inclinação, mapa,
+  altimetria, frequência cardíaca, potência…) para pôr por cima dos clips no DaVinci Resolve, Premiere Pro ou Final Cut Pro.
+  Serve para <b>ciclismo</b>, <b>corrida e trail</b> e <b>ski e snowboard</b>.
   <br><b>Os vídeos nunca saem do seu computador.</b>
 </div>
 
@@ -126,9 +127,9 @@ telemeSYNC a correr em http://localhost:5174  (Ctrl+C para terminar)</div>
 <h2>2. Usar — os 5 passos</h2>
 
 <div class="step"><div class="num">1</div><div>
-  <p><b>Telemetria</b> — arraste o ficheiro <code>.fit</code> (preferível) ou <code>.gpx</code> da volta. Aparece o resumo: data, duração,
-  distância, desnível e as métricas que o seu aparelho grava (só essas aparecem nas opções).</p>
-  <p class="muted">Onde encontrar o FIT: na app do ciclocomputador (Bryton Active, iGPSPORT, Garmin Connect → Exportar original) ou no Strava (atividade → ⋯ → Exportar original).</p>
+  <p><b>Telemetria</b> — arraste o ficheiro <code>.fit</code> (preferível) ou <code>.gpx</code> da atividade. Aparece o resumo: data, duração,
+  distância, desnível (o mesmo que o aparelho marca) e as métricas que o seu aparelho grava (só essas aparecem nas opções).</p>
+  <p class="muted">Onde encontrar o FIT: na app do aparelho (Garmin Connect, Bryton Active, iGPSPORT, Coros… → Exportar original) ou no Strava (atividade → ⋯ → Exportar original).</p>
 </div></div>
 
 <div class="step"><div class="num">2</div><div>
@@ -142,13 +143,19 @@ telemeSYNC a correr em http://localhost:5174  (Ctrl+C para terminar)</div>
     <li>Clique num clip para o ver com os gráficos por cima, ao vivo. Confirme num momento conhecido: por exemplo, numa <b>paragem</b> a velocidade tem de ir a 0.</li>
     <li>Se estiver desfasado: arraste o bloco ou use os botões <code>±1 min</code> <code>±1 s</code> <code>±0,1 s</code>. O ajuste vale para <b>todos os clips dessa câmara</b> (com a tecla <span class="key">Alt</span> ajusta só esse clip).</li>
     <li>Se a câmara estiver com a hora errada em exatamente 1 h ou 2 h, aparece um aviso com o botão de correção.</li>
+    <li>O <b>mapa redondo com as ruas</b> ao lado do vídeo ajuda a acertar: pare o vídeo à entrada de uma curva ou cruzamento e ajuste até a seta estar no mesmo ponto. Com <b>Pôr este mapa no vídeo</b> ele passa a ser um gadget.</li>
+    <li>Vídeo de lado ou ao contrário? Use <b>Rodar vídeo 180°</b> ou <b>Rodar 90°</b> (vídeos ao alto).</li>
     <li><b>Arraste os gráficos</b> por cima do vídeo para os posicionar; o quadrado laranja no canto muda o tamanho.</li>
   </ul>
 </div></div>
 
 <div class="step"><div class="num">4</div><div>
-  <p><b>Overlays</b> — escolha os gráficos (velocidade, inclinação, mapa, altimetria, FC, …) e o estilo (cores, contorno, sombra,
-  km/h ou mph, °C ou °F).</p>
+  <p><b>Overlays</b> — escolha o desporto (ciclismo, corrida e trail, ski e snowboard), os gráficos (velocidade, ritmo, inclinação, mapa, altimetria, FC, potência, mostradores…) e o estilo (cores, contorno, sombra,
+  km/h ou mph, °C ou °F, fundo dos gadgets).</p>
+  <ul>
+    <li><b>Quando aparecem</b>: cada gadget pode aparecer só quando interessa, por exemplo a velocidade acima de 50 km/h ou a inclinação acima de 8 %, e desaparece uns segundos depois.</li>
+    <li><b>Fundo de cada gadget</b>: um gadget pode ter um fundo mais ou menos transparente do que os outros.</li>
+  </ul>
 </div></div>
 
 <div class="step"><div class="num">5</div><div>
@@ -184,7 +191,7 @@ telemeSYNC a correr em http://localhost:5174  (Ctrl+C para terminar)</div>
 <p>Apague a pasta <code>telemeSYNC</code>. As definições ficam em <code>%APPDATA%\telemeSYNC</code> (pode apagar também).</p>
 
 <div class="box" style="margin-top:6mm">
-  <b>Feedback para a versão de testes</b> — anote: modelo da câmara e do ciclocomputador, se a hora dos clips foi detetada certa
+  <b>Feedback</b> — sugestões e problemas são bem-vindos em <b>telemesync.app</b>. Ajuda indicar o modelo da câmara e do aparelho, se a hora dos clips foi detetada certa
   (e quanto teve de ajustar), se o vídeo apareceu no preview, e se os ficheiros abriram com transparência no seu editor.
 </div>
 
