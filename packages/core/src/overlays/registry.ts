@@ -3,6 +3,19 @@ import type { RideData } from '../telemetry/ride.ts';
 import { sampleAt } from '../telemetry/ride.ts';
 import { dialFamily } from './dial/index.ts';
 import { elevationProfileOverlay } from './elevationProfile.ts';
+import { glassFamily, glassPanelMetricOf } from './glass/index.ts';
+import { glassCards } from './glass/cards.ts';
+import { glassDials } from './glass/dials.ts';
+import { KIT_FAMILIES } from './kit/families.ts';
+import { natalCards } from './natal/cards.ts';
+import { natalDials } from './natal/dials.ts';
+import { dialMapOverlay } from './dial/map.ts';
+import { dialProfileOverlay } from './dial/profile.ts';
+import { dialSummaryOverlay } from './dial/summary.ts';
+import { isDialOverlay } from './dial/index.ts';
+import { isSegmentOverlay } from './segment/segment.ts';
+import { panelMetricOf } from './panel/panel.ts';
+import type { GadgetCategory, ThemeId } from './themes.ts';
 import { mapOverlay } from './map.ts';
 import { natalFamily } from './natal/index.ts';
 import { segmentOverlays } from './segment/segment.ts';
@@ -48,9 +61,11 @@ export const OVERLAYS: OverlayDefinition[] = [
   ...panelOverlays,
   ...dialFamily,
   ...segmentOverlays,
+  ...glassFamily,
   ...natalFamily,
   ...runOverlays,
   ...snowOverlays,
+  ...KIT_FAMILIES,
 ].map((o) => (SHARED_SPORTS[o.id] ? { ...o, sports: SHARED_SPORTS[o.id] } : o));
 
 /** Section of the app a gadget goes in: plain gadgets, round dials, panels, or live cards and tables. */
@@ -71,6 +86,33 @@ export function overlaySports(id: OverlayId): Sport[] {
 /** Overlays of a sport's catalogue that this ride can show. */
 export function overlaysForSport(ride: RideData, sport: Sport): OverlayDefinition[] {
   return availableOverlays(ride).filter((o) => (o.sports ?? ['cycling']).includes(sport));
+}
+
+// Categories of the gadgets made before the kit (the kit gadgets carry theirs).
+const MAP_IDS = new Set<OverlayId>(['map', 'elevationProfile', dialMapOverlay.id, dialProfileOverlay.id, ...natalCards.slice(0, 2).map((d) => d.id), ...glassCards.slice(0, 3).map((d) => d.id)]);
+const SUMMARY_IDS = new Set<OverlayId>([dialSummaryOverlay.id, natalCards[2].id, 'glassSummary']);
+const DIAL_IDS = new Set<OverlayId>([...natalDials.map((d) => d.id), ...glassDials.map((d) => d.id)]);
+
+/** Kind of gadget (the same categories in every theme). */
+export function overlayCategory(id: OverlayId): GadgetCategory {
+  const def = OVERLAYS.find((o) => o.id === id);
+  if (def?.category) return def.category;
+  if (MAP_IDS.has(id)) return 'maps';
+  if (SUMMARY_IDS.has(id) || panelMetricOf(id) || glassPanelMetricOf(id)) return 'panels';
+  if (overlayGroup(id) === 'live' || isSegmentOverlay(id)) return 'segments';
+  if (overlayGroup(id) === 'dial' || isDialOverlay(id) || DIAL_IDS.has(id)) return 'dials';
+  if (def?.theme && def.theme !== 'default') return 'extras';
+  return 'numbers';
+}
+
+/** True when the gadget is in the sport's catalogue (cycling when it says nothing, as in overlaySports). */
+export function suitsSport(def: OverlayDefinition, sport: Sport | undefined): boolean {
+  return !sport || (def.sports ?? ['cycling']).includes(sport);
+}
+
+/** Gadgets of a theme that this ride can show and that suit the sport, in the theme's order. */
+export function themeOverlays(ride: RideData, theme: ThemeId, sport: Sport | undefined): OverlayDefinition[] {
+  return OVERLAYS.filter((o) => (o.theme ?? 'default') === theme && ride.available.has(o.requires) && suitsSport(o, sport));
 }
 
 /** Theme of an overlay in the app (tabs in step 4). */

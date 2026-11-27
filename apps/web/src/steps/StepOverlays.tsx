@@ -36,6 +36,7 @@ import {
 } from '@telemesync/core';
 import { OverlayCanvas } from '../components/OverlayCanvas.tsx';
 import { ConditionsPanel } from '../components/ConditionsPanel.tsx';
+import { GadgetPicker } from '../components/GadgetPicker.tsx';
 import { langName, useLang, useT } from '../i18n/index.tsx';
 import { clipsSpan, drawStyle, useApp } from '../lib/store.ts';
 import { RoutePicker } from '../components/RoutePicker.tsx';
@@ -58,12 +59,14 @@ const LB_PER_KG = 2.20462;
 /** Power options, shown when a gadget with power is chosen: instantaneous or 3 s average, and W/kg with the weight. */
 /** Gadgets that colour or place values by power zone (need the FTP). */
 const POWER_ZONE_IDS: OverlayId[] = ['dialPower', 'panelPower'];
+const usesPowerZones = (id: OverlayId) => POWER_ZONE_IDS.includes(id) || id === 'glassPower' || id === 'glassPanelPower' || /\.power$/.test(id);
 /** Gadgets that show heart-rate zones (need the zone limits). */
 const HR_ZONE_IDS: OverlayId[] = ['heartRate', 'dialHeartRate', 'panelHeartRate', 'natalHeartRate', 'natalHeartRateReindeer'];
+const usesHrZones = (id: OverlayId) => HR_ZONE_IDS.includes(id) || id.startsWith('glass') && /HeartRate/.test(id) || /\.(heartRate|ecg|gpsWatch)$/.test(id);
 
 function PowerOptions() {
   const { style, setStyle, overlays } = useApp();
-  const usesZones = overlays.some((o) => POWER_ZONE_IDS.includes(o));
+  const usesZones = overlays.some(usesPowerZones);
   const defaultFtp = style.ftp === DEFAULT_STYLE.ftp;
   const tr = useT();
   const imperial = style.units.system === 'imperial';
@@ -116,7 +119,7 @@ function PowerOptions() {
 function HeartRateOptions() {
   const { style, setStyle, overlays } = useApp();
   const tr = useT();
-  const usesZones = overlays.some((o) => HR_ZONE_IDS.includes(o));
+  const usesZones = overlays.some(usesHrZones);
   const defaultZones = style.hrMax <= 0 && style.hrZones.join() === DEFAULT_STYLE.hrZones.join();
   const setZone = (k: number, v: number) => {
     const z = [...style.hrZones];
@@ -330,28 +333,10 @@ export function StepOverlays() {
   const { ride, overlays, toggleOverlay, style, setStyle, sync, activeClipId, playhead, setStep, overlayLang, setOverlayLang, sport, setSport, streets } = useApp();
   const tr = useT();
   const lang = useLang((s) => s.lang);
-  const [theme, setTheme] = useState<OverlayTheme>(storedTheme);
-  const chooseTheme = (th: OverlayTheme) => {
-    setTheme(th);
-    try {
-      localStorage.setItem(THEME_KEY, th);
-    } catch {
-      /* ignore */
-    }
-  };
   if (!ride) return <section><p>{tr('sync.needRide')}</p></section>;
-  const cycling = overlaysForSport(ride, 'cycling');
-  const natal = cycling.filter((d) => d.theme === 'natal');
-  const classic = cycling.filter((d) => (d.theme ?? 'default') === 'default');
-  const segs = classic.filter((d) => isSegmentOverlay(d.id));
-  const defs = classic.filter((d) => !panelMetricOf(d.id) && !isDialOverlay(d.id) && !isSegmentOverlay(d.id));
-  const dials = classic.filter((d) => isDialOverlay(d.id));
-  const panels = classic.filter((d) => panelMetricOf(d.id));
-  const sportList = sport === 'cycling' ? [] : overlaysForSport(ride, sport);
   // Maps on "only the clips": the stretch the clips cover.
   const viewStyle = drawStyle(style, sync);
-  const showArea = overlays.some((o) => ROUTE_IDS.includes(o));
-  const byGroup = (g: ReturnType<typeof overlayGroup>) => sportList.filter((d) => overlayGroup(d.id) === g);
+  const showArea = overlays.some((o) => ROUTE_IDS.includes(o) || o === 'glassMap' || o === 'glassProfile' || /\.(map|profile)$/.test(o));
   const chartMetrics = PANEL_METRICS.filter((m) => ride.available.has(m));
   const distUnit = style.units.system === 'metric' ? 'km' : 'mi';
   const setPanel = (m: PanelMetric, patch: Partial<PanelOptions>) =>
@@ -373,69 +358,6 @@ export function StepOverlays() {
   const ghostT = style.ghost && (t < ghostStart || t > ghostStart + style.ghost.timeMs * 1.1) ? ghostStart + style.ghost.timeMs * 0.4 : t;
   const previewT = (d: OverlayDefinition) =>
     isSegmentOverlay(d.id) ? segT : d.id === 'runGhost' ? ghostT : d.id === 'snowRunLive' || d.id === 'snowRuns' ? snowPreviewT(ride, t) : t;
-
-  const card = (d: OverlayDefinition) => (
-    <label key={d.id} className={`overlay-card${overlays.includes(d.id) ? ' on' : ''}`}>
-      <input type="checkbox" checked={overlays.includes(d.id)} onChange={(e) => toggleOverlay(d.id, e.target.checked)} />
-      <span>{overlayLabel(d.id, lang)}</span>
-      <div className="checker">
-        <OverlayCanvas id={d.id} ride={ride} style={viewStyle} t={previewT(d)} clipStart={clipStart} clipEnd={clipEnd} streets={streets} cssScale={0.45} fitHeight={190} />
-      </div>
-    </label>
-  );
-  const grid = (list: OverlayDefinition[]) => (list.length ? <div className="overlay-grid">{list.map(card)}</div> : null);
-  const panelGrid = (list: OverlayDefinition[]) => (
-    <div className="overlay-grid panels">
-      {list.map((d) => {
-        const m = panelMetricOf(d.id)!;
-        const o = panelOptions(m, style, ride);
-        const on = overlays.includes(d.id);
-        return (
-          <div key={d.id} className={`overlay-card${on ? ' on' : ''}`}>
-            <label className="overlay-card-head">
-              <input type="checkbox" checked={on} onChange={(e) => toggleOverlay(d.id, e.target.checked)} />
-              <span>{overlayLabel(d.id, lang)}</span>
-            </label>
-            <div className="panel-opts">
-              <label className="field">
-                {tr('ov.chart')}
-                <select value={o.chart} onChange={(e) => setPanel(m, { chart: e.target.value as PanelMetric })}>
-                  {chartMetrics.map((c) => <option key={c} value={c}>{panelMetricName(c, lang)}</option>)}
-                </select>
-              </label>
-              <label className="field">
-                {tr('ov.window')}
-                <select value={o.window} onChange={(e) => setPanel(m, { window: e.target.value as PanelOptions['window'] })}>
-                  <option value="time">{tr('ov.lastMin', { n: style.chartMinutes })}</option>
-                  <option value="distance">{tr('ov.lastDist', { n: style.chartDistance, unit: distUnit })}</option>
-                </select>
-              </label>
-            </div>
-            <div className="checker" onClick={() => toggleOverlay(d.id, !on)}>
-              <OverlayCanvas id={d.id} ride={ride} style={viewStyle} t={t} clipStart={clipStart} clipEnd={clipEnd} streets={streets} cssScale={0.45} fitHeight={220} />
-            </div>
-          </div>
-        );
-      })}
-    </div>
-  );
-  /** Gadgets, dials and panels of a sport other than cycling (same sections as cycling). */
-  const sportSections = (lead: string) => (
-    <>
-      <p className="lead">{lead}</p>
-      <h3>{tr('ov.gadgets')}</h3>
-      {grid(byGroup('gadget'))}
-      <h3>{tr('ov.dials')}</h3>
-      {grid(byGroup('dial'))}
-      {byGroup('panel').length ? (
-        <>
-          <h3>{tr('ov.panels')}</h3>
-          <p className="lead">{tr('ov.panelsLead')}</p>
-          {panelGrid(byGroup('panel'))}
-        </>
-      ) : null}
-    </>
-  );
 
   return (
     <section>
@@ -459,58 +381,33 @@ export function StepOverlays() {
       {showArea ? <AreaOptions /> : null}
       <ConditionsPanel />
 
-      {sport === 'cycling' ? (
-        <>
-          <div className="theme-tabs" role="tablist">
-            {OVERLAY_THEMES.map((th) => {
-              const n = overlays.filter((o) => overlayTheme(o) === th && overlaySports(o).includes('cycling')).length;
-              return (
-                <button key={th} role="tab" aria-selected={theme === th} className={theme === th ? 'active' : ''} onClick={() => chooseTheme(th)}>
-                  {tr(`ov.theme.${th}`)}
-                  {n ? <span className="theme-count">{n}</span> : null}
-                </button>
-              );
-            })}
-          </div>
-          {theme === 'default' ? (
+      <GadgetPicker
+        sport={sport}
+        previewStyle={viewStyle}
+        streets={streets}
+        times={{ t, clipStart, clipEnd }}
+        previewT={previewT}
+        defaultLead={sport === 'running' ? tr('ov.run.lead') : sport === 'snow' ? tr('ov.snow.lead') : undefined}
+        sectionNote={(c) =>
+          c !== 'segments' ? null : sport === 'running' ? (
             <>
-              {grid(defs)}
-              <h3>{tr('ov.dials')}</h3>
-              <p className="lead">{tr('ov.dialsLead')}</p>
-              {grid(dials)}
-              <h3>{tr('ov.panels')}</h3>
-              <p className="lead">{tr('ov.panelsLead')}</p>
-              {panelGrid(panels)}
-              <h3>{tr('seg.section')}</h3>
-              <p className="lead">{tr('seg.sectionLead')}</p>
+              <p className="lead">{tr('ov.run.liveLead')}</p>
+              <GhostOptions clipStart={cs} />
               {style.segments.length === 0 ? <p className="notice">{tr('seg.noneHint')}</p> : null}
-              {grid(segs)}
+            </>
+          ) : sport === 'snow' ? (
+            <>
+              <p className="lead">{tr('ov.snow.liveLead')}</p>
+              {detectRuns(ride).length === 0 ? <p className="notice">{tr('ov.snow.noRuns')}</p> : null}
             </>
           ) : (
             <>
-              <p className="lead">{tr('ov.natalLead')}</p>
-              {grid(natal)}
+              <p className="lead">{tr('seg.sectionLead')}</p>
+              {style.segments.length === 0 ? <p className="notice">{tr('seg.noneHint')}</p> : null}
             </>
-          )}
-        </>
-      ) : sport === 'running' ? (
-        <>
-          {sportSections(tr('ov.run.lead'))}
-          <h3>{tr('ov.run.live')}</h3>
-          <p className="lead">{tr('ov.run.liveLead')}</p>
-          <GhostOptions clipStart={cs} />
-          {style.segments.length === 0 ? <p className="notice">{tr('seg.noneHint')}</p> : null}
-          {grid(byGroup('live'))}
-        </>
-      ) : (
-        <>
-          {sportSections(tr('ov.snow.lead'))}
-          <h3>{tr('ov.snow.live')}</h3>
-          <p className="lead">{tr('ov.snow.liveLead')}</p>
-          {detectRuns(ride).length === 0 ? <p className="notice">{tr('ov.snow.noRuns')}</p> : null}
-          {grid(byGroup('live'))}
-        </>
-      )}
+          )
+        }
+      />
 
       <h3>{tr('ov.style')}</h3>
       <div className="style-form">
@@ -592,7 +489,7 @@ export function StepOverlays() {
           {tr('ov.distWindow', { unit: distUnit })}
           <input type="number" min={0.5} max={200} step={0.5} value={style.chartDistance} onChange={(e) => Number(e.target.value) > 0 && setStyle({ chartDistance: Number(e.target.value) })} />
         </label>
-        <button className="small" onClick={() => setStyle({ ...DEFAULT_STYLE, language: style.language, segments: style.segments, weightKg: style.weightKg, ftp: style.ftp, hrZones: style.hrZones, hrMax: style.hrMax })}>{tr('ov.resetStyle')}</button>
+        <button className="small" onClick={() => setStyle({ ...DEFAULT_STYLE, language: style.language, segments: style.segments, weightKg: style.weightKg, ftp: style.ftp, hrZones: style.hrZones, hrMax: style.hrMax, sport: style.sport, watch: style.watch })}>{tr('ov.resetStyle')}</button>
       </div>
       <button className="primary" onClick={() => setStep('render')} disabled={!overlays.length}>{tr('ov.next')}</button>
     </section>

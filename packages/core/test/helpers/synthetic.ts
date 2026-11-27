@@ -146,7 +146,7 @@ export function encodeFit(samples: RawSample[], opts: { enhanced?: boolean; loca
   return enc.close();
 }
 
-export function encodeGpx(samples: RawSample[], opts: { extensions?: boolean } = {}): string {
+export function encodeGpx(samples: RawSample[], opts: { extensions?: boolean; type?: string } = {}): string {
   const pts = samples
     .map((s) => {
       const ext = opts.extensions ?? true
@@ -157,7 +157,7 @@ export function encodeGpx(samples: RawSample[], opts: { extensions?: boolean } =
     .join('\n');
   return `<?xml version="1.0" encoding="UTF-8"?>
 <gpx creator="Synthetic" version="1.1" xmlns="http://www.topografix.com/GPX/1/1" xmlns:gpxtpx="http://www.garmin.com/xmlschemas/TrackPointExtension/v1">
-<trk><name>Volta sintética</name><trkseg>
+<trk><name>Volta sintética</name>${opts.type ? `<type>${opts.type}</type>` : ''}<trkseg>
 ${pts}
 </trkseg></trk></gpx>`;
 }

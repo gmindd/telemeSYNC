@@ -160,7 +160,25 @@ describe('ride metrics and interpolation', () => {
 
   it('exposes only available metrics', () => {
     expect([...r.available].sort()).toEqual(
-      ['altitude', 'cadence', 'distance', 'elapsedTime', 'elevationGain', 'elevationProfile', 'grade', 'heartRate', 'localTime', 'map', 'power', 'speed', 'temperature'].sort(),
+      [
+        'altitude',
+        'cadence',
+        'compass',
+        'distance',
+        'elapsedTime',
+        'elevationGain',
+        'elevationProfile',
+        'grade',
+        'heartRate',
+        'localTime',
+        'map',
+        'pace',
+        'power',
+        'runs',
+        'speed',
+        'temperature',
+        'verticalSpeed',
+      ].sort(),
     );
   });
 });

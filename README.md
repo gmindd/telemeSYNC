@@ -134,7 +134,7 @@ Os overlays usam a língua de `style.language` (a da app ou outra escolhida no p
    Para as outras línguas, dar a cada ponto novo um `data-i18n="news.<versão sem pontos>.<n>"` (ex.: `news.101.1`) e acrescentar a tradução com a mesma chave em `site/i18n/en.json`, `fr.json`, `es.json` e `de.json`. Um texto sem tradução aparece em português.
 5. Enviar para o `main` **depois** de a Release estar publicada (o aviso de atualizações aponta logo para os novos links) e fazer *Redeploy* no Coolify.
 
-Ao abrir, o programa lê `https://telemesync.app/data/latest.json` (e `https://telemesync.pereiragabriel.com/data/latest.json` se esse falhar; as versões até à 1.2.0 leem só este, por isso os dois domínios servem o mesmo site — ver `docs/dominio.md`) e, se a versão for mais recente do que a sua, mostra um aviso com os links para as novidades e o download do seu sistema. O site usa o mesmo ficheiro para a versão e os links dos botões de download, e põe primeiro o sistema de quem visita.
+Ao abrir, o programa lê `https://telemesync.app/data/latest.json` (as versões até à 1.2.0 leem `https://telemesync.pereiragabriel.com/data/latest.json`, por isso os dois domínios servem o mesmo site — ver `docs/dominio.md`) e, se a versão for mais recente do que a sua, mostra um aviso com os links para as novidades e o download do seu sistema. O site usa o mesmo ficheiro para a versão e os links dos botões de download, e põe primeiro o sistema de quem visita.
 
 ## Estado
 

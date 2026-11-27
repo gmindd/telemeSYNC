@@ -20,6 +20,10 @@ export const METRIC_SLUGS: Record<string, Translations> = {
   segmentLive: ['segment', 'segmento', 'segment', 'segmento', 'segment'],
   segmentLaps: ['laps', 'voltas', 'tours', 'vueltas', 'runden'],
   dialSummary: ['compact-panel', 'painel-compacto', 'panneau-compact', 'panel-compacto', 'kompakt-panel'],
+  steps: ['steps', 'passos', 'pas', 'pasos', 'schritte'],
+  runs: ['runs', 'descidas', 'descentes', 'bajadas', 'abfahrten'],
+  slopeDeg: ['slope-degrees', 'declive-graus', 'pente-degres', 'pendiente-grados', 'hangneigung-grad'],
+  compass: ['compass', 'bussola', 'boussole', 'brujula', 'kompass'],
 };
 
 /** File slug words for the gadgets of the other sports ("corrida-mostrador-fc.mov"). */

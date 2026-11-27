@@ -283,7 +283,8 @@ export const useApp = create<State & Actions>((set, get) => ({
       const mapMode = get().style.mapMode === 'custom' && !mapRange ? 'full' : get().style.mapMode;
       set({
         sport,
-        style: { ...get().style, segments, ghost: ghost ? { ...ghost, startMs: ghostStart } : null, mapRange, mapMode },
+        // The gadgets follow step 4's sport too (pace for running, ski runs for snow…).
+        style: { ...get().style, segments, ghost: ghost ? { ...ghost, startMs: ghostStart } : null, mapRange, mapMode, sport },
         segAnchor: undefined,
         ride,
         streets: undefined,
@@ -472,7 +473,8 @@ export const useApp = create<State & Actions>((set, get) => ({
   },
 
   setSport(sport) {
-    set({ sport });
+    // The gadgets read the sport from the style (pace for running, ski runs for snow…), so both move together.
+    set({ sport, style: { ...get().style, sport } });
     store(SPORT_KEY, sport);
   },
 
@@ -597,12 +599,13 @@ export const useApp = create<State & Actions>((set, get) => ({
       const sync = resolveAll({ cameras: p.cameras, clips }, get().ride?.startTime, get().ride);
       const selected: Record<string, boolean> = {};
       p.clips.forEach((c) => (selected[c.id] = c.selected));
+      const projectSport = get().ride?.sport ?? p.sport ?? get().sport;
       set({
         sync,
         selected,
         files: {},
         overlays: p.overlays,
-        style: { ...DEFAULT_STYLE, ...p.style, units: { ...DEFAULT_STYLE.units, ...p.style.units }, language: get().overlayLang === 'auto' ? currentLang() : get().style.language },
+        style: { ...DEFAULT_STYLE, ...p.style, units: { ...DEFAULT_STYLE.units, ...p.style.units }, language: get().overlayLang === 'auto' ? currentLang() : get().style.language, sport: projectSport },
         format: p.output.format,
         maxFps: p.output.maxFps === 30 ? 30 : 0,
         exportSeparate: p.output.separate ?? true,
@@ -610,7 +613,7 @@ export const useApp = create<State & Actions>((set, get) => ({
         compositeShortSide: p.output.compositeShortSide ?? 1080,
         layout: p.layout ?? {},
         // The project's sport tab; the ride's own sport, when its file says, still wins (see loadTelemetry).
-        sport: get().ride?.sport ?? p.sport ?? get().sport,
+        sport: projectSport,
         rideName: p.name,
         activeClipId: clips[0]?.id,
         step: get().ride ? 'sync' : 'telemetry',

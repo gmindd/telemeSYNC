@@ -19,7 +19,15 @@ export type MetricKey =
   | 'elapsedTime'
   | 'localTime'
   | 'map'
-  | 'elevationProfile';
+  | 'elevationProfile'
+  /** Running pace (from speed). */
+  | 'pace'
+  /** Climbing / descending rate (from altitude). */
+  | 'verticalSpeed'
+  /** Heading and the way back to the start (from positions). */
+  | 'compass'
+  /** Ski runs and vertical drop (from altitude and speed). */
+  | 'runs';
 
 export interface RideOptions {
   /** Samples further apart than this are treated as a gap (pause / signal loss). */
@@ -225,7 +233,10 @@ export function buildRide(raw: RawTelemetry, opts: RideOptions = {}): RideData {
   if (hasAlt) available.add('altitude').add('elevationGain').add('elevationProfile');
   if (hasAlt && hasDist) available.add('grade');
   if (hasDist) available.add('distance');
-  if (hasPos) available.add('map');
+  if (hasPos) available.add('map').add('compass');
+  if (available.has('speed')) available.add('pace');
+  if (hasAlt) available.add('verticalSpeed');
+  if (hasAlt && available.has('speed')) available.add('runs');
   for (const k of ['heartRate', 'cadence', 'power', 'temperature'] as const) if (channels.has(k)) available.add(k);
 
   let maxSpeed = 0;
@@ -235,6 +246,7 @@ export function buildRide(raw: RawTelemetry, opts: RideOptions = {}): RideData {
     if (i > 0 && t[i] - t[i - 1] <= gapThresholdMs && speed[i] > 0.5) movingMs += t[i] - t[i - 1];
   }
 
+  const avgMovingSpeed = movingMs > 0 ? distance[n - 1] / (movingMs / 1000) : 0;
   return {
     source: raw.source,
     name: raw.name,
@@ -268,7 +280,7 @@ export function buildRide(raw: RawTelemetry, opts: RideOptions = {}): RideData {
       elevationGainM: elevationGain[n - 1],
       elevationLossM: elevationLoss[n - 1],
       maxSpeed,
-      avgMovingSpeed: movingMs > 0 ? distance[n - 1] / (movingMs / 1000) : 0,
+      avgMovingSpeed,
     },
   };
 }

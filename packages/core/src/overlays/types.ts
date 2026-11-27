@@ -6,6 +6,7 @@ import type { Units } from './units.ts';
 import type { Ghost } from '../metrics/running.ts';
 import type { Sport } from '../telemetry/types.ts';
 import type { GadgetCondition } from './visibility.ts';
+import { THEMES, type GadgetCategory, type KitThemeId, type ThemeId } from './themes.ts';
 
 /**
  * Minimal 2D context surface used by renderers. Satisfied by the browser's
@@ -35,6 +36,8 @@ export interface Ctx2D {
   createRadialGradient(x0: number, y0: number, r0: number, x1: number, y1: number, r1: number): CanvasGradientLike;
   fill(): void;
   stroke(): void;
+  /** Dashed lines (optional: drawing works without it, just solid). */
+  setLineDash?(segments: number[]): void;
   fillText(text: string, x: number, y: number): void;
   strokeText(text: string, x: number, y: number): void;
   measureText(text: string): { width: number };
@@ -59,7 +62,11 @@ export interface CanvasGradientLike {
   addColorStop(offset: number, color: string): void;
 }
 
+/** Gadgets of the kit themes: `${theme}.${role}`, e.g. "hud.speed", "minimal.compass". */
+export type KitOverlayId = `${KitThemeId}.${string}`;
+
 export type OverlayId =
+  | KitOverlayId
   | 'speed'
   | 'altitude'
   | 'grade'
@@ -113,6 +120,27 @@ export type OverlayId =
   | 'natalMap'
   | 'natalProfile'
   | 'natalSummary'
+  | 'glassHeartRate'
+  | 'glassCadence'
+  | 'glassSpeed'
+  | 'glassGrade'
+  | 'glassAltitude'
+  | 'glassPower'
+  | 'glassDistance'
+  | 'glassTime'
+  | 'glassTemperature'
+  | 'glassPanelSpeed'
+  | 'glassPanelAltitude'
+  | 'glassPanelGrade'
+  | 'glassPanelHeartRate'
+  | 'glassPanelCadence'
+  | 'glassPanelPower'
+  | 'glassPanelTemperature'
+  | 'glassMap'
+  | 'glassProfile'
+  | 'glassProfileStrip'
+  | 'glassSummary'
+  | 'glassHeartRateZone'
   // Running / trail
   | 'pace'
   | 'gap'
@@ -150,6 +178,36 @@ export interface PanelOptions {
   chart: PanelMetric;
   /** Chart window: last `chartMinutes` or last `chartDistance`. */
   window: 'time' | 'distance';
+}
+
+/** What a field of the GPS watch shows. */
+export type WatchMetric =
+  | 'pace'
+  | 'speed'
+  | 'heartRate'
+  | 'hrZone'
+  | 'distance'
+  | 'time'
+  | 'cadence'
+  | 'power'
+  | 'altitude'
+  | 'ascent'
+  | 'grade'
+  | 'verticalSpeed'
+  | 'temperature'
+  | 'clock'
+  | 'lap';
+/** Now (instantaneous), average since the start, average of the current lap, or maximum since the start. */
+export type WatchMode = 'now' | 'avg' | 'lap' | 'max';
+export interface WatchField {
+  metric: WatchMetric;
+  mode: WatchMode;
+}
+export interface WatchOptions {
+  /** 3 or 4 fields, top to bottom (with 4, the 2nd and 3rd share the middle row). */
+  fields: WatchField[];
+  /** Heart-rate zone gauge around the top of the screen. */
+  hrGauge: boolean;
 }
 
 export interface OverlayStyle {
@@ -216,6 +274,15 @@ export interface OverlayStyle {
   ghost: Ghost | null;
   /** When each gadget appears and disappears (see visibility.ts); gadgets not listed are always shown. */
   conditions: Partial<Record<OverlayId, GadgetCondition>>;
+  /** Sport of step 4 (the file's, or the tab chosen); missing = the ride's, else cycling. Decides pace vs speed and so on. */
+  sport?: Sport;
+  /** Fields of the GPS watch gadget (Minimal Pro); missing = the default running screen. */
+  watch?: WatchOptions;
+}
+
+/** Sport the gadgets follow: the one chosen in the app, else the ride's. */
+export function sportOf(style: Pick<OverlayStyle, 'sport'>, ride: { sport?: Sport }): Sport {
+  return style.sport ?? ride.sport ?? 'cycling';
 }
 
 export const DEFAULT_STYLE: OverlayStyle = {
@@ -280,8 +347,9 @@ export interface FrameState {
   textSample: RideSample;
 }
 
-export type OverlayTheme = 'default' | 'natal';
-export const OVERLAY_THEMES: OverlayTheme[] = ['default', 'natal'];
+export type OverlayTheme = ThemeId;
+/** Official themes (status "stable" in THEMES); themes in testing are offered with offeredThemes(..., true). */
+export const OVERLAY_THEMES: OverlayTheme[] = THEMES.filter((t) => t.status === 'stable').map((t) => t.id);
 
 export interface OverlayDefinition {
   id: OverlayId;
@@ -295,8 +363,12 @@ export interface OverlayDefinition {
   textOnly: boolean;
   /** Theme the overlay belongs to in the app (default = the classic designs). */
   theme?: OverlayTheme;
+  /** Kind of gadget, the same in every theme (see overlayCategory for the older gadgets without it). */
+  category?: GadgetCategory;
   /** Sports whose catalogue lists the overlay in the app (default: cycling only). */
   sports?: Sport[];
+  /** Default spot in the composite: maps top-right, profiles along the bottom (others stack top-left). */
+  placement?: 'topRight' | 'bottom';
   /** Name in the app, for overlays whose name is not built from the metric (see overlayLabel). */
   labelFor?: (lang: Lang | undefined) => string;
   /** Slug for output file names, in the app language (see overlayFileSlug). */
