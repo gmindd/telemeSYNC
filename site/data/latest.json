@@ -1,18 +1,18 @@
 {
-  "version": "1.2.0",
-  "date": "2026-11-19",
-  "summary": "Corrida e trail, ski e snowboard; gadgets que aparecem só quando interessa; mapa com ruas na sincronização; rodar o vídeo 90°; desnível igual ao do ciclocomputador.",
+  "version": "1.3.0",
+  "date": "2026-11-27",
+  "summary": "Galeria de temas com seis temas novos em teste (HUD, Minimal Pro, TV, Cyberpunk, Gelo, Outdoor) e o Vidro; bússola; relógio GPS; apagar gadgets na sincronização.",
   "summaries": {
-    "en": "Running and trail, skiing and snowboarding; gadgets that appear only when it matters; a map with streets in the sync step; video rotated 90°; elevation gain matching the bike computer.",
-    "pt": "Corrida e trail, ski e snowboard; gadgets que aparecem só quando interessa; mapa com ruas na sincronização; rodar o vídeo 90°; desnível igual ao do ciclocomputador.",
-    "fr": "Course et trail, ski et snowboard ; des gadgets qui n’apparaissent que quand ça compte ; une carte avec les rues à la synchronisation ; vidéo pivotée de 90° ; dénivelé identique à celui du compteur.",
-    "es": "Running y trail, esquí y snowboard; gadgets que aparecen solo cuando importa; mapa con calles en la sincronización; girar el vídeo 90°; desnivel igual al del ciclocomputador.",
-    "de": "Laufen und Trail, Ski und Snowboard; Gadgets, die nur erscheinen, wenn es zählt; Karte mit Straßen beim Synchronisieren; Video um 90° drehen; Höhenmeter wie beim Radcomputer."
+    "en": "Theme gallery with six new themes in testing (HUD, Minimal Pro, TV, Cyberpunk, Ice, Outdoor) and Glass; compass; GPS watch; delete gadgets in the sync step.",
+    "pt": "Galeria de temas com seis temas novos em teste (HUD, Minimal Pro, TV, Cyberpunk, Gelo, Outdoor) e o Vidro; bússola; relógio GPS; apagar gadgets na sincronização.",
+    "fr": "Galerie de thèmes avec six nouveaux thèmes en test (HUD, Minimal Pro, TV, Cyberpunk, Glace, Outdoor) et Verre ; boussole ; montre GPS ; supprimer des gadgets à la synchronisation.",
+    "es": "Galería de temas con seis temas nuevos en prueba (HUD, Minimal Pro, TV, Cyberpunk, Hielo, Outdoor) y Cristal; brújula; reloj GPS; borrar gadgets en la sincronización.",
+    "de": "Themen-Galerie mit sechs neuen Themen im Test (HUD, Minimal Pro, TV, Cyberpunk, Eis, Outdoor) und Glas; Kompass; GPS-Uhr; Gadgets beim Synchronisieren löschen."
   },
-  "downloadUrl": "https://github.com/gmindd/telemeSYNC/releases/download/v1.2.0/telemeSYNC-1.2.0-windows.zip",
+  "downloadUrl": "https://github.com/gmindd/telemeSYNC/releases/download/v1.3.0/telemeSYNC-1.3.0-windows.zip",
   "downloads": {
-    "windows": "https://github.com/gmindd/telemeSYNC/releases/download/v1.2.0/telemeSYNC-1.2.0-windows.zip",
-    "mac": "https://github.com/gmindd/telemeSYNC/releases/download/v1.2.0/telemeSYNC-1.2.0-macos.zip"
+    "windows": "https://github.com/gmindd/telemeSYNC/releases/download/v1.3.0/telemeSYNC-1.3.0-windows.zip",
+    "mac": "https://github.com/gmindd/telemeSYNC/releases/download/v1.3.0/telemeSYNC-1.3.0-macos.zip"
   },
   "changelogUrl": "https://telemesync.app/#novidades"
 }
